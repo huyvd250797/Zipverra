@@ -1,37 +1,39 @@
-# Zipverra v1.3.4 — Push Reliability & Error Recovery
+# Zipverra v1.4.0 — Mobile UX/UI 2.0
 
 **Mobile PWA · Next.js 16 · GitHub OAuth · Vercel deployment target**
 
-## Tính năng mới v1.3.4
+## Điểm mới v1.4.0 — Mobile UX/UI 2.0
 
-- **Post-commit verification:** sau PATCH branch, gọi GitHub để kiểm tra commit HEAD đã được cập nhật, parent trùng HEAD preview, message đúng bằng tên ZIP và các file thay đổi khớp blob SHA/mode hoặc đã bị xóa. Không coi HTTP 200 là bằng chứng duy nhất.
-- **Lost-response recovery:** khi GitHub đã nhận PATCH nhưng kết nối mất trước khi Zipverra nhận phản hồi, backend xác minh và trả về commit SHA thành công.
-- **Retry có kiểm soát:** trình duyệt tối đa ba lần cho các thao tác đọc và upload blob (content-addressed); **không tự gửi lại API `/commit`**. Backend chỉ có thể lặp PATCH với **cùng commit SHA**, khi HEAD vẫn bằng giá trị cũ và lần gọi trước thất bại tạm thời. Không force-push.
-- **Idempotent recovery:** khi được yêu cầu commit lại với HEAD preview cũ, backend đọc commit hiện tại. Nếu HEAD là con trực tiếp của HEAD cũ, message đúng và thay đổi SHA trùng hoàn toàn thì trả thành công, không tạo commit mới.
-- **Recovery journal:** trước khi gọi commit, `sessionStorage` giữ owner, repo, branch, expected HEAD, message, paths và SHA. **Không lưu OAuth token hoặc nội dung source**. Sau khi reload cùng phiên WebView/PWA, app hiển thị **Xác minh push trên GitHub**.
-- **GitHub verification endpoint:** `POST /api/github/verify` chỉ đọc dữ liệu GitHub, không tạo commit, cho kết quả `applied` / `not_applied` / `unknown`.
-- **Network status và state machine:** hiển thị Online/Offline cùng các trạng thái `UPLOADING`, `COMMITTING`, `VERIFYING`, `SUCCEEDED`, `UNCONFIRMED`... Không cho push khi thiết bị offline hoặc còn một phiên commit chưa xác minh.
-- **Giữ nguyên:** đăng nhập GitHub OAuth, commit message = tên file ZIP bỏ `.zip`, branch mặc định `main`, Merge/Sync, danh sách diff, splash/PWA, chống zoom, iPhone safe-area.
+- **Bottom navigation thực sự hoạt động:** `Home · Repos · Activity · Settings` trên màn hình ≤760px; các vùng giao diện được hiển thị theo tab, không unmount state của ZIP/GitHub. Desktop vẫn hiển thị các panel theo grid.
+- **Home:** upload ZIP từ Files/ChatGPT, repo đích hiện tại, commit message theo tên ZIP, chế độ Merge/Sync, preview và Push; tự cuộn đến preview sau phân tích trên màn hình điện thoại.
+- **Repositories:** đăng nhập GitHub OAuth, tìm và lọc repository, chọn repo/branch mặc định `main`, danh sách repo gần đây (chỉ lưu tên ở `localStorage`, tối đa 5).
+- **Activity:** 4 bước Validate → Upload → Commit → Verify, tiến trình, xác minh push chưa chắc chắn, báo lỗi từng bước. Có status shortcut trên Home và badge phục hồi tại tab Activity.
+- **Settings:** Light/Dark theme lưu cục bộ và thông tin phiên bản/quyền OAuth.
+- **Diff filtering:** lọc file Tất cả/Thêm/Sửa/Xóa, số file theo trạng thái; lọc chỉ thay đổi cách xem, không thay đổi payload commit.
+- **Sync confirmation:** nếu chế độ Sync có xóa file, cần chấp nhận **riêng** việc xóa bên cạnh xác nhận push thông thường.
+- **PWA polish:** safe area Dynamic Island/Home Indicator, thanh nav dưới, không tràn ngang màn hình 320–430 px, skeleton khi lấy repo, reduced-motion.
+- **Giữ nguyên tính an toàn của v1.3.4:** GitHub OAuth, không lưu token ở phía client, merge/sync, GitHub commit verification, journal/sessionStorage, retry an toàn, không tự retry commit khi trạng thái chưa rõ.
 
-### Quy trình khi push chưa xác nhận
+### Cách dùng trên điện thoại
 
-1. **Không upload lại ZIP ngay**; chạm **Xác minh push trên GitHub**.
-2. `applied`: Zipverra cung cấp commit SHA và link GitHub, đánh dấu thành công.
-3. `not_applied`: HEAD chưa đổi, bản ghi tạm được xóa; phân tích lại ZIP trước khi thử lại.
-4. `unknown`: HEAD đã đổi nhưng không thể khớp chắc chắn với commit dự kiến (ví dụ người khác vừa push); Zipverra không tự ghi đè hay lặp commit. Cần xem lịch sử GitHub và phân tích lại sau khi xác nhận.
+1. Tab **Repos** → đăng nhập/kiểm tra tài khoản → chọn repo, nhánh `main` (hoặc nhập thủ công).
+2. Bấm **Tiếp tục tải ZIP** để về **Home** → chọn ZIP → Merge/Sync → **Phân tích ZIP**.
+3. Xem các file thay đổi, lọc theo loại, xác nhận thay đổi (và riêng việc xóa file nếu Sync có xóa) → **Commit & Push**.
+4. Tab **Activity** để xem tiến trình; với trạng thái push chưa rõ, chọn **Xác minh push trên GitHub** thay vì push lần hai.
+5. Tab **Settings** chọn giao diện Light/Dark.
 
-**Giới hạn đã biết:** Nếu có nhiều commit mới nối tiếp ngay sau lần push của bạn, thuật toán xác minh thận trọng chỉ nhận diện commit con trực tiếp; trả `unknown` chứ không kết luận thất bại. Journal lưu theo `sessionStorage` và có thể mất khi iOS xóa hoàn toàn tiến trình PWA hoặc storage. Phiên bản này không hỗ trợ khôi phục upload blob đang dang dở sau khi browser bị đóng, không sử dụng backend queue/database và chưa thực hiện live E2E với GitHub thực. Dữ liệu journal chứa tên file/path; tránh dùng trên thiết bị chia sẻ nếu đường dẫn source là thông tin nhạy cảm.
+**Giới hạn:** `Activity` trong v1.4.0 hiển thị quá trình push hiện tại, chưa phải lịch sử commit dài hạn. Repo gần đây lưu *tên repo* trong trình duyệt trên thiết bị, không gồm source hay OAuth token. Không có database mới.
 
-## Phiên bản kế tiếp: v1.4.0 — Mobile UX/UI 2.0
+## Phiên bản kế tiếp: v1.5.0 — GitHub App Authentication
 
-Xem chi tiết trong `ROADMAP_NEXT.md`. Trọng tâm: bottom navigation kiểu native, khu vực Upload ZIP tối ưu thao tác một tay, push progress dạng timeline, lịch sử thao tác gần đây, skeleton loading, light/dark theme, xác nhận Merge/Sync rõ ràng và kiểm thử PWA đa kích thước iPhone. Chưa thay đổi GitHub Authentication ở giai đoạn này.
+Thay OAuth App có scope `repo workflow` bằng **GitHub App**, chỉ cấp quyền với repository được chọn; triển khai installation flow, token ngắn hạn trên server, repository permissions phù hợp cho Contents/Workflows và migration an toàn từ phiên OAuth. Xem `ROADMAP_NEXT.md`.
 
 ---
 
 ## 1. Đưa source Zipverra lên GitHub và Vercel
 
-1. Giải nén `Zipverra_v1.3.4_Push_Reliability_Error_Recovery_Vercel_Ready.zip`.
-2. Tạo repository GitHub, ví dụ `zipverra`. Upload **nội dung bên trong thư mục `Zipverra-v1.3.4/`** vào gốc repository; phải thấy `package.json`, `app/`, `lib/`, `public/` ngay ở root. Không upload chỉ file ZIP.
+1. Giải nén `Zipverra_v1.4.0_Mobile_UX_UI_2.0_Vercel_Ready.zip`.
+2. Tạo repository GitHub, ví dụ `zipverra`. Upload **nội dung bên trong thư mục `Zipverra-v1.4.0/`** vào gốc repository; phải thấy `package.json`, `app/`, `lib/`, `public/` ngay ở root. Không upload chỉ file ZIP.
 3. Vào https://vercel.com/new → Import Git Repository → chọn repository Zipverra → Framework **Next.js** → Root Directory `./` → Deploy.
 4. Sau lần deploy đầu, sao chép **đường dẫn production ổn định** từ Vercel, ví dụ `https://zipverra-example.vercel.app`. Chưa thể đăng nhập GitHub ở bước này.
 
@@ -113,12 +115,12 @@ npm test       # Unit tests: GitHub commit + operations + OAuth session / Origin
 npm run build  # Next.js production build (cần dependencies/npm access)
 ```
 
-Đóng gói này đã chạy 44/44 unit tests, kiểm tra cú pháp JS/JSX và xác minh metadata. **Chưa chạy được `npm run build` trong môi trường đóng gói vì registry.npmjs.org không truy cập được để cài dependencies.** Vercel sẽ tự cài dependencies và build sau khi import repo; cần kiểm tra Deployment Logs trước khi coi là production-ready đã xác minh.
+Bản nâng cấp đã chạy **52/52 unit tests đạt**, kiểm tra cú pháp JSX và bố cục mẫu bằng Chromium tại 320, 375, 390, 430, 768 và 1280 px. Chi tiết kiểm chứng trong `QA_NOTES.md`. **Chưa chạy được `npm run build` trong môi trường đóng gói vì registry.npmjs.org không truy cập được để cài dependencies.** Vercel sẽ tự cài dependencies và build sau khi import repo; cần kiểm tra Deployment Logs trước khi coi là production-ready đã xác minh.
 
 ## Cấu trúc
 
 ```text
-Zipverra-v1.3.4/
+Zipverra-v1.4.0/
 ├── app/
 │   ├── api/auth/           # login, callback, session, logout
 │   ├── api/github/         # repos, snapshot, blob, commit, verify
@@ -133,12 +135,16 @@ Zipverra-v1.3.4/
 │   ├── github.js
 │   ├── verification.js    # đối chiếu HEAD/parent/tree SHA
 │   ├── reliability.js     # retry policy và journal validation
+│   ├── mobile-ui.js       # tabs, diff filter, recent repo, timeline
 │   ├── http.js
 │   ├── operations.js
 │   └── paths.js
 ├── public/                 # icon.svg, icon-192.png, icon-512.png, apple-touch-icon.png
 ├── tests/
 ├── .env.example
+├── CHANGELOG.md
+├── QA_NOTES.md
+├── ROADMAP_NEXT.md
 ├── .github/workflows/ci.yml
 ├── package.json
 ├── next.config.mjs

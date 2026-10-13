@@ -1,23 +1,25 @@
-# Zipverra v1.4.0 — Mobile UX/UI 2.0 (Kế hoạch tiếp theo)
+# Zipverra v1.5.0 — GitHub App Authentication (phiên bản tiếp theo)
 
 ## Mục tiêu
-Biến Zipverra từ responsive website thành trải nghiệm PWA trên iPhone tương tự ứng dụng native, ít thao tác hơn khi upload source và theo dõi push. **Không thay đổi các ràng buộc an toàn của v1.3.4.**
+Chuyển ứng dụng từ OAuth App sử dụng scope `repo workflow` rộng sang GitHub App có thể cài riêng cho các repository được cho phép. Luồng ZIP → preview → commit → verify phải giữ nguyên.
 
-## Phạm vi ưu tiên
-1. **App shell / navigation:** bottom navigation `Home · Repositories · Activity · Settings`, an toàn với Dynamic Island và Home Indicator; các tab vẫn dùng một nguồn trạng thái chuẩn.
-2. **Mobile upload flow:** khu vực chọn ZIP dễ dùng bằng một tay; trạng thái file + tên commit rõ ràng; chọn repo/branch với tìm kiếm và nhắc repo gần đây (lưu local không chứa token).
-3. **Push timeline:** hiển thị Validate → Upload → Commit → Verify, hỗ trợ retry blob / Verify Push mà không khiến người dùng tạo commit trùng.
-4. **Merge/Sync UX:** hiển thị số file thay đổi và xóa, cảnh báo Sync có xác nhận riêng, danh sách thay đổi lọc theo Added/Modified/Deleted.
-5. **Visual design:** chuẩn hóa spacing, typography, màu dark/light, skeleton/loading và empty states; đảm bảo accessibility và prefers-reduced-motion.
-6. **iPhone PWA tests:** layout 320/375/390/430px, standalone, Safari, xoay màn hình, zoom/font size, keyboard và safe-area.
-
-## Ngoài phạm vi v1.4.0
-- GitHub App permissions per repository (dự kiến v1.5.0)
-- Lịch sử commit dài hạn và rollback (dự kiến v1.6.0)
-- Xử lý ZIP lớn hơn 20 MiB (dự kiến v1.7.0)
+## Hạng mục xây dựng
+1. GitHub App registration và installation onboarding trên iPhone; phân biệt tài khoản người dùng với installation.
+2. Đăng nhập an toàn và callback GitHub App; xác minh state, tránh CSRF; server lưu bí mật và quản lý installation token ngắn hạn.
+3. Permissions tối thiểu: Metadata (read), Contents (read/write), Workflows (write khi thực sự cần); cảnh báo khi installation không cấp quyền sửa workflow.
+4. Danh sách repository chỉ bao gồm repository trong installation; hỗ trợ organization policy.
+5. Migration không gián đoạn: OAuth App hiện tại chỉ tắt sau khi login+push qua GitHub App được xác minh.
+6. Tests: repo public/private, access denied, token expiry/refresh, branch protection, GitHub actions files, 404/403 diagnostics, GitHub Commit verification.
+7. Không lưu token trình duyệt; không đưa secrets vào source/ZIP.
 
 ## Tiêu chí nghiệm thu
-- Giao diện không bị status bar che, không tràn ngang ở 320–430px.
-- `main` được chọn mặc định; commit message vẫn lấy đúng tên ZIP.
-- `npm test` và `npm run build` chạy thành công trên CI/Vercel.
-- Không tự retry commit; mọi trạng thái unconfirmed có hành động xác minh rõ ràng.
+- Chủ tài khoản có thể chọn repository được Zipverra truy cập, thay vì mở quyền toàn bộ repository như OAuth App cũ.
+- Các thao tác upload blob, create tree, create commit, verify hoạt động trên repo đã cài app.
+- Các repo không được cấp quyền bị từ chối rõ ràng; UI giải thích cách cấp thêm quyền.
+- E2E kiểm thử trên repo thử nghiệm và Next.js production build được xác nhận trước khi phát hành.
+
+## Sau v1.5.0
+- v1.6.0 History & Safe Rollback.
+- v1.7.0 Advanced ZIP & Large Source.
+- v1.8.0 Vercel Deployment Tracking.
+- v1.9.0 Repository Workspace.
