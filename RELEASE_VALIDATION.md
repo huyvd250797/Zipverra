@@ -1,4 +1,4 @@
-# Zipverra v1.5.0 — Release Validation
+# Zipverra v1.5.1 — Release Validation
 
 **Build date:** 2026-10-13
 
@@ -22,3 +22,12 @@
 3. Install App on a sandbox repository and run manual E2E checklist in `QA_NOTES.md`.
 4. Verify Workflows:write or avoid changing `.github/workflows/*` without the grant.
 5. Only switch over production workflows after verified successful push on sandbox.
+
+
+## v1.5.1 targeted fix verification
+
+- Fix source: `lib/auth/github-app.js` regex no longer mandates `Iv1.`. Valid modern GitHub App IDs like `Iv23...` now pass.
+- Login error source: `app/api/auth/login/route.js` returns sanitized, variable-specific configuration errors rather than a blanket error.
+- Automated suite: 58/58 tests passed (`npm test`), including two new tests for modern IDs and safe errors.
+- `node --check` for JS/MJS files passed.
+- Next.js `npm run build` and real GitHub authorization were not exercised in packaging environment; verify on Vercel after deploy.

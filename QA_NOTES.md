@@ -1,10 +1,10 @@
-# QA & Deployment Checklist — Zipverra v1.5.0
+# QA & Deployment Checklist — Zipverra v1.5.1
 
 ## Before deploying
 
 - [ ] `npm install`, `npm test`, `npm run build` passed on CI/Vercel.
 - [ ] APP_URL matches production origin and GitHub App Callback URL exactly.
-- [ ] GitHub App ID is **not** used instead of Client ID; Client ID starts `Iv1.`.
+- [ ] GitHub App ID is **not** used instead of Client ID; Client ID starts with `Iv` (for example `Iv23...` or legacy `Iv1...`).
 - [ ] GitHub App settings: request authorization during installation disabled, token expiration enabled.
 - [ ] GitHub App Contents `Read & write`, Metadata `Read`, Workflows `Read & write` if editing workflow files.
 - [ ] New env vars `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`, `APP_URL` are configured for production.

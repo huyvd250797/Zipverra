@@ -135,3 +135,28 @@ test('session with expired refresh token cannot be accepted', () => {
   const cookie = encodeSession({ ...tokenData(now), tokenExpiresAt: now + 10_000, refreshExpiresAt: now + 3_600_000, user: USER }, ENV, now);
   assert.equal(decodeSession(cookie, ENV, now + 3_600_001), null);
 });
+
+
+test('modern real-world GitHub App Client IDs without a dot are accepted', () => {
+  const config = githubAppConfig({ ...ENV, GITHUB_APP_CLIENT_ID: 'Iv23likezCs3H3thOomZ' });
+  assert.equal(config.id, 'Iv23likezCs3H3thOomZ');
+  assert.equal(config.origin, ENV.APP_URL);
+  assert.equal(authorizeUrl('x'.repeat(32), { ...ENV, GITHUB_APP_CLIENT_ID: 'Iv23likezCs3H3thOomZ' }).includes('client_id=Iv23likezCs3H3thOomZ'), true);
+});
+
+test('configuration errors identify incorrect variable names but never reveal secrets', () => {
+  const marker = 'SENSITIVE_GITHUB_SECRET_VALUE_123';
+  assert.throws(() => githubAppConfig({ ...ENV, GITHUB_APP_CLIENT_ID: 'invalid', GITHUB_APP_CLIENT_SECRET: '' }), (e) => {
+    assert.equal(e.code, 'APP_NOT_CONFIGURED');
+    assert.match(e.message, /GITHUB_APP_CLIENT_ID/);
+    assert.match(e.message, /GITHUB_APP_CLIENT_SECRET/);
+    assert.doesNotMatch(e.message, /SENSITIVE_GITHUB_SECRET_VALUE_123/);
+    return true;
+  });
+  assert.throws(() => githubAppConfig({ ...ENV, APP_URL: 'https://example.org/extra', GITHUB_APP_CLIENT_SECRET: marker }), (e) => {
+    assert.equal(e.code, 'APP_URL_INVALID');
+    assert.match(e.message, /APP_URL/);
+    assert.doesNotMatch(e.message, /SENSITIVE_GITHUB_SECRET_VALUE_123/);
+    return true;
+  });
+});

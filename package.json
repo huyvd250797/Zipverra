@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "private": true,
   "type": "module",
-  "description": "Zipverra v1.5.0: GitHub App user authentication, selective repository access, expiring sessions, mobile-first ZIP push",
+  "description": "Zipverra v1.5.1: GitHub App user authentication, selective repository access, expiring sessions, mobile-first ZIP push",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

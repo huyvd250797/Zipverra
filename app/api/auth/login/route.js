@@ -11,9 +11,14 @@ export async function GET() {
     response.cookies.set(cookieName('oauth_state'), state, oauthOptions());
     response.headers.set('Cache-Control', 'no-store');
     return response;
-  } catch {
-    return new Response('GitHub App chưa được cấu hình. Xem README và thiết lập GITHUB_APP_CLIENT_ID / GITHUB_APP_CLIENT_SECRET / GITHUB_APP_SLUG.', {
-      status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' },
+  } catch (error) {
+    // Only expose field names, never credentials or raw stack traces.
+    const knownConfigError = error?.code === 'APP_NOT_CONFIGURED' || error?.code === 'APP_URL_INVALID';
+    const message = knownConfigError ? error.message : 'Không thể khởi tạo đăng nhập GitHub App. Kiểm tra Vercel Runtime Logs (AUTH_LOGIN_ERROR).';
+    if (!knownConfigError) console.error('AUTH_LOGIN_ERROR', error?.code || 'UNEXPECTED_ERROR');
+    return new Response(message, {
+      status: knownConfigError ? 503 : 500,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' },
     });
   }
 }

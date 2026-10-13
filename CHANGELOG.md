@@ -1,5 +1,13 @@
 # Zipverra Changelog
 
+## v1.5.1 — GitHub App Client ID compatibility hotfix (2026-10-13)
+
+- Chấp nhận GitHub App Client ID mới dạng `Iv23...` không có dấu chấm, ngoài dạng cũ `Iv1...`.
+- Phân biệt biến env sai/thiếu và lỗi `APP_URL` trước khi redirect OAuth.
+- Lỗi đăng nhập không bao giờ hiển thị secret hay giá trị credential.
+- Giữ nguyên GitHub App permissions, PWA và Git push.
+
+
 ## v1.5.0 — GitHub App Authentication (2026-10-13)
 
 - Thay OAuth App scopes `repo workflow` bằng GitHub App user-to-server flow với OAuth `state` + `offline_access`.
