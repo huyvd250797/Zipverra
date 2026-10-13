@@ -53,6 +53,9 @@ test('lost PATCH response but updated remote branch is reported as verified succ
   const previous = globalThis.fetch;
   let head = A, patchCount = 0, createCount = 0;
   globalThis.fetch = async (url, opts = {}) => {
+    if (url.includes('/user/installations?')) return response(200, { installations: [{ id: 42, account: { login: 'team' }, permissions: { contents: 'write', workflows: 'write' } }] });
+    if (url.includes('/user/installations/42/repositories')) return response(200, { repositories: [{ full_name: 'team/demo', permissions: { push: true } }] });
+    if (url.endsWith('/repos/team/demo') && opts.method === 'GET') return response(200, { permissions: { push: true }, archived: false });
     if (url.endsWith('/git/ref/heads/main') && opts.method === 'GET') return response(200, { object: { sha: head } });
     if (url.endsWith(`/git/commits/${A}`)) return response(200, { tree: { sha: D } });
     if (url.endsWith(`/git/commits/${C}`)) return response(200, { tree: { sha: D }, ...successCommit });
@@ -76,6 +79,9 @@ test('repeated commit request detects prior matching commit without mutation', a
   const previous = globalThis.fetch;
   let mutations = 0;
   globalThis.fetch = async (url, opts = {}) => {
+    if (url.includes('/user/installations?')) return response(200, { installations: [{ id: 42, account: { login: 'team' }, permissions: { contents: 'write', workflows: 'write' } }] });
+    if (url.includes('/user/installations/42/repositories')) return response(200, { repositories: [{ full_name: 'team/demo', permissions: { push: true } }] });
+    if (url.endsWith('/repos/team/demo') && opts.method === 'GET') return response(200, { permissions: { push: true }, archived: false });
     if (opts.method !== 'GET') { mutations++; throw new Error('must not mutate'); }
     if (url.endsWith('/git/ref/heads/main')) return response(200, { object: { sha: C } });
     if (url.endsWith(`/git/commits/${C}`)) return response(200, { tree: { sha: D }, ...successCommit });
@@ -93,6 +99,9 @@ test('repeated commit request detects prior matching commit without mutation', a
 test('verification detects unchanged head without commit mutation', async () => {
   const previous = globalThis.fetch;
   globalThis.fetch = async (url, opts = {}) => {
+    if (url.includes('/user/installations?')) return response(200, { installations: [{ id: 42, account: { login: 'team' }, permissions: { contents: 'write', workflows: 'write' } }] });
+    if (url.includes('/user/installations/42/repositories')) return response(200, { repositories: [{ full_name: 'team/demo', permissions: { push: true } }] });
+    if (url.endsWith('/repos/team/demo') && opts.method === 'GET') return response(200, { permissions: { push: true }, archived: false });
     assert.equal(opts.method, 'GET');
     if (url.endsWith('/git/ref/heads/main')) return response(200, { object: { sha: A } });
     if (url.endsWith(`/git/commits/${A}`)) return response(200, { tree: { sha: D } });
@@ -108,6 +117,9 @@ test('uncertain PATCH with changed unrelated HEAD refuses to report success or r
   const previous = globalThis.fetch;
   let patchCount = 0, head = A;
   globalThis.fetch = async (url, opts = {}) => {
+    if (url.includes('/user/installations?')) return response(200, { installations: [{ id: 42, account: { login: 'team' }, permissions: { contents: 'write', workflows: 'write' } }] });
+    if (url.includes('/user/installations/42/repositories')) return response(200, { repositories: [{ full_name: 'team/demo', permissions: { push: true } }] });
+    if (url.endsWith('/repos/team/demo') && opts.method === 'GET') return response(200, { permissions: { push: true }, archived: false });
     if (url.endsWith('/git/ref/heads/main') && opts.method === 'GET') return response(200, { object: { sha: head } });
     if (url.endsWith(`/git/commits/${A}`)) return response(200, { tree: { sha: D } });
     if (url.endsWith(`/git/commits/${D}`)) return response(200, { tree: { sha: D }, message: 'unrelated', parents: [{ sha: A }] });
@@ -135,6 +147,9 @@ test('transient PATCH retries identical commit SHA only once when branch remains
   const oldFetch = globalThis.fetch;
   let head = A, patchCount = 0, commitCreates = 0, patchSha = [];
   globalThis.fetch = async (url, opts = {}) => {
+    if (url.includes('/user/installations?')) return response(200, { installations: [{ id: 42, account: { login: 'team' }, permissions: { contents: 'write', workflows: 'write' } }] });
+    if (url.includes('/user/installations/42/repositories')) return response(200, { repositories: [{ full_name: 'team/demo', permissions: { push: true } }] });
+    if (url.endsWith('/repos/team/demo') && opts.method === 'GET') return response(200, { permissions: { push: true }, archived: false });
     if (url.endsWith('/git/ref/heads/main') && opts.method === 'GET') return response(200, { object: { sha: head } });
     if (url.endsWith(`/git/commits/${A}`)) return response(200, { tree: { sha: D } });
     if (url.endsWith(`/git/commits/${C}`)) return response(200, { tree: { sha: D }, ...successCommit });
@@ -166,7 +181,7 @@ test('new mobile status and recovery actions are present without losing 1.3.3 sa
   assert.match(page, /Xác minh push trên GitHub/);
   assert.match(page, /JOURNAL_KEY/);
   assert.match(page, /phase\.replaceAll/);
-  assert.match(page, /v1\.4\.0/);
+  assert.match(page, /v1\.5\.0/);
   assert.match(css, /safe-area-inset-top/);
   assert.match(css, /recovery-banner/);
 });

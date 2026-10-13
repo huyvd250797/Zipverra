@@ -216,3 +216,27 @@ html[data-theme="light"] .file-detail{color:#187b63}
 html[data-theme="light"] .file-detail strong{color:#144e46}
 html[data-theme="light"] .empty-change{color:#58708a}
 html[data-theme="light"] .timeline-step small{color:#59748b}
+
+
+/* v1.5.0 — GitHub App permission manager, touch-first */
+.app-install-panel {
+  margin: 16px 0 18px;
+  padding: 16px;
+  border: 1px solid var(--border, #2e4556);
+  border-radius: 16px;
+  background: var(--card-secondary, rgba(42, 179, 140, .07));
+  min-width: 0;
+}
+.app-install-head {display:flex; align-items:center; gap:8px; margin-bottom:10px; flex-wrap:wrap;}
+.app-install-head strong {font-size:14px;}
+.app-install-pill {margin-left:auto; color:var(--muted, #94a5bd); font-size:11px; white-space:nowrap;}
+.app-install-panel .auth-muted {overflow-wrap:anywhere; line-height:1.55; margin:0 0 12px;}
+.app-install-actions {display:flex; gap:8px; flex-wrap:wrap;}
+.app-install-actions .button {min-height:44px; display:inline-flex; justify-content:center; align-items:center; gap:8px; text-align:center; padding:10px 12px;}
+.app-install-link {flex:1 1 200px;}
+.app-install-reload {flex:0 1 auto;}
+@media(max-width:420px) {
+  .app-install-panel {padding:13px;}
+  .app-install-actions {display:grid; grid-template-columns:minmax(0, 1fr);}
+  .app-install-reload {width:100%;}
+}

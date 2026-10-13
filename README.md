@@ -1,152 +1,102 @@
-# Zipverra v1.4.0 — Mobile UX/UI 2.0
+# Zipverra v1.5.0 — GitHub App Authentication
 
-**Mobile PWA · Next.js 16 · GitHub OAuth · Vercel deployment target**
+**Next.js 16 · React 19 · Vercel-targeted · Installable mobile PWA**  
+**Slogan:** Push to GitHub. From Your Phone.
 
-## Điểm mới v1.4.0 — Mobile UX/UI 2.0
+Zipverra nhận ZIP do ChatGPT xuất, đọc và đối chiếu file với một repository GitHub, dùng **tên ZIP bỏ `.zip` làm commit message**, cho chọn branch (mặc định `main`), xem preview Merge/Sync, commit rồi xác minh thay đổi trên GitHub. App chạy trên Vercel; không cần chạy Node server lâu dài hoặc Python để giải nén.
 
-- **Bottom navigation thực sự hoạt động:** `Home · Repos · Activity · Settings` trên màn hình ≤760px; các vùng giao diện được hiển thị theo tab, không unmount state của ZIP/GitHub. Desktop vẫn hiển thị các panel theo grid.
-- **Home:** upload ZIP từ Files/ChatGPT, repo đích hiện tại, commit message theo tên ZIP, chế độ Merge/Sync, preview và Push; tự cuộn đến preview sau phân tích trên màn hình điện thoại.
-- **Repositories:** đăng nhập GitHub OAuth, tìm và lọc repository, chọn repo/branch mặc định `main`, danh sách repo gần đây (chỉ lưu tên ở `localStorage`, tối đa 5).
-- **Activity:** 4 bước Validate → Upload → Commit → Verify, tiến trình, xác minh push chưa chắc chắn, báo lỗi từng bước. Có status shortcut trên Home và badge phục hồi tại tab Activity.
-- **Settings:** Light/Dark theme lưu cục bộ và thông tin phiên bản/quyền OAuth.
-- **Diff filtering:** lọc file Tất cả/Thêm/Sửa/Xóa, số file theo trạng thái; lọc chỉ thay đổi cách xem, không thay đổi payload commit.
-- **Sync confirmation:** nếu chế độ Sync có xóa file, cần chấp nhận **riêng** việc xóa bên cạnh xác nhận push thông thường.
-- **PWA polish:** safe area Dynamic Island/Home Indicator, thanh nav dưới, không tràn ngang màn hình 320–430 px, skeleton khi lấy repo, reduced-motion.
-- **Giữ nguyên tính an toàn của v1.3.4:** GitHub OAuth, không lưu token ở phía client, merge/sync, GitHub commit verification, journal/sessionStorage, retry an toàn, không tự retry commit khi trạng thái chưa rõ.
+## 1. Điểm mới v1.5.0
 
-### Cách dùng trên điện thoại
+- **GitHub App web authentication** thay cho OAuth App scopes rộng `repo workflow`. Đăng nhập bằng nút **Continue with GitHub** và OAuth authorization code + state chống CSRF.
+- **Select repositories:** app được cài và cấp phép trên tài khoản GitHub hoặc Organization, tùy chọn **Only select repositories**; UI chỉ liệt kê repository có quyền `push`, đã được GitHub App cấp `Contents: write`.
+- **GitHub App permission preflight:** kiểm tra installation, chủ repo, quyền ghi của người dùng, Contents: write và Workflows: write (nếu ZIP có `.github/workflows/*.yml` hoặc `.yaml`); kiểm tra lại tại bước Commit.
+- **Expiring user access token:** mặc định 8 giờ, refresh token do GitHub cung cấp. Server làm mới khi sắp hết hạn và xoay vòng session cookie HttpOnly AES-256-GCM. Session web tối đa 7 ngày.
+- **Manage GitHub App:** đường dẫn cài đặt/cấp thêm repository cùng nút Refresh danh sách repo. Hỗ trợ Organization nếu admin phê duyệt.
+- **Không cần GitHub App private key:** Vì Zipverra **chỉ thực hiện yêu cầu theo tương tác người dùng**, API dùng user-to-server access token, bị giới hạn bởi **cả quyền người dùng và quyền đã cấp cho App**. Không dùng installation access token để push thay người dùng (đề phòng nâng quyền trái ý).
+- Giữ nguyên 4 tab `Home · Repos · Activity · Settings`, PWA safe area, splash, zoom lock, Light/Dark, diff preview, Merge/Sync, upload binary, SHA verification, retry có kiểm soát, journal và Verify Push.
 
-1. Tab **Repos** → đăng nhập/kiểm tra tài khoản → chọn repo, nhánh `main` (hoặc nhập thủ công).
-2. Bấm **Tiếp tục tải ZIP** để về **Home** → chọn ZIP → Merge/Sync → **Phân tích ZIP**.
-3. Xem các file thay đổi, lọc theo loại, xác nhận thay đổi (và riêng việc xóa file nếu Sync có xóa) → **Commit & Push**.
-4. Tab **Activity** để xem tiến trình; với trạng thái push chưa rõ, chọn **Xác minh push trên GitHub** thay vì push lần hai.
-5. Tab **Settings** chọn giao diện Light/Dark.
+## 2. Đưa source lên GitHub và Vercel
 
-**Giới hạn:** `Activity` trong v1.4.0 hiển thị quá trình push hiện tại, chưa phải lịch sử commit dài hạn. Repo gần đây lưu *tên repo* trong trình duyệt trên thiết bị, không gồm source hay OAuth token. Không có database mới.
+1. Giải nén bản ZIP; upload **các file bên trong `Zipverra-v1.5.0/`** vào **gốc repository** của Zipverra (chứa ngay `package.json`, `app/`, `lib/`, `public/`). Không upload nguyên file ZIP lên GitHub với kỳ vọng Vercel tự giải nén.
+2. Vercel → **Add New Project** → import repository → Next.js / Root Directory `./`.
+3. Trước khi triển khai hoạt động đăng nhập, tạo GitHub App theo Mục 3 và cấu hình environment variables Mục 4.
+4. Deploy → Vercel Logs phải chạy `npm run build` thành công. Các phiên bản trước không thể sử dụng lại Client ID/Secret OAuth App cũ.
+5. Truy cập URL production trên iPhone; Safari → Share → Add to Home Screen để cài PWA.
 
-## Phiên bản kế tiếp: v1.5.0 — GitHub App Authentication
+> `APP_URL` phải là URL domain production ổn định, ví dụ `https://zipverra.example.com` hoặc `https://zipverra.vercel.app`. Nếu dùng alias/custom domain, callback GitHub App phải khớp **chính xác**. Vercel preview URLs khác domain production sẽ không xác thực được nếu vẫn dùng cùng APP_URL.
 
-Thay OAuth App có scope `repo workflow` bằng **GitHub App**, chỉ cấp quyền với repository được chọn; triển khai installation flow, token ngắn hạn trên server, repository permissions phù hợp cho Contents/Workflows và migration an toàn từ phiên OAuth. Xem `ROADMAP_NEXT.md`.
+## 3. Tạo GitHub App (bắt buộc)
 
----
+1. GitHub → [Settings / Developer Settings / GitHub Apps](https://github.com/settings/apps) → **New GitHub App**.
+2. **GitHub App name:** chọn tên còn trống, ví dụ `zipverra-personal`; app URL: `https://YOUR_ZIPVERRA_DOMAIN`.
+3. **Callback URL:** `https://YOUR_ZIPVERRA_DOMAIN/api/auth/callback`. Đây là URL cho nút Continue with GitHub.
+4. **Request user authorization (OAuth) during installation:** **tắt**. Zipverra đã có nút login riêng với `state` chống CSRF. Nếu bật chế độ tự bắt đầu OAuth trong khi cài App, GitHub có thể redirect vào callback không có state của phiên hiện tại và Zipverra sẽ từ chối.
+5. **Expire user authorization tokens:** bật (GitHub mặc định bật). Zipverra yêu cầu refresh token và token có hạn, không nhận token không hết hạn.
+6. **Repository permissions:** `Contents` → **Read and write**, `Metadata` → **Read-only** (mặc định); `Workflows` → **Read and write** để có thể cập nhật `.github/workflows/*.yml/.yaml` (nếu không cần cập nhật workflows có thể bỏ quyền này). Không cần quyền `Administration`, `Actions` hoặc `Organization` để push source cơ bản.
+7. **Where can this GitHub App be installed:** chọn Only on this account cho sử dụng cá nhân, hoặc Any account cho organization/đa người dùng tùy nhu cầu. Admin tổ chức có thể phải phê duyệt.
+8. Save → lấy **Client ID** (thường có dạng `Iv1.xxxxx`) và tạo **Client secret** tại GitHub App settings. Lấy **slug** từ đường dẫn `https://github.com/apps/SLUG` (ví dụ `zipverra-personal`). App ID và private key **không** được dùng trong kiến trúc user-to-server của phiên bản này.
+9. Trên Zipverra: **Continue with GitHub** để đăng nhập, sau đó **Install / Manage GitHub App** → chọn account/organization → **Only select repositories** → chọn repo muốn push. Về Zipverra nhấn **Refresh** để tải danh sách repo. Có thể cài App trước rồi login cũng được.
+10. Nếu nâng quyền Workflows cho App đã cài: GitHub có thể yêu cầu chủ installation chấp nhận lại quyền mới. Làm mới trang sau khi chấp thuận.
 
-## 1. Đưa source Zipverra lên GitHub và Vercel
+**Giải thích quyền:** GitHub App user token không dùng OAuth `repo workflow` scopes. Token này chỉ cho phép thao tác trên phần giao nhau giữa repository/quyền của tài khoản và repository/quyền được cấp cho GitHub App. Đây là token phát hành cho thao tác nhân danh người dùng, không phải installation token.
 
-1. Giải nén `Zipverra_v1.4.0_Mobile_UX_UI_2.0_Vercel_Ready.zip`.
-2. Tạo repository GitHub, ví dụ `zipverra`. Upload **nội dung bên trong thư mục `Zipverra-v1.4.0/`** vào gốc repository; phải thấy `package.json`, `app/`, `lib/`, `public/` ngay ở root. Không upload chỉ file ZIP.
-3. Vào https://vercel.com/new → Import Git Repository → chọn repository Zipverra → Framework **Next.js** → Root Directory `./` → Deploy.
-4. Sau lần deploy đầu, sao chép **đường dẫn production ổn định** từ Vercel, ví dụ `https://zipverra-example.vercel.app`. Chưa thể đăng nhập GitHub ở bước này.
+## 4. Cấu hình môi trường Vercel
 
-> Nếu chuyển sang custom domain, cần cập nhật GitHub OAuth callback URL và APP_URL tương ứng. Một OAuth App chỉ được cấu hình một callback URL chính; dùng một domain production ổn định để đăng nhập, không dùng URL deployment preview thay đổi liên tục.
+Vercel → Project → Settings → Environment Variables → Add (Production), rồi **Redeploy**:
 
-## 2. Tạo GitHub OAuth App
+| Biến | Giá trị |
+|---|---|
+| `APP_URL` | `https://YOUR_ZIPVERRA_DOMAIN` (không có path, không có dấu `/` ở cuối) |
+| `GITHUB_APP_CLIENT_ID` | GitHub App Client ID (`Iv1...`), **không phải** App ID |
+| `GITHUB_APP_CLIENT_SECRET` | GitHub App Client Secret (chỉ server biết) |
+| `GITHUB_APP_SLUG` | Slug trong `github.com/apps/SLUG` |
+| `SESSION_SECRET` | Chuỗi ngẫu nhiên tối thiểu 32 ký tự, khuyến cáo 64 ký tự hex, ví dụ `openssl rand -hex 32` |
 
-1. Đăng nhập GitHub, mở https://github.com/settings/developers → **OAuth Apps** → **New OAuth App**.
-2. **Application name:** `Zipverra` (nếu GitHub yêu cầu tên khác có thể chọn `Zipverra Personal`).
-3. **Homepage URL:** `https://zipverra-example.vercel.app` (thay bằng domain production vừa lấy).
-4. **Authorization callback URL:** `https://zipverra-example.vercel.app/api/auth/callback` (**bắt buộc khớp APP_URL**).
-5. Nhấn **Register application** và sao chép **Client ID**.
-6. Nhấn **Generate a new client secret**; sao chép và lưu trong nơi an toàn, không gửi vào chat, không commit lên GitHub.
+Không cần `DATABASE_URL`, `GITHUB_APP_PRIVATE_KEY` hoặc `GITHUB_APP_ID`. Các biến `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` cũ **không được sử dụng** trong v1.5.0; có thể xóa sau khi đảm bảo migration thành công. Tuyệt đối không đưa `.env.local` chứa secret vào GitHub.
 
-### Quyền đăng nhập
+## 5. Quy trình Push từ iPhone
 
-Zipverra đang dùng **GitHub OAuth App** với `scope=repo workflow` để đọc/ghi repositories, bao gồm private repositories. Đây là **scope tương đối rộng**, GitHub OAuth App không cung cấp giới hạn theo từng repository giống GitHub App/fine-grained PAT. Chỉ đăng nhập trên domain của chính bạn và không công khai OAuth secret. Với nhiều người dùng, tổ chức hoặc nhu cầu giới hạn tới từng repo, nên chuyển sang GitHub App permissions (nâng cấp sau).
+1. Đăng nhập GitHub App → cấp quyền repository trong Install/Manage → nhấn Refresh.
+2. Chọn repo, branch mặc định `main` (có thể nhập branch khác có sẵn).
+3. Chọn file ZIP trong Files; commit message tự lấy từ tên ZIP.
+4. Chọn `Merge` (không xóa file vắng mặt trong ZIP) hoặc `Sync` (có thể xóa file, cần xác nhận riêng).
+5. Phân tích ZIP; so sánh file thêm/sửa/xóa; đồng ý thay đổi.
+6. Commit & Push; màn hình Activity theo dõi `Validate → Upload → Commit → Verify`.
+7. Nếu kết quả không rõ sau lỗi mạng, dùng **Xác minh push**; **không tự retry Commit**. Link commit chỉ hiển thị khi GitHub đã xác minh.
 
-## 3. Thiết lập Environment Variables trên Vercel
+## 6. Security và giới hạn
 
-Vercel → **Project → Settings → Environment Variables**. Thêm 4 biến sau vào **Production** (có thể chọn All Environments nếu URL dùng chung; không khuyến cáo preview OAuth cùng production):
+- Session lưu token truy cập + refresh token trong cookie `HttpOnly`, `SameSite=Lax`, `Secure` trên HTTPS, nội dung AES-256-GCM. Mã cookie v1.4.0 không hợp lệ trên v1.5.0, nên người dùng phải đăng nhập lại **một lần**.
+- GitHub App user access tokens có hạn 8 giờ; refresh token được xoay vòng server-side khi gần hết hạn. Refresh đồng thời trong **cùng một Function isolate** được hợp nhất. **Giới hạn MVP:** nếu nhiều Vercel instances cùng refresh một cookie cũ đúng lúc, vẫn có thể xảy ra tranh chấp refresh token; khi đó đăng nhập lại. Giải pháp lâu dài: phiên tập trung/atomic refresh trong database/KV.
+- Session trong cookie 7 ngày (ngắn hơn refresh token GitHub). Đăng xuất xóa cookie của Zipverra; không thu hồi ngay token ở phía GitHub. Người dùng có thể thu hồi quyền ứng dụng từ GitHub Settings → Applications.
+- Mutation API yêu cầu origin chính xác với `APP_URL`, `Content-Type: application/json`; frontend không đọc hoặc truyền token GitHub. Tránh cài Zipverra trên domain không đáng tin.
+- Không thể vượt qua GitHub branch protection, ruleset, yêu cầu status checks hoặc organization policy; các repo đó phải dùng PR (tính năng tương lai).
+- ZIP tối đa 20 MB; tối đa 2,5 MB/file; tối đa 1.200 file; không hỗ trợ tạo branch mới, Git LFS, symlink Git hoặc submodule phức tạp. Xử lý ZIP trực tiếp trong trình duyệt để hạn chế giới hạn request 4,5 MB của Vercel Functions.
+- Không ghi token ra logs, không lưu source ZIP trên server. PWA recovery journal giữ **metadata commit** cục bộ trong sessionStorage, không lưu access token.
 
-| Tên biến | Ví dụ / ý nghĩa |
-| --- | --- |
-| `APP_URL` | `https://zipverra-example.vercel.app` — **URL production**, không có dấu `/` cuối |
-| `GITHUB_CLIENT_ID` | Client ID từ GitHub OAuth App |
-| `GITHUB_CLIENT_SECRET` | Secret từ GitHub OAuth App; không lộ ra trình duyệt |
-| `SESSION_SECRET` | Ít nhất 32 ký tự ngẫu nhiên, **nên dùng 64 ký tự hex** |
+## 7. Migration từ v1.4.0
 
-Tạo `SESSION_SECRET` an toàn bằng `openssl rand -hex 32`, hoặc `node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))"`. Trên iPhone có thể dùng trình quản lý mật khẩu hỗ trợ tạo chuỗi ngẫu nhiên dài. **Không yêu cầu ChatGPT tạo hoặc lưu secret thực tế.**
+1. **Đảm bảo có cách rollback**: lưu commit/ZIP v1.4.0. Chưa xóa GitHub OAuth App cũ ngay.
+2. Tạo GitHub App mới, thiết lập callback, permission, client secret, slug; cấu hình 5 biến env mới.
+3. Deploy v1.5.0; mọi người dùng sẽ phải đăng nhập lại vì session mới không chấp nhận cookie OAuth cũ.
+4. Install GitHub App trên đúng repository và organization; login/Refresh; push thử vào **repo/branch thử nghiệm**, xác minh commit.
+5. Khi mọi thao tác đã ổn định, mới xóa biến env OAuth cũ và cân nhắc thu hồi OAuth App cũ.
 
-Sau khi Save variables, vào Vercel **Deployments** và **Redeploy** bản Production (cấu hình mới sẽ có hiệu lực ở deployment mới). Mở domain trong `APP_URL` và nhấn **Continue with GitHub**.
-
-### Dùng local (tùy chọn)
-
-Tạo file `.env.local` từ `.env.example`; đặt `APP_URL=http://localhost:3000`, và thêm OAuth App callback `http://localhost:3000/api/auth/callback`. Chạy:
+## 8. Kiểm thử
 
 ```bash
 npm install
-npm run dev
+npm test
+npm run build
 ```
 
-OAuth App production có callback khác local; bạn có thể tạo OAuth App riêng cho local. Với mục tiêu chỉ dùng Vercel/iPhone không cần chạy localhost.
+GitHub Actions `ci.yml` cũng chạy test và build mỗi commit/pull request. `tests/` chứa session encryption, GitHub App OAuth URL, refresh rotation, kiểm tra installation và permission, commit verification, retry, mobile UI, PWA. Một số kiểm thử cần cấp quyền và repository thật **không thể thay thế bằng unit tests**; chạy checklist trong `QA_NOTES.md` sau deploy.
 
-## 4. Quy trình dùng Zipverra
+## 9. Tài liệu bổ sung
 
-1. Vào website Zipverra và nhấn **Continue with GitHub**; chấp nhận quyền `repo` + `workflow` trên màn hình GitHub.
-2. Zipverra hiển thị tài khoản GitHub; danh sách repo có quyền push được tự tải. Có nút **Tải repositories** để làm mới; có thể nhập `Owner/Repository` thủ công.
-3. Chọn branch đích — mặc định **`main`** (branch phải tồn tại; app chưa hỗ trợ tạo branch mới).
-4. Chọn file ZIP, ví dụ `Finzaro_v1.2.0.zip` → tự động tạo commit message `Finzaro_v1.2.0`.
-5. Chọn **Merge** (thêm/sửa, không xóa file cũ) hoặc **Sync** (thêm/sửa/xóa; xem danh sách xóa trước).
-6. Nhấn **Phân tích ZIP và xem thay đổi** → kiểm tra preview → tích ô xác nhận → nhấn **Commit & Push**.
-7. Nhận link commit SHA sau khi push thành công. Nếu repository đích đã kết nối với Vercel, Vercel tự deploy theo cấu hình branch của dự án đó.
-
-## 5. Bảo mật / xác thực
-
-- **Authorization code OAuth flow**, `state` chống CSRF đăng nhập và **PKCE S256**. Mã OAuth được đổi lấy token trên server; Client Secret chỉ dùng server-side.
-- Access token được mã hóa bằng AES-256-GCM trong cookie phiên **HttpOnly**, `Secure` trên Production, `SameSite=Lax`, prefix `__Host-`. Giao diện không nhận token, không lưu trong `localStorage`, không gửi `token` trong JSON API.
-- Session tự hết hạn sau 7 ngày. Đăng xuất sẽ xóa cookie của ứng dụng, **không tự thu hồi OAuth authorization trên GitHub**. Có thể thu hồi tại https://github.com/settings/applications.
-- POST API GitHub cần có phiên hợp lệ và `Origin` khớp chính xác `APP_URL`. Không dùng proxy tùy ý; không cung cấp access token cho giao diện.
-- Ứng dụng từ chối file `.env*` có nguy cơ lộ secret, private keys phổ biến, `.npmrc`, ZIP traversal/absolute paths và symbolic links. `.env.example` được cho phép vì không chứa secret thật.
-- Branch update dùng **non-forced fast-forward**, kiểm tra HEAD trước commit; branch protection/organization policy vẫn có thể chặn push.
-- Bảo mật cuối cùng vẫn phụ thuộc vào tên miền, Vercel account và bí mật trong Environment Variables. Nếu secret bị lộ, cần rotate Client Secret và SESSION_SECRET.
-
-## 6. Giới hạn của MVP
-
-- ZIP tối đa **20 MiB**, 2.5 MB mỗi file (để Base64 + JSON dưới 4.5 MB limit của Vercel Function), tổng giải nén 50 MiB, tối đa 1.200 file và tối đa 1.200 file thay đổi mỗi commit.
-- Không hỗ trợ Git LFS, submodule mới, thay đổi symbolic links, tạo branch, repo rỗng chưa có commit, xử lý conflict phức tạp, PR workflow.
-- ZIP nên gồm source chứ không gồm `node_modules`/`.git`/`.next`; thư mục wrapper ở cấp cao nhất được loại bỏ nếu phát hiện chắc chắn.
-- Repos có >6.000 file hoặc bị GitHub đánh dấu tree `truncated` sẽ không có preview an toàn.
-- ZIP merge/sync chạy trong browser; khi refresh trang phải upload lại.
-- OAuth App `scope=repo workflow` không bị giới hạn theo một repository. Tùy yêu cầu quản lý tổ chức, GitHub có thể yêu cầu admin phê duyệt OAuth App.
-- Không nên sử dụng domain Preview của Vercel khác với `APP_URL`; cả URL callback và Origin check dùng domain production cố định.
-
-## 7. Kiểm thử
-
-```bash
-npm test       # Unit tests: GitHub commit + operations + OAuth session / Origin
-npm run build  # Next.js production build (cần dependencies/npm access)
-```
-
-Bản nâng cấp đã chạy **52/52 unit tests đạt**, kiểm tra cú pháp JSX và bố cục mẫu bằng Chromium tại 320, 375, 390, 430, 768 và 1280 px. Chi tiết kiểm chứng trong `QA_NOTES.md`. **Chưa chạy được `npm run build` trong môi trường đóng gói vì registry.npmjs.org không truy cập được để cài dependencies.** Vercel sẽ tự cài dependencies và build sau khi import repo; cần kiểm tra Deployment Logs trước khi coi là production-ready đã xác minh.
-
-## Cấu trúc
-
-```text
-Zipverra-v1.4.0/
-├── app/
-│   ├── api/auth/           # login, callback, session, logout
-│   ├── api/github/         # repos, snapshot, blob, commit, verify
-│   ├── globals.css
-│   ├── layout.jsx
-│   ├── components/            # SplashScreen + MobileViewportGuard
-│   ├── manifest.js
-│   └── page.jsx
-├── lib/
-│   ├── auth/session.js     # AES-256-GCM, cookies, CSRF origin
-│   ├── archive.js
-│   ├── github.js
-│   ├── verification.js    # đối chiếu HEAD/parent/tree SHA
-│   ├── reliability.js     # retry policy và journal validation
-│   ├── mobile-ui.js       # tabs, diff filter, recent repo, timeline
-│   ├── http.js
-│   ├── operations.js
-│   └── paths.js
-├── public/                 # icon.svg, icon-192.png, icon-512.png, apple-touch-icon.png
-├── tests/
-├── .env.example
-├── CHANGELOG.md
-├── QA_NOTES.md
-├── ROADMAP_NEXT.md
-├── .github/workflows/ci.yml
-├── package.json
-├── next.config.mjs
-└── vercel.json
-```
+- `CHANGELOG.md` — lịch sử thay đổi
+- `QA_NOTES.md` — checklist triển khai và bảo mật
+- `ROADMAP_NEXT.md` — v1.6.0 History & Safe Rollback
+- [GitHub Docs: Generating a user access token](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app)
+- [GitHub Docs: Refreshing user access tokens](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/refreshing-user-access-tokens)
+- [GitHub Docs: Installation repositories accessible to user](https://docs.github.com/en/rest/apps/installations)

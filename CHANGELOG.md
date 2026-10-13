@@ -1,4 +1,13 @@
-# Changelog — Zipverra
+# Zipverra Changelog
+
+## v1.5.0 — GitHub App Authentication (2026-10-13)
+
+- Thay OAuth App scopes `repo workflow` bằng GitHub App user-to-server flow với OAuth `state` + `offline_access`.
+- GitHub App install/manage URL và danh sách repository bị giới hạn theo người dùng + App installation; hỗ trợ owner/organization.
+- Preflight Contents: write, Workflows: write, user push rights và revalidate tại commit.
+- Phiên cookie AES-256-GCM v2 chứa access + refresh token; token rotation và singleflight best-effort.
+- Giữ Mobile UX/UI 2.0, push recovery, Merge/Sync, PWA.
+- Cấu hình Vercel mới và tài liệu migrate.
 
 ## v1.4.0 — Mobile UX/UI 2.0 (2026-10-13)
 

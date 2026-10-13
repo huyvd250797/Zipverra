@@ -96,6 +96,7 @@ export default function Home() {
   const [syncConfirmed, setSyncConfirmed] = useState(false);
   const [auth, setAuth] = useState({ loading: true, authenticated: false, user: null });
   const [repos, setRepos] = useState([]);
+  const [installations, setInstallations] = useState([]);
   const [owner, setOwner] = useState('');
   const [repo, setRepo] = useState('');
   const [branch, setBranch] = useState('main');
@@ -164,7 +165,7 @@ export default function Home() {
     const params = new URLSearchParams(window.location.search);
     const oauthError = params.get('auth_error');
     if (oauthError) {
-      const messages = { cancelled: 'Bạn đã hủy cấp quyền GitHub.', invalid_state: 'Phiên OAuth không khớp hoặc đã hết hạn. Vui lòng đăng nhập lại.', missing_scope: 'Bạn cần cấp quyền repo để đọc và cập nhật source trên GitHub.', exchange_failed: 'GitHub không hoàn tất đăng nhập. Hãy kiểm tra cấu hình OAuth và thử lại.' };
+      const messages = { cancelled: 'Bạn đã hủy cấp quyền GitHub.', invalid_state: 'Phiên OAuth không khớp hoặc đã hết hạn. Vui lòng đăng nhập lại.', expiration_disabled: 'GitHub App cần bật User-to-server token expiration và đăng nhập lại.', exchange_failed: 'GitHub App không hoàn tất đăng nhập. Hãy kiểm tra Client ID/Secret, Callback URL và thử lại.' };
       setError(messages[oauthError] || 'Đăng nhập GitHub thất bại.');
     }
     if (oauthError || params.has('auth')) window.history.replaceState({}, '', window.location.pathname);
@@ -175,7 +176,7 @@ export default function Home() {
     if (!auth.authenticated) return;
     let active = true;
     setLoadingRepos(true);
-    api('repos', {}).then((data) => { if (active) setRepos(data.repos || []); })
+    api('repos', {}).then((data) => { if (active) { setRepos(data.repos || []); setInstallations(data.installations || []); } })
       .catch((e) => { if (active) setError(`Không tải được repositories: ${e.message}`); })
       .finally(() => { if (active) setLoadingRepos(false); });
     return () => { active = false; };
@@ -228,8 +229,9 @@ export default function Home() {
     try {
       if (!auth.authenticated) throw new Error('Hãy đăng nhập GitHub trước.');
       const result = await api('repos', {});
-      setRepos(result.repos);
-      setStatus(`Đã tải ${result.repos.length} repository có quyền ghi. Nếu thiếu repo, có thể nhập thủ công.`);
+      setRepos(result.repos || []);
+      setInstallations(result.installations || []);
+      setStatus(`Đã tải ${(result.repos || []).length} repository có quyền ghi. Nếu thiếu repo, mở Install / Manage GitHub App và nhấn Refresh.`);
     } catch (e) { setError(e.message); setStatus(''); }
     finally { setBusy(false); setLoadingRepos(false); }
   }
@@ -253,12 +255,17 @@ export default function Home() {
       if (!file) throw new Error('Hãy chọn file ZIP chứa source code.');
       setStatus('Đang giải nén, kiểm tra file và tính Git SHA...');
       const archive = await readArchive(file, setProgress);
+      setPhase(PUSH_STAGES.PREFLIGHT);
+      setStatus('Đang kiểm tra GitHub App installation và quyền ghi repository...');
+      await api('preflight', { ...input, workflowPaths: [] });
       setStatus('Đang đọc HEAD và so sánh với repository...');
       const remote = await api('snapshot', input);
       const changes = calculateChanges(archive.files, remote.files, mode);
-      setPhase(PUSH_STAGES.PREFLIGHT);
-      setStatus('Đang kiểm tra quyền push và GitHub Actions workflow...');
-      await api('preflight', { ...input, workflowPaths: changes.filter((c) => /\.github\/workflows\/[^/]+\.ya?ml$/i.test(c.path)).map((c) => c.path) });
+      const workflowPaths = changes.filter((c) => /^\.github\/workflows\/[^/]+\.ya?ml$/i.test(c.path)).map((c) => c.path);
+      if (workflowPaths.length) {
+        setStatus('Đang kiểm tra quyền Workflows: write cho file CI...');
+        await api('preflight', { ...input, workflowPaths });
+      }
       setPreview({ archive, remote, changes, input: { owner: input.owner, repo: input.repo, branch: input.branch }, mode, filename: file.name });
       saveRecent(`${input.owner}/${input.repo}`);
       setChangeFilter('all');
@@ -320,6 +327,11 @@ export default function Home() {
       if (input.owner !== preview.input.owner || input.repo !== preview.input.repo || input.branch !== preview.input.branch || mode !== preview.mode || file?.name !== preview.filename) {
         throw new Error('Cấu hình đã thay đổi. Hãy preview lại.');
       }
+      // Refresh expiring GitHub App credentials once before parallel blob workers.
+      // This reduces refresh-token races between concurrent serverless requests.
+      const sessionResponse = await fetch('/api/auth/session', { cache: 'no-store' });
+      const sessionState = await sessionResponse.json().catch(() => ({}));
+      if (!sessionResponse.ok || !sessionState.authenticated) throw new Error('Phiên GitHub App đã hết hạn. Hãy đăng nhập lại trước khi push.');
       const uploadChanges = preview.changes.filter((c) => c.kind !== 'delete');
       const byPath = new Map(preview.archive.files.map((f) => [f.path, f]));
       const blobShas = new Map();
@@ -371,8 +383,8 @@ export default function Home() {
     <div className="shell">
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar">
-      <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span></strong><small>ZIP TO GITHUB · GITHUB OAUTH</small></div></div>
-      <div className="version"><span className="live-dot"/> v1.4.0</div>
+      <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span></strong><small>ZIP TO GITHUB · GITHUB APP</small></div></div>
+      <div className="version"><span className="live-dot"/> v1.5.0</div>
     </header>
     <div className="mobile-context"><div><span className="mobile-eyebrow">ZIPVERRA / {({ home: 'HOME', repositories: 'REPOSITORIES', activity: 'ACTIVITY', settings: 'SETTINGS' })[activeTab]}</span><h2>{({ home: 'Upload source', repositories: 'GitHub repositories', activity: 'Push activity', settings: 'Preferences' })[activeTab]}</h2></div><span className={`mobile-connection ${online ? 'connected' : 'disconnected'}`} aria-label={online ? 'Online' : 'Offline'}>{online ? 'Online' : 'Offline'}</span></div>
     {activeTab !== 'activity' && (error || busy) && <button type="button" className={`mobile-global-status ${error ? 'has-error' : ''}`} onClick={() => goToTab('activity')}><span>{error ? `Cần kiểm tra: ${error}` : `${status || 'Đang xử lý...'} · ${progress}%`}</span><Icon name="arrow" size={17}/></button>}
@@ -389,19 +401,24 @@ export default function Home() {
       <section className="content-grid" data-active-view={activeTab}>
         <div className="form-column">
           <article className="panel repository-panel" data-mobile-view="repositories">
-            <StepTitle n="01" title="Đăng nhập GitHub" desc="Kết nối tài khoản bằng GitHub OAuth, không cần nhập token thủ công."/>
+            <StepTitle n="01" title="Đăng nhập GitHub" desc="Đăng nhập an toàn bằng GitHub App, chỉ truy cập repository được cấp phép."/>
             {auth.loading ? <div className="auth-card"><span className="auth-muted">Đang kiểm tra phiên đăng nhập GitHub...</span></div> : auth.authenticated ? <div className="auth-card signed-in">
-              <div className="account-row"><div className="account-avatar">{auth.user?.login?.slice(0, 1).toUpperCase() || 'G'}</div><div className="account-info"><strong>@{auth.user?.login}</strong><small>Đã kết nối GitHub</small></div><span className="auth-chip"><Icon name="check" size={14}/> Connected</span></div>
+              <div className="account-row"><div className="account-avatar">{auth.user?.login?.slice(0, 1).toUpperCase() || 'G'}</div><div className="account-info"><strong>@{auth.user?.login}</strong><small>GitHub App · Quyền theo repository</small></div><span className="auth-chip"><Icon name="check" size={14}/> Connected</span></div>
               <div className="inline-actions"><button type="button" className="button secondary" disabled={busy} onClick={loadRepos}><Icon name="refresh" size={17}/> Tải repositories</button><button type="button" className="button ghost" onClick={logout} disabled={busy}>Đăng xuất</button></div>
             </div> : <div className="auth-card">
-              <p className="auth-muted">Đăng nhập để chọn repository và cấp quyền tạo commit. Token OAuth chỉ được xử lý trên máy chủ.</p>
+              <p className="auth-muted">Đăng nhập với GitHub App, sau đó cài App cho những repository muốn cập nhật. Không cần nhập PAT.</p>
               <a className="button primary full login-button" href="/api/auth/login"><Icon name="github" size={19}/> Continue with GitHub <Icon name="arrow" size={16}/></a>
-              <small className="hint">GitHub OAuth App yêu cầu quyền <b>repo</b> và <b>workflow</b> để push source bao gồm GitHub Actions. Chỉ đăng nhập khi bạn tin cậy ứng dụng này.</small>
+              <small className="hint">GitHub App chỉ thấy repository đã được cài và cấp quyền. Cần <b>Contents: Read & write</b>; cấp thêm <b>Workflows: Read & write</b> nếu ZIP thay đổi file workflow.</small>
+            </div>}
+            {auth.authenticated && <div className="app-install-panel" aria-label="GitHub App access">
+              <div className="app-install-head"><Icon name="shield" size={18}/><strong>GitHub App Access</strong><span className="app-install-pill">{installations.length} installation</span></div>
+              <p className="auth-muted">{installations.length ? `Đã liên kết: ${installations.map((x) => x.account).filter(Boolean).join(', ')}. Chỉ repo có quyền Write mới xuất hiện.` : 'Chưa thấy GitHub App installation có quyền truy cập. Hãy cài GitHub App cho tài khoản hoặc tổ chức rồi làm mới danh sách.'}</p>
+              <div className="app-install-actions"><a className="button secondary app-install-link" href="/api/auth/install" target="_blank" rel="noopener noreferrer"><Icon name="external" size={16}/> Install / Manage GitHub App</a><button type="button" className="button secondary app-install-reload" disabled={loadingRepos || busy} onClick={async () => {setLoadingRepos(true); setError(''); try {const data = await api('repos', {}); setRepos(data.repos || []); setInstallations(data.installations || []);} catch (e) { setError(e.message); } finally {setLoadingRepos(false);} }}><Icon name="refresh" size={16}/> Refresh</button></div>
             </div>}
             <div className="field"><label htmlFor="repo-search">Tìm repository</label><div className="input-icon"><Icon name="search" size={17}/><input id="repo-search" type="search" value={repoSearch} disabled={busy || !auth.authenticated} placeholder="Lọc theo tên repository" onChange={(e) => setRepoSearch(e.target.value)}/></div></div>
             {loadingRepos && <div className="repo-skeleton" aria-label="Đang tải danh sách repository"><span/><span/><span/></div>}
             {recents.length > 0 && <div className="recents-block"><span className="mini-label">GẦN ĐÂY · lưu trên thiết bị</span><div className="recent-list">{recents.map((name) => <button type="button" key={name} className="recent-chip" disabled={busy || !auth.authenticated} onClick={() => chooseRepo(name)}>{name}</button>)}</div></div>}
-            <div className="field"><label htmlFor="repo-select">Chọn repository</label><select id="repo-select" disabled={busy || !auth.authenticated || !repos.length} value={displayedRepos.some((x) => x.full_name === `${owner}/${repo}`) ? `${owner}/${repo}` : ''} onChange={(e) => chooseRepo(e.target.value)}><option value="">{repos.length ? (displayedRepos.length ? 'Chọn repository hoặc nhập bên dưới' : 'Không có repo phù hợp') : 'Chưa tải — có thể nhập thủ công'}</option>{displayedRepos.map((x) => <option key={x.full_name} value={x.full_name}>{x.full_name}{x.private ? ' 🔒' : ''}</option>)}</select></div>
+            <div className="field"><label htmlFor="repo-select">Chọn repository</label><select id="repo-select" disabled={busy || !auth.authenticated || !repos.length} value={displayedRepos.some((x) => x.full_name === `${owner}/${repo}`) ? `${owner}/${repo}` : ''} onChange={(e) => chooseRepo(e.target.value)}><option value="">{repos.length ? (displayedRepos.length ? 'Chọn repository được cấp quyền' : 'Không có repo phù hợp') : 'Chưa có repo được GitHub App cấp quyền'}</option>{displayedRepos.map((x) => <option key={x.full_name} value={x.full_name}>{x.full_name}{x.private ? ' 🔒' : ''}</option>)}</select></div>
             <div className="two-col"><div className="field"><label htmlFor="owner">Owner</label><input id="owner" value={owner} disabled={busy || !auth.authenticated} placeholder="huyvd250797" onChange={(e) => change(setOwner, e.target.value)}/></div><div className="field"><label htmlFor="repo">Repository</label><input id="repo" value={repo} disabled={busy || !auth.authenticated} placeholder="Finzaro" onChange={(e) => change(setRepo, e.target.value)}/></div></div>
             <div className="field"><label htmlFor="branch">Branch đích <span className="tag">Mặc định: main</span></label><div className="input-icon"><Icon name="branch" size={17}/><input id="branch" value={branch} disabled={busy || !auth.authenticated} placeholder="main" onChange={(e) => change(setBranch, e.target.value)}/></div></div>
             <button type="button" className="button secondary full mobile-repo-next" onClick={() => goToTab('home')} disabled={!auth.authenticated || !owner || !repo || busy}>Tiếp tục tải ZIP <Icon name="arrow" size={17}/></button>
@@ -440,12 +457,12 @@ export default function Home() {
             {error && <div className="error-banner" role="alert">{error}{errorHint && <p className="error-hint">{errorHint}</p>}</div>}
             {result && <div className="success-banner"><div className="success-title"><Icon name="check" size={17}/> Push thành công!</div><p>Đã cập nhật {result.changed} file. Commit: <code>{result.sha.slice(0, 12)}</code></p><a href={result.url} target="_blank" rel="noopener noreferrer">Xem commit trên GitHub <Icon name="external" size={15}/></a></div>}
           </article>
-          <article className="panel settings-panel" data-mobile-view="settings"><div className="settings-heading"><Icon name="settings" size={21}/><div><h2>Tùy chỉnh Zipverra</h2><p>Cài đặt giao diện chỉ lưu trên thiết bị.</p></div></div><div className="field"><label>Giao diện</label><div className="theme-options" role="group" aria-label="Chế độ hiển thị"><button type="button" className={theme === 'dark' ? 'selected' : ''} aria-pressed={theme === 'dark'} onClick={() => setTheme('dark')}><Icon name="moon" size={18}/> Dark</button><button type="button" className={theme === 'light' ? 'selected' : ''} aria-pressed={theme === 'light'} onClick={() => setTheme('light')}><Icon name="sun" size={18}/> Light</button></div></div><div className="settings-info"><span>Phiên bản</span><strong>v1.4.0</strong></div><div className="settings-info"><span>Chế độ GitHub</span><strong>OAuth</strong></div><div className="settings-info"><span>Commit message</span><strong>Tên file ZIP</strong></div><p className="hint">Danh sách repo gần đây và giao diện được lưu trên thiết bị, không chứa GitHub token.</p></article>
-          <article className="hint-card" data-mobile-view="settings"><Icon name="shield" size={22}/><div><strong>Quyền GitHub tối thiểu</strong><p>GitHub OAuth App yêu cầu scope <b>repo</b> và <b>workflow</b> để cập nhật cả workflow CI. Không lưu token trong JavaScript phía trình duyệt. Nếu branch được bảo vệ, GitHub có thể từ chối push và yêu cầu Pull Request.</p></div></article>
+          <article className="panel settings-panel" data-mobile-view="settings"><div className="settings-heading"><Icon name="settings" size={21}/><div><h2>Tùy chỉnh Zipverra</h2><p>Cài đặt giao diện chỉ lưu trên thiết bị.</p></div></div><div className="field"><label>Giao diện</label><div className="theme-options" role="group" aria-label="Chế độ hiển thị"><button type="button" className={theme === 'dark' ? 'selected' : ''} aria-pressed={theme === 'dark'} onClick={() => setTheme('dark')}><Icon name="moon" size={18}/> Dark</button><button type="button" className={theme === 'light' ? 'selected' : ''} aria-pressed={theme === 'light'} onClick={() => setTheme('light')}><Icon name="sun" size={18}/> Light</button></div></div><div className="settings-info"><span>Phiên bản</span><strong>v1.5.0</strong></div><div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div><div className="settings-info"><span>Commit message</span><strong>Tên file ZIP</strong></div><p className="hint">Danh sách repo gần đây và giao diện được lưu trên thiết bị, không chứa GitHub token.</p></article>
+          <article className="hint-card" data-mobile-view="settings"><Icon name="shield" size={22}/><div><strong>Quyền GitHub tối thiểu</strong><p>GitHub App dùng token người dùng có thời hạn, giới hạn bởi quyền người dùng và các repository được cài đặt. Cần <b>Contents: Read & write</b> và <b>Workflows: Read & write</b> khi sửa CI. Token/refresh token ở cookie HttpOnly được mã hóa; branch protection vẫn có thể yêu cầu Pull Request.</p></div></article>
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v1.4.0</span><span>OAuth cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v1.5.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <nav className="mobile-bottom-nav" aria-label="Điều hướng Zipverra">{[{id:'home',label:'Home',icon:'home'},{id:'repositories',label:'Repos',icon:'branch'},{id:'activity',label:'Activity',icon:'activity'},{id:'settings',label:'Settings',icon:'settings'}].map((tab) => <button type="button" key={tab.id} className={`mobile-nav-item ${activeTab === tab.id ? 'active' : ''}`} aria-current={activeTab === tab.id ? 'page' : undefined} onClick={() => goToTab(tab.id)}><Icon name={tab.icon} size={21}/><span>{tab.label}</span>{tab.id === 'activity' && pendingCommit && <i className="nav-alert" aria-label="Có push cần xác minh"/>}</button>)}</nav>
   </>;

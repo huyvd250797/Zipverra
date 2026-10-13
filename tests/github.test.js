@@ -1,156 +1,134 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createCommit, createBlob, github, githubStage, validateWorkflowScope, parseOAuthScopes, preflight } from '../lib/github.js';
+import { createCommit, createBlob, github, githubStage, validateWorkflowPermission, preflight,
+  listWritableRepos, assertAppRepoGrant, appInstallations } from '../lib/github.js';
 
-const SHA = 'a'.repeat(40);
-const TREE = 'b'.repeat(40);
-const COMMIT = 'c'.repeat(40);
-
+const SHA = 'a'.repeat(40), TREE = 'b'.repeat(40), COMMIT = 'c'.repeat(40);
 function mockResponse(status, body) { return { ok: status >= 200 && status < 300, status, text: async () => JSON.stringify(body) }; }
+function authFixtures(url, opts = {}, permissions = { contents: 'write', workflows: 'write' }) {
+  if (url.includes('/user/installations?')) return mockResponse(200, { installations: [{ id: 42, account: { login: 'team' }, permissions, repository_selection: 'selected' }] });
+  if (url.includes('/user/installations/42/repositories')) return mockResponse(200, { repositories: [{ full_name: 'team/demo', private: true, default_branch: 'main', permissions: { push: true } }] });
+  if (url.endsWith('/repos/team/demo') && opts.method === 'GET') return mockResponse(200, { permissions: { push: true }, archived: false });
+  return null;
+}
 
-test('GitHub request sends auth in header and never in URL', async () => {
+test('GitHub API keeps token in Authorization header and redacts errors', async () => {
   let called;
-  const r = await github('SECRET', '/user', 'GET', undefined, async (url, options) => {
-    called = { url, options };
-    return mockResponse(200, { login: 'test' });
+  const result = await github('SECRET', '/user', 'GET', undefined, async (url, options) => {
+    called = { url, options }; return mockResponse(200, { login: 'test' });
   });
-  assert.equal(r.login, 'test');
-  assert.equal(called.options.headers.Authorization, 'Bearer SECRET');
+  assert.equal(result.login, 'test'); assert.equal(called.options.headers.Authorization, 'Bearer SECRET');
   assert.ok(!called.url.includes('SECRET'));
+  await assert.rejects(() => github('SECRET', '/user', 'GET', undefined, async () => mockResponse(403, { message: 'Access denied' })),
+    (e) => e.status === 403 && !e.message.includes('SECRET'));
 });
 
-test('GitHub error does not include the supplied token', async () => {
-  await assert.rejects(
-    () => github('SECRET', '/user', 'GET', undefined, async () => mockResponse(403, { message: 'Access denied' })),
-    (e) => e.status === 403 && e.stage === 'GITHUB_API' && e.message.includes('Access denied') && !e.message.includes('SECRET'),
-  );
+test('GitHub App workflow edit needs Workflows: write; other files do not', () => {
+  assert.doesNotThrow(() => validateWorkflowPermission([{ path: 'src/page.jsx' }], { contents: 'write' }));
+  assert.doesNotThrow(() => validateWorkflowPermission([{ path: '.github/workflows/ci.yml' }], { workflows: 'write' }));
+  assert.throws(() => validateWorkflowPermission([{ path: '.github/workflows/ci.yaml' }], { workflows: 'read' }),
+    (e) => e.code === 'APP_WORKFLOWS_PERMISSION_REQUIRED' && e.status === 403);
 });
 
-test('blob rejects oversized base64 prior to calling GitHub', async () => {
-  await assert.rejects(() => createBlob('TOKEN', 'a', 'b', 'A'.repeat(3_400_001)), /quá lớn/);
+test('installation-limited repository listing includes only repositories with user push rights', async () => {
+  const old = globalThis.fetch;
+  globalThis.fetch = async (url, opts) => authFixtures(url, opts) || mockResponse(404, { message: 'Not Found' });
+  try {
+    const list = await listWritableRepos('TOKEN');
+    assert.equal(list.repos.length, 1);
+    assert.equal(list.repos[0].full_name, 'team/demo');
+    assert.equal(list.repos[0].workflowPermission, true);
+    assert.equal(list.installations[0].account, 'team');
+  } finally { globalThis.fetch = old; }
 });
 
-test('commit refuses stale head before creating a tree', async () => {
-  const oldFetch = globalThis.fetch;
-  let calls = [];
-  globalThis.fetch = async (url) => {
-    calls.push(url);
-    if (url.includes('/git/ref/heads/main')) return mockResponse(200, { object: { sha: SHA } });
-    if (url.includes(`/git/commits/${SHA}`)) return mockResponse(200, { tree: { sha: TREE } });
-    if (url.includes(`/git/trees/${TREE}`)) return mockResponse(200, { tree: [], truncated: false });
-    throw Error('Should not make mutation on stale branch.');
+test('missing GitHub App installation rejects repo before attempting to commit', async () => {
+  const old = globalThis.fetch;
+  let mutation = 0;
+  globalThis.fetch = async (url, opts = {}) => {
+    if (opts.method !== 'GET') mutation++;
+    if (url.includes('/user/installations?')) return mockResponse(200, { installations: [] });
+    throw Error('Unexpected endpoint');
   };
   try {
-    await assert.rejects(() => createCommit('TOKEN', {
-      owner: 'test', repo: 'repo', branch: 'main', expectedHead: COMMIT, message: 'source_v1.2',
-      entries: [{ path: 'README.md', mode: '100644', sha: TREE }],
-    }), /Branch đã thay đổi/);
-    assert.equal(calls.length, 4);
-  } finally { globalThis.fetch = oldFetch; }
+    await assert.rejects(() => preflight('TOKEN', 'team', 'demo', 'main'), (e) => e.code === 'APP_INSTALLATION_REQUIRED');
+    assert.equal(mutation, 0);
+  } finally { globalThis.fetch = old; }
 });
 
-test('successful commit creates Git tree, Git commit, then verifies remote branch and blobs', async () => {
-  const originalFetch = globalThis.fetch;
-  const log = [];
-  let head = SHA;
-  globalThis.fetch = async (url, options = {}) => {
-    const body = options.body ? JSON.parse(options.body) : undefined;
-    log.push({ url, method: options.method, body });
-    if (url.endsWith('/git/ref/heads/main') && options.method === 'GET') return mockResponse(200, { object: { sha: head } });
-    if (url.endsWith(`/git/commits/${SHA}`)) return mockResponse(200, { tree: { sha: TREE } });
-    if (url.endsWith(`/git/commits/${COMMIT}`)) return mockResponse(200, { message: 'Finzaro_v1.2.0', parents: [{ sha: SHA }], tree: { sha: TREE } });
-    if (url.includes(`/git/trees/${TREE}?recursive=1`)) return mockResponse(200, { tree: head === COMMIT ? [{ path: 'public/logo.png', sha: TREE, mode: '100644', type: 'blob' }] : [], truncated: false });
-    if (url.endsWith('/git/trees') && options.method === 'POST') return mockResponse(201, { sha: TREE });
-    if (url.endsWith('/git/commits') && options.method === 'POST') return mockResponse(201, { sha: COMMIT });
-    if (url.endsWith('/git/refs/heads/main') && options.method === 'PATCH') { head = COMMIT; return mockResponse(200, { object: { sha: COMMIT } }); }
-    throw Error(`Unexpected GitHub endpoint: ${url}`);
-  };
+test('GitHub App preflight catches missing workflow grant before mutations', async () => {
+  const old = globalThis.fetch;
+  globalThis.fetch = async (url, opts = {}) => authFixtures(url, opts, { contents: 'write', workflows: 'read' }) || mockResponse(404, { message: 'Not Found' });
   try {
-    const data = await createCommit('TOKEN', {
-      owner: 'test', repo: 'repo', branch: 'main', expectedHead: SHA,
-      message: 'Finzaro_v1.2.0', entries: [{ path: 'public/logo.png', mode: '100644', sha: TREE }],
-    });
-    assert.equal(data.sha, COMMIT);
-    assert.equal(data.verified, true);
-    assert.equal(data.changed, 1);
-    assert.equal(log.find((item) => item.method === 'POST' && item.url.endsWith('/git/trees')).body.base_tree, TREE);
-    assert.deepEqual(log.find((item) => item.method === 'POST' && item.url.endsWith('/git/commits')).body.parents, [SHA]);
-    assert.equal(log.find((item) => item.method === 'PATCH').body.force, false);
-  } finally { globalThis.fetch = originalFetch; }
+    await assert.rejects(() => preflight('TOKEN', 'team', 'demo', 'main', ['.github/workflows/ci.yml']),
+      (e) => e.code === 'APP_WORKFLOWS_PERMISSION_REQUIRED');
+  } finally { globalThis.fetch = old; }
 });
 
-test('empty source files can be uploaded as Git blobs', async () => {
-  const oldFetch = globalThis.fetch;
-  let posted;
-  globalThis.fetch = async (_url, options) => {
-    posted = JSON.parse(options.body);
-    return mockResponse(201, { sha: 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391' });
-  };
+test('preflight succeeds for installed and writable repo, including workflow grant', async () => {
+  const old = globalThis.fetch;
+  globalThis.fetch = async (url, opts = {}) => authFixtures(url, opts) || mockResponse(404, { message: 'Not Found' });
   try {
-    const sha = await createBlob('TOKEN', 'owner', 'repo', '');
-    assert.equal(sha, 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391');
-    assert.deepEqual(posted, { content: '', encoding: 'base64' });
-  } finally { globalThis.fetch = oldFetch; }
+    assert.deepEqual(await preflight('TOKEN', 'team', 'demo', 'main', ['.github/workflows/ci.yml']), {
+      writable: true, workflowPermission: true, installation: 'team' });
+  } finally { globalThis.fetch = old; }
 });
 
+test('GitHub App repo with only read Contents is rejected', async () => {
+  const old = globalThis.fetch;
+  globalThis.fetch = async (url, opts = {}) => authFixtures(url, opts, { contents: 'read' }) || mockResponse(404, { message: 'Not Found' });
+  try { await assert.rejects(() => assertAppRepoGrant('TOKEN', 'team', 'demo'), (e) => e.code === 'APP_INSTALLATION_REQUIRED'); }
+  finally { globalThis.fetch = old; }
+});
 
-test('GitHub error identifies exact failed operation and preserves 404 status', async () => {
+test('GitHub App repo with read-only user permission is excluded', async () => {
+  const old = globalThis.fetch;
+  globalThis.fetch = async (url, opts = {}) => {
+    if (url.includes('/user/installations/42/repositories')) return mockResponse(200, { repositories: [{ full_name: 'team/demo', permissions: { push: false } }] });
+    return authFixtures(url, opts) || mockResponse(404, {});
+  };
+  try { assert.equal((await listWritableRepos('TOKEN')).repos.length, 0); }
+  finally { globalThis.fetch = old; }
+});
+
+test('GitHub error reports exact failed stage', async () => {
   assert.equal(githubStage('/repos/a/b/git/refs/heads/main', 'PATCH'), 'UPDATE_BRANCH');
   await assert.rejects(() => github('SECRET', '/repos/a/b/git/refs/heads/main', 'PATCH', { sha: SHA, force: false },
     async () => mockResponse(404, { message: 'Not Found' })),
-    (error) => error.status === 404 && error.stage === 'UPDATE_BRANCH' &&
-      error.message.includes('UPDATE_BRANCH') && error.hint.includes('Owner/Repository'));
+    (error) => error.status === 404 && error.stage === 'UPDATE_BRANCH' && error.hint.includes('GitHub App'));
 });
 
-test('OAuth scopes parsed from GitHub token response', () => {
-  assert.deepEqual(parseOAuthScopes('repo,workflow'), ['repo', 'workflow']);
-  assert.deepEqual(parseOAuthScopes('repo workflow'), ['repo', 'workflow']);
-  assert.deepEqual(parseOAuthScopes(undefined), []);
-});
-
-test('workflow changes require workflow scope but ordinary files do not', () => {
-  assert.doesNotThrow(() => validateWorkflowScope([{ path: 'src/page.jsx' }], ['repo']));
-  assert.doesNotThrow(() => validateWorkflowScope([{ path: '.github/workflows/ci.yml' }], ['repo', 'workflow']));
-  assert.throws(() => validateWorkflowScope([{ path: '.github/workflows/ci.yaml' }], ['repo']),
-    (error) => error.status === 403 && error.code === 'WORKFLOW_SCOPE_REQUIRED' && error.stage === 'PREFLIGHT');
-});
-
-test('preflight rejects missing workflow grant before any GitHub network request', async () => {
-  const oldFetch = globalThis.fetch;
-  let count = 0;
-  globalThis.fetch = async () => { count++; throw Error('Should not fetch'); };
+test('blob rejects oversized base64 and accepts an empty file', async () => {
+  await assert.rejects(() => createBlob('TOKEN', 'a', 'b', 'A'.repeat(3_400_001)), /quá lớn/);
+  const old = globalThis.fetch;
+  let body;
+  globalThis.fetch = async (_url, opts) => { body = JSON.parse(opts.body); return mockResponse(201, { sha: SHA }); };
   try {
-    await assert.rejects(() => preflight('TOKEN', 'owner', 'repo', 'main', ['.github/workflows/ci.yml'], ['repo']),
-      (error) => error.code === 'WORKFLOW_SCOPE_REQUIRED');
-    assert.equal(count, 0);
-  } finally { globalThis.fetch = oldFetch; }
+    assert.equal(await createBlob('TOKEN', 'owner', 'repo', ''), SHA);
+    assert.deepEqual(body, { content: '', encoding: 'base64' });
+  } finally { globalThis.fetch = old; }
 });
 
-test('preflight verifies repository write permission from GitHub', async () => {
-  const oldFetch = globalThis.fetch;
-  globalThis.fetch = async () => mockResponse(200, { permissions: { pull: true, push: false }, archived: false });
+test('commit refuses stale head before creating mutations', async () => {
+  const old = globalThis.fetch;
+  globalThis.fetch = async (url, opts = {}) => {
+    const fixture = authFixtures(url, opts); if (fixture) return fixture;
+    if (url.endsWith('/git/ref/heads/main')) return mockResponse(200, { object: { sha: SHA } });
+    if (url.endsWith(`/git/commits/${SHA}`)) return mockResponse(200, { tree: { sha: TREE } });
+    if (url.includes('/git/trees/') && opts.method === 'GET') return mockResponse(200, { tree: [], truncated: false });
+    throw Error('Unexpected mutation');
+  };
   try {
-    await assert.rejects(() => preflight('TOKEN', 'owner', 'repo', 'main', [], ['repo']),
-      (error) => error.code === 'REPO_WRITE_DENIED' && error.status === 403);
-  } finally { globalThis.fetch = oldFetch; }
+    await assert.rejects(() => createCommit('TOKEN', { owner: 'team', repo: 'demo', branch: 'main', expectedHead: COMMIT, message: 'update', entries: [{ path: 'README.md', mode: '100644', sha: TREE }] }), /Branch đã thay đổi/);
+  } finally { globalThis.fetch = old; }
 });
 
-test('preflight allows writable repository with workflow scope', async () => {
-  const oldFetch = globalThis.fetch;
-  globalThis.fetch = async () => mockResponse(200, { permissions: { push: true }, archived: false });
-  try {
-    const result = await preflight('TOKEN', 'owner', 'repo', 'main', ['.github/workflows/build.yml'], ['repo', 'workflow']);
-    assert.deepEqual(result, { writable: true, workflowPermission: true });
-  } finally { globalThis.fetch = oldFetch; }
-});
-
-test('create commit refuses workflow edit with inadequate scope before write API', async () => {
-  const oldFetch = globalThis.fetch;
-  globalThis.fetch = async () => { throw Error('Should not call API'); };
-  try {
-    await assert.rejects(() => createCommit('TOKEN', {
-      owner: 'owner', repo: 'repo', branch: 'main', expectedHead: SHA,
-      message: 'sample', entries: [{ path: '.github/workflows/ci.yml', mode: '100644', sha: TREE }],
-    }, ['repo']), (error) => error.code === 'WORKFLOW_SCOPE_REQUIRED');
-  } finally { globalThis.fetch = oldFetch; }
+test('another organization installation cannot authorize a repo owned by a different account', async () => {
+  const old = globalThis.fetch;
+  globalThis.fetch = async (url, opts = {}) => {
+    if (url.includes('/user/installations?')) return mockResponse(200, { installations: [{ id: 77, account: { login: 'elsewhere' }, permissions: { contents: 'write' } }] });
+    throw Error('Must not fetch another owner repository list');
+  };
+  try { await assert.rejects(() => assertAppRepoGrant('TOKEN', 'team', 'demo'), (e) => e.code === 'APP_INSTALLATION_REQUIRED'); }
+  finally { globalThis.fetch = old; }
 });

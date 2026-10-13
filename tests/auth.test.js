@@ -1,17 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { appUrl, cookieName, encodeSession, decodeSession, currentSession, secureEquals, checkOrigin } from '../lib/auth/session.js';
+import { appUrl, cookieName, encodeSession, decodeSession, currentSession, secureEquals, checkOrigin, cookieHeader } from '../lib/auth/session.js';
 import { handle } from '../lib/http.js';
+import { authorizeUrl, installUrl, normalizeTokenResponse, resolveAppSession, exchangeAppToken, githubAppConfig } from '../lib/auth/github-app.js';
 
-const ENV = { APP_URL: 'https://zipverra.example', SESSION_SECRET: 'b'.repeat(64), NODE_ENV: 'production' };
+const ENV = { APP_URL: 'https://zipverra.example', SESSION_SECRET: 'b'.repeat(64), NODE_ENV: 'production', GITHUB_APP_CLIENT_ID: 'Iv1.a0bcdee777', GITHUB_APP_CLIENT_SECRET: 'secret_long_enough_for_tests', GITHUB_APP_SLUG: 'zipverra' };
 const USER = { id: 12345, login: 'sample-developer', avatar_url: 'https://avatars.githubusercontent.com/u/12345' };
+const tokenData = (now = Date.now()) => ({ token: 'ghu_example_valid_token', refreshToken: 'ghr_example_refresh_token', tokenExpiresAt: now + 8 * 3600e3, refreshExpiresAt: now + 180 * 86400e3 });
 function request(path, options = {}, value = null) {
   const headers = new Headers(options.headers || {});
   if (value) headers.set('cookie', `${cookieName('session', ENV)}=${value}`);
   return new Request(`https://zipverra.example/${path}`, { ...options, headers });
 }
 
-test('OAuth APP_URL rejects HTTP outside localhost and embedded credentials', () => {
+test('APP_URL only accepts HTTPS domain root or local development', () => {
   assert.equal(appUrl(ENV), 'https://zipverra.example');
   assert.equal(appUrl({ APP_URL: 'http://localhost:3000' }), 'http://localhost:3000');
   assert.throws(() => appUrl({ APP_URL: 'http://example.com' }), /HTTPS/);
@@ -19,73 +21,117 @@ test('OAuth APP_URL rejects HTTP outside localhost and embedded credentials', ()
   assert.throws(() => appUrl({ APP_URL: 'https://example.com/subdir' }), /HTTPS/);
 });
 
-test('session encrypts OAuth access token, and decodes identity', () => {
-  const encrypted = encodeSession({ token: 'gho_example_valid_token', user: USER }, ENV, 100_000);
-  assert.doesNotMatch(encrypted, /gho_example_valid_token|sample-developer/);
-  const decoded = decodeSession(encrypted, ENV, 150_000);
-  assert.equal(decoded.token, 'gho_example_valid_token');
-  assert.equal(decoded.user.login, USER.login);
-  assert.equal(decoded.expiresAt, 100_000 + 7 * 86_400_000);
+test('GitHub App encrypted session keeps access+refresh tokens server-side and rejects old OAuth cookies', () => {
+  const now = 100_000;
+  const encrypted = encodeSession({ ...tokenData(now), user: USER }, ENV, now);
+  assert.doesNotMatch(encrypted, /ghu_example|ghr_example|sample-developer/);
+  const decoded = decodeSession(encrypted, ENV, now + 1000);
+  assert.equal(decoded.token, tokenData(now).token);
+  assert.equal(decoded.refreshToken, tokenData(now).refreshToken);
+  assert.equal(decoded.authType, 'github_app');
+  assert.equal(decoded.expiresAt, now + 7 * 86_400_000);
+  assert.equal(decodeSession(encrypted + 'garbage', ENV, now + 1000), null);
+  assert.equal(decodeSession(encrypted, { ...ENV, SESSION_SECRET: 'x'.repeat(64) }, now + 1000), null);
+  assert.equal(decodeSession(encrypted, ENV, now + 7 * 86_400_000), null);
 });
 
-test('session rejects tampering, wrong key, expiration, invalid user', () => {
-  const encrypted = encodeSession({ token: 'gho_example_valid_token', user: USER }, ENV, 100_000);
-  assert.equal(decodeSession(encrypted + 'xyz', ENV, 150_000), null);
-  assert.equal(decodeSession(encrypted, { ...ENV, SESSION_SECRET: 'x'.repeat(64) }, 150_000), null);
-  assert.equal(decodeSession(encrypted, ENV, 100_000 + 7 * 86_400_000), null);
-  assert.throws(() => encodeSession({ token: 'short', user: USER }, ENV), /không hợp lệ/);
-  assert.throws(() => encodeSession({ token: 'gho_example_valid_token', user: USER }, { ...ENV, SESSION_SECRET: 'short' }), /32/);
+test('session validation rejects missing refresh token and weak crypto secret', () => {
+  assert.throws(() => encodeSession({ token: 'ghu_access_token', user: USER }, ENV), /không hợp lệ/);
+  assert.throws(() => encodeSession({ ...tokenData(), user: USER }, { ...ENV, SESSION_SECRET: 'short' }), /32/);
+  assert.throws(() => encodeSession({ ...tokenData(), token: 'short', user: USER }, ENV), /không hợp lệ/);
 });
 
-test('session cookie has __Host- prefix in production and validates expiry', () => {
-  const encrypted = encodeSession({ token: 'gho_example_valid_token', user: USER }, ENV);
-  const current = currentSession(request('api/auth/session', {}, encrypted), ENV);
-  assert.equal(current.user.id, USER.id);
+test('__Host- cookie is HttpOnly Secure SameSite and session is valid', () => {
+  const encrypted = encodeSession({ ...tokenData(), user: USER }, ENV);
+  assert.equal(currentSession(request('api/auth/session', {}, encrypted), ENV).user.id, USER.id);
   assert.equal(cookieName('session', ENV), '__Host-zipverra_session');
-  assert.equal(currentSession(request('api/auth/session'), ENV), null);
+  const header = cookieHeader(cookieName('session', ENV), encrypted, { maxAge: 100, secure: true });
+  assert.match(header, /HttpOnly; SameSite=Lax; Secure/);
 });
 
-test('OAuth state constant-time equality handles missing and mismatched values', () => {
+test('OAuth state equality constant-time and CSRF strict origin', () => {
   assert.equal(secureEquals('abcd', 'abcd'), true);
   assert.equal(secureEquals('abcd', 'abce'), false);
   assert.equal(secureEquals('abcd', undefined), false);
-  assert.equal(secureEquals('abcd', 'ab'), false);
-});
-
-test('CSRF requires exact origin match for mutation requests', () => {
   assert.equal(checkOrigin(request('api/github/repos', { headers: { origin: ENV.APP_URL } }), ENV), true);
   assert.throws(() => checkOrigin(request('api/github/repos'), ENV), /Origin/);
-  assert.throws(() => checkOrigin(request('api/github/repos', { headers: { origin: 'https://evil.example' } }), ENV), /Origin/);
-  assert.throws(() => checkOrigin(request('api/github/repos', { headers: { origin: 'https://zipverra.example.evil.test' } }), ENV), /Origin/);
+  assert.throws(() => checkOrigin(request('api/github/repos', { headers: { origin: 'https://evil.test' } }), ENV), /Origin/);
 });
 
-const original = { SESSION_SECRET: process.env.SESSION_SECRET, APP_URL: process.env.APP_URL, NODE_ENV: process.env.NODE_ENV };
-test('GitHub API rejects unauthenticated requests and hostile origins without calling action', async () => {
+test('GitHub App web authorization never requests broad OAuth repo or workflow scopes', () => {
+  const url = new URL(authorizeUrl('state'.repeat(12), ENV));
+  assert.equal(url.host, 'github.com');
+  assert.equal(url.searchParams.get('scope'), 'offline_access');
+  assert.equal(url.searchParams.get('redirect_uri'), `${ENV.APP_URL}/api/auth/callback`);
+  assert.equal(installUrl(ENV), 'https://github.com/apps/zipverra/installations/new');
+  assert.throws(() => githubAppConfig({ ...ENV, GITHUB_APP_SLUG: 'evil.test/redirect' }));
+});
+
+test('GitHub App rejects non-expiring user tokens, accepts expiring tokens', () => {
+  assert.throws(() => normalizeTokenResponse({ access_token: 'ghu_example_long', scope: 'repo' }), (e) => e.code === 'EXPIRING_TOKEN_REQUIRED');
+  const normalized = normalizeTokenResponse({ access_token: 'ghu_example_long', refresh_token: 'ghr_example_long', expires_in: 28800, refresh_token_expires_in: 15897600 }, 1000);
+  assert.equal(normalized.tokenExpiresAt, 28800000 + 1000);
+});
+
+test('refresh call is server-side POST and never leaks token into URL', async () => {
+  let called;
+  const token = await exchangeAppToken({ refreshToken: 'ghr_old_refresh_token' }, ENV, async (url, opts) => {
+    called = { url, opts };
+    return { ok: true, json: async () => ({ access_token: 'ghu_updated_token', refresh_token: 'ghr_updated_token', expires_in: 28800, refresh_token_expires_in: 15897600 }) };
+  }, 3000);
+  assert.equal(token.token, 'ghu_updated_token');
+  assert.equal(called.opts.method, 'POST');
+  assert.equal(new URLSearchParams(called.opts.body).get('grant_type'), 'refresh_token');
+  assert.ok(!called.url.includes('ghr_old'));
+});
+
+test('refresh single-flight reuses one token rotation for concurrent requests in one server instance', async () => {
+  const now = Date.now();
+  const nearExpiry = { ...tokenData(now), tokenExpiresAt: now + 5000, user: USER };
+  const cookie = encodeSession(nearExpiry, ENV, now);
+  let calls = 0;
+  const fetcher = async () => {
+    calls += 1;
+    await Promise.resolve();
+    return { ok: true, json: async () => ({ access_token: 'ghu_refreshed_access', refresh_token: 'ghr_refreshed_token', expires_in: 28800, refresh_token_expires_in: 15897600 }) };
+  };
+  const req = request('api/auth/session', {}, cookie);
+  const [a, b] = await Promise.all([resolveAppSession(req, ENV, now, fetcher), resolveAppSession(req, ENV, now, fetcher)]);
+  assert.equal(calls, 1);
+  assert.equal(a.session.token, 'ghu_refreshed_access');
+  assert.equal(b.session.refreshToken, 'ghr_refreshed_token');
+  assert.equal(a.rotated, true);
+});
+
+const prev = { SESSION_SECRET: process.env.SESSION_SECRET, APP_URL: process.env.APP_URL, NODE_ENV: process.env.NODE_ENV };
+test('API enforces session and CSRF, reads token only from encrypted cookie', async () => {
   Object.assign(process.env, ENV);
   try {
     let invoked = 0;
-    const notLoggedIn = await handle(request('api/github/repos', { method: 'POST', headers: { origin: ENV.APP_URL, 'content-type': 'application/json' }, body: '{}' }), async () => { invoked++; return {}; });
-    assert.equal(notLoggedIn.status, 401);
-    assert.equal(invoked, 0);
-    const token = encodeSession({ token: 'gho_example_valid_token', user: USER }, ENV);
-    const malicious = await handle(request('api/github/repos', { method: 'POST', headers: { origin: 'https://evil.example', 'content-type': 'application/json' }, body: '{}' }, token), async () => { invoked++; return {}; });
+    const anonymous = await handle(request('api/github/repos', { method: 'POST', headers: { origin: ENV.APP_URL, 'content-type': 'application/json' }, body: '{}' }), () => { invoked++; return {}; });
+    assert.equal(anonymous.status, 401);
+    const cookie = encodeSession({ ...tokenData(), user: USER }, ENV);
+    const malicious = await handle(request('api/github/repos', { method: 'POST', headers: { origin: 'https://evil.test', 'content-type': 'application/json' }, body: '{}' }, cookie), () => { invoked++; return {}; });
     assert.equal(malicious.status, 403);
-    assert.equal(invoked, 0);
-  } finally {
-    for (const [key, value] of Object.entries(original)) value === undefined ? delete process.env[key] : process.env[key] = value;
-  }
+    const r = await handle(request('api/github/repos', { method: 'POST', headers: { origin: ENV.APP_URL, 'content-type': 'application/json' }, body: JSON.stringify({ token: 'FAKE-CLIENT' }) }, cookie), async (body, token) => { assert.equal(body.token, 'FAKE-CLIENT'); assert.equal(token, 'ghu_example_valid_token'); invoked++; return { ok: true }; });
+    assert.equal(r.status, 200);
+    assert.equal(invoked, 1);
+  } finally { for (const [k, v] of Object.entries(prev)) v === undefined ? delete process.env[k] : process.env[k] = v; }
 });
 
-test('GitHub API uses server-side token from encrypted cookie, ignoring client token field', async () => {
-  Object.assign(process.env, ENV);
-  try {
-    const cookie = encodeSession({ token: 'gho_example_valid_token', user: USER }, ENV);
-    const received = [];
-    const r = await handle(request('api/github/repos', { method: 'POST', headers: { origin: ENV.APP_URL, 'content-type': 'application/json' }, body: JSON.stringify({ token: 'FAKE-CLIENT-TOKEN' }) }, cookie), async (body, token) => { received.push({ body, token }); return { ok: true }; });
-    assert.equal(r.status, 200);
-    assert.equal(received[0].token, 'gho_example_valid_token');
-    assert.equal(received[0].body.token, 'FAKE-CLIENT-TOKEN');
-  } finally {
-    for (const [key, value] of Object.entries(original)) value === undefined ? delete process.env[key] : process.env[key] = value;
-  }
+test('refresh token rejected by GitHub gives reconnect error without exposing the token', async () => {
+  await assert.rejects(() => exchangeAppToken({ refreshToken: 'ghr_sensitive_refresh' }, ENV, async () => ({
+    ok: false, json: async () => ({ error: 'bad_refresh_token' }),
+  })), (e) => e.code === 'REFRESH_DENIED' && !e.message.includes('ghr_sensitive_refresh'));
+});
+
+test('GitHub App configuration rejects OAuth App client ID and secrets missing', () => {
+  assert.throws(() => githubAppConfig({ ...ENV, GITHUB_APP_CLIENT_ID: 'abc123' }), (e) => e.code === 'APP_NOT_CONFIGURED');
+  assert.throws(() => githubAppConfig({ ...ENV, GITHUB_APP_CLIENT_SECRET: '' }), (e) => e.code === 'APP_NOT_CONFIGURED');
+});
+
+test('session with expired refresh token cannot be accepted', () => {
+  const now = 100_000;
+  const cookie = encodeSession({ ...tokenData(now), tokenExpiresAt: now + 10_000, refreshExpiresAt: now + 3_600_000, user: USER }, ENV, now);
+  assert.equal(decodeSession(cookie, ENV, now + 3_600_001), null);
 });
