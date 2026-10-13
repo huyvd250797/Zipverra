@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "private": true,
   "type": "module",
-  "description": "Zipverra v1.6.0: GitHub App authentication, version history, safe rollback, mobile-first ZIP push",
+  "description": "Zipverra v1.7.0: repo-first mobile workflow, background ZIP processing, resumable Git blob batches, history and safe rollback",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

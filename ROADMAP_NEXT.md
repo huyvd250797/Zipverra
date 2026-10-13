@@ -1,31 +1,31 @@
-# Zipverra v1.7.0 — Advanced ZIP & Large Source (Next Release)
+# Zipverra v1.8.0 — Vercel Deployment Tracking (Next Release)
 
 ## Mục tiêu
 
-Hỗ trợ source ZIP lớn hơn giới hạn MVP mà vẫn push ổn định trên iPhone và Vercel. Ưu tiên độ tin cậy, bảo mật ZIP và khả năng phục hồi upload hơn việc tăng dung lượng đơn thuần.
+Đóng vòng phát hành source ngay trên điện thoại: **Upload ZIP → GitHub commit/verify → theo dõi build/deployment → mở ứng dụng production**. Push GitHub thành công không tự đồng nghĩa deploy thành công.
 
-## Phạm vi đề xuất
+## Các module dự kiến
 
-1. **Web Worker archive processing:** giải nén, tính hash và so sánh file trong Worker để UI không bị treo; streaming/chunking để hạn chế bộ nhớ trên iPhone.
-2. **Larger ZIP support:** phân tầng xử lý ZIP; trước khi tăng giới hạn cần kiểm soát ZIP bomb, tổng kích thước giải nén, tỉ lệ nén bất thường và tổng số file.
-3. **Chunked upload strategy:** chia file thành lô phù hợp giới hạn body Vercel Functions 4.5MB; thiết kế cho file >2.5MB bằng storage/worker path, không giả định GitHub blob REST API có chunk upload.
-4. **Resume uploads:** manifest có checksum, checkpoint giữa phiên, xác thực SHA phía GitHub; không auto-replay commit/branch writes.
-5. **Smart asset handling:** file ảnh, icon, font, binary; Git LFS chỉ khi có quy trình riêng vì GitHub REST blob không tự upload LFS content.
-6. **UX large source:** tiến trình upload theo file/batch, đánh dấu phần có thể tiếp tục, bộ lọc file lỗi, cảnh báo dung lượng/mạng di động.
-7. **Quality:** unit + integration tests ZIP lớn, network interruption, throttling 429, branch contention và PWA background/foreground.
+1. **Vercel Connect:** cấu hình kết nối dự án Vercel tương ứng với GitHub repository theo cơ chế cấp quyền rõ ràng (OAuth / token mã hóa server-side). Không commit token vào source.
+2. **Deployment mapping:** mapping `owner/repo + branch` ↔ Vercel project, hỗ trợ nhiều repository/organization và lựa chọn Production/Preview.
+3. **Live deployment status:** Ready / Building / Error / Canceled; lấy status bằng API hoặc webhooks có signature, xử lý polling/rate limits.
+4. **Commit → Deployment link:** liên kết SHA GitHub do Zipverra vừa push đến deployment tương ứng, hiển thị URL, mốc thời gian và trạng thái.
+5. **Build diagnostics:** tóm tắt lỗi build, liên kết trực tiếp logs/deployment; không nhúng/công khai môi trường hay secret.
+6. **Mobile Activity Integration:** Activity thêm giai đoạn **Deploy**, lịch sử nguồn và nút mở trang production trên iPhone.
+7. **Safe controls:** xem lịch sử deploy, cân nhắc redeploy/rollback deployment với xác nhận riêng; không tự ghi đè GitHub branch.
+8. **Notifications (optional):** PWA push notification hoặc in-app notification khi Vercel deploy xong/hỏng; chỉ triển khai nếu yêu cầu và hạ tầng phù hợp.
 
-## Architecture decision cần chốt
+## Chú ý thiết kế
 
-- Giữ Next.js 16 + React 19, GitHub App user token và Vercel.
-- Với upload thực sự lớn: cân nhắc Vercel Blob/S3 + queue/worker nền, thay vì chạy một Function lâu hoặc vượt request body.
-- Không tự đồng bộ/xóa file nằm ngoài phạm vi ZIP nếu không có xác nhận rõ ràng.
-- Nếu thêm cloud storage hoặc queue sẽ phát sinh biến môi trường và chi phí dịch vụ; document rõ trước khi triển khai.
+- Giữ GitHub App và History & Safe Rollback hiện tại; Vercel Deploy rollback khác với Git rollback.
+- Không đưa token Vercel lên browser JS, không gửi Vercel API request trực tiếp bằng token ở client.
+- Tách state Git push thành công với Vercel build Ready/Error; Vercel có thể deploy nhiều lần cho cùng commit.
+- Khả năng lấy logs và metadata tùy quyền Vercel workspace; phải có thông báo khi không đủ quyền.
 
 ## Definition of Done
 
-- Full Next.js production build thành công; test E2E với private sandbox repo và source đủ lớn.
-- Push thành công được xác minh bằng commit SHA, idempotent khi retry; không force-push.
-- ZIP traversal, bomb, oversize, file-count limit và secrets đều bị từ chối an toàn.
-- Giữ History & Safe Rollback v1.6.0 không hồi quy.
+- E2E trên GitHub repo sandbox kết nối Vercel project sandbox, mapping đúng SHA.
+- Hiển thị thành công + lỗi build rõ ràng; retry/polling không gây rate-limit quá mức.
+- Unit/integration tests, production build, iPhone PWA UI/safe area đã kiểm tra thực tế.
 
-**After v1.7.0:** Zipverra v1.8.0 — Vercel Deployment Tracking.
+**After v1.8.0:** Zipverra v1.9.0 — Repository Workspace.

@@ -1,3 +1,4 @@
+import { LIMITS } from '../lib/constants.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { computeVersionChanges, signRollbackProof, validateRollbackProof,
@@ -81,7 +82,7 @@ test('special modes, symlinks, submodules and dangerous .env changes are blocked
   assert.throws(() => computeVersionChanges([], [{ path: 'link', sha: S1, type: 'blob', mode: '120000' }]), e => e.code === 'ROLLBACK_UNSUPPORTED_MODE');
   assert.throws(() => computeVersionChanges([], [{ path: 'vendored', sha: S1, type: 'commit', mode: '160000' }]), e => e.code === 'ROLLBACK_UNSUPPORTED_MODE');
   assert.throws(() => computeVersionChanges([], [{ path: '.env.production', sha: S1, type: 'blob', mode: '100644' }]), e => e.code === 'ROLLBACK_UNSAFE_PATH');
-  assert.throws(() => computeVersionChanges([], Array.from({length:1201}, (_,i) => ({ path: `f${i}`, sha: S1, type: 'blob', mode: '100644' }))), e => e.code === 'ROLLBACK_TOO_LARGE');
+  assert.throws(() => computeVersionChanges([], Array.from({length:LIMITS.commitEntries + 1}, (_,i) => ({ path: `f${i}`, sha: S1, type: 'blob', mode: '100644' }))), e => e.code === 'ROLLBACK_TOO_LARGE');
 });
 
 test('rollback proof validates HMAC, timestamp, expiration and tampering', () => {

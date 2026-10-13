@@ -1,11 +1,11 @@
-# Zipverra v1.6.0 — History & Safe Rollback
+# Zipverra v1.7.0 — Advanced ZIP & Large Source
 
 **Next.js 16 · React 19 · Vercel-targeted · Installable mobile PWA**  
 **Slogan:** Push to GitHub. From Your Phone.
 
 Zipverra nhận ZIP do ChatGPT xuất, đọc và đối chiếu file với một repository GitHub, dùng **tên ZIP bỏ `.zip` làm commit message**, cho chọn branch (mặc định `main`), xem preview Merge/Sync, commit rồi xác minh thay đổi trên GitHub. App chạy trên Vercel; không cần chạy Node server lâu dài hoặc Python để giải nén.
 
-## 1. Điểm mới v1.6.0
+## 1. Điểm mới v1.7.0
 
 - **GitHub App web authentication** thay cho OAuth App scopes rộng `repo workflow`. Đăng nhập bằng nút **Continue with GitHub** và OAuth authorization code + state chống CSRF.
 - **Select repositories:** app được cài và cấp phép trên tài khoản GitHub hoặc Organization, tùy chọn **Only select repositories**; UI chỉ liệt kê repository có quyền `push`, đã được GitHub App cấp `Contents: write`.
@@ -13,7 +13,32 @@ Zipverra nhận ZIP do ChatGPT xuất, đọc và đối chiếu file với mộ
 - **Expiring user access token:** mặc định 8 giờ, refresh token do GitHub cung cấp. Server làm mới khi sắp hết hạn và xoay vòng session cookie HttpOnly AES-256-GCM. Session web tối đa 7 ngày.
 - **Manage GitHub App:** đường dẫn cài đặt/cấp thêm repository cùng nút Refresh danh sách repo. Hỗ trợ Organization nếu admin phê duyệt.
 - **Không cần GitHub App private key:** Vì Zipverra **chỉ thực hiện yêu cầu theo tương tác người dùng**, API dùng user-to-server access token, bị giới hạn bởi **cả quyền người dùng và quyền đã cấp cho App**. Không dùng installation access token để push thay người dùng (đề phòng nâng quyền trái ý).
-- Mở rộng thành 5 tab `Home · Repos · Activity · History · Settings`, PWA safe area, splash, zoom lock, Light/Dark, diff preview, Merge/Sync, upload binary, SHA verification, retry có kiểm soát, journal và Verify Push.
+- Giữ 5 tab `Repos · Upload · Activity · History · Settings`, PWA safe area, splash, zoom lock, Light/Dark, diff preview, Merge/Sync, upload binary, SHA verification, retry có kiểm soát, journal và Verify Push.
+
+
+### Repo-first workflow & Mobile UX 3.0 — v1.7.0
+
+Quy trình trên điện thoại được **thiết kế lại theo thứ tự bắt buộc**:
+
+1. **Repos (màn hình mặc định)** → đăng nhập GitHub nếu cần, tìm/chọn repository, nhập branch (mặc định `main`). Chọn repo sẽ tự chuyển sang Upload.
+2. **Upload ZIP** → chỉ cho chọn file khi repo đã được cấp quyền. Thay repo sẽ **xóa ZIP cũ**, đưa mode về Merge và hủy preview để không push nhầm source sang repo mới.
+3. **Phân tích & kiểm tra** → giải nén ở Web Worker, bảo vệ đường dẫn, hash Git Blob SHA-1, kiểm tra quyền GitHub, đọc HEAD và tạo preview thêm/sửa/xóa. Chưa thực hiện commit.
+4. **Xác nhận & Push** → tick xác nhận; Sync xóa file cần tick riêng. Commit message mặc định là tên ZIP không có `.zip`.
+5. **Activity** → **tự động mở ngay khi nhấn Push**, hiển thị Validate → Upload → Commit → Verify, tiến độ batch, lỗi và nút Xác minh push nếu kết quả chưa rõ.
+
+Tab **Repos** chỉ chứa repo, branch, tìm kiếm và repo gần đây (đã lọc theo quyền hiện tại). **GitHub Account & App Access** (Install / Manage, Refresh, Logout) chuyển sang **Settings** nhằm giảm rối.
+
+**Đã xóa** đoạn mô tả dài mà người dùng yêu cầu bỏ khỏi giao diện. Hero vẫn giữ slogan `Push to GitHub. From Your Phone.`.
+
+### Advanced ZIP & Large Source — v1.7.0
+
+- **Web Worker:** JSZip giải nén, bảo vệ ZIP traversal, phát hiện file nguy hiểm và tính Git SHA-1 ngoài luồng giao diện; `Uint8Array` được transfer về main thread, giảm copy bộ nhớ. Nếu trình duyệt không hỗ trợ Worker, tải module parser theo nhu cầu và chạy fallback trên UI thread.
+- **ZIP lớn hơn:** tối đa **80 MiB file ZIP**, **160 MiB dữ liệu giải nén**, **2.500 file source (tối đa 10.000 phần tử trong ZIP tính cả file bỏ qua)**, **2.500 file thay đổi mỗi commit**, tối đa 12.000 file được đọc ở repository đích. Cần thiết bị đủ RAM; ZIP 80 MiB không bảo đảm mọi iPhone đều giải nén được.
+- **Giới hạn file đơn:** **2,5 MB/file** (định dạng nhị phân lẫn text). Các yêu cầu gửi Base64 qua Vercel dưới ngưỡng body 4,5 MB; chưa hỗ trợ split một file lớn thành nhiều phần để tạo **một Git blob** vì GitHub Git Data REST API không có giao diện multipart blob. File lớn hơn cần Git/Git LFS hoặc cơ chế object-storage/worker riêng trong tương lai.
+- **Batch upload:** nhóm tối đa 12 file, 2 upload blob đồng thời. Chỉ gửi **file thay đổi**, không gửi nguyên ZIP lên server; không tự retry commit/branch mutation.
+- **Resume trước commit:** mỗi blob được xác minh SHA và checkpoint ở `localStorage` trên thiết bị (metadata tên file/SHA, không phải nội dung ZIP/token). Khi mất mạng, mở lại PWA → **chọn lại cùng repo/branch và file ZIP** → phân tích lại → Push; file đã upload với SHA phù hợp sẽ được bỏ qua. Checkpoint chỉ hợp lệ trong 24 giờ và ràng buộc bởi fingerprint SHA-256 của repo, HEAD, mode, path và blob SHA.
+- **Trạng thái commit không chắc chắn:** ưu tiên nút **Xác minh push** ở Activity; không tự tạo commit thứ hai. Recovery Journal cũ dùng `sessionStorage` vẫn hoạt động.
+- **Thận trọng:** Không có tiến trình background khi đóng PWA. Resume là **tiếp tục theo file** sau khi người dùng mở lại/chọn lại ZIP, không phải tiếp tục từng byte bên trong một file đang upload.
 
 
 ### History & Safe Rollback — v1.6.0
@@ -23,13 +48,13 @@ Zipverra nhận ZIP do ChatGPT xuất, đọc và đối chiếu file với mộ
 - **Rollback:** chọn commit cũ trong lịch sử, nhấn **Preview rollback**, kiểm tra danh sách file + số file bị xóa/sửa/thêm, tick xác nhận rồi nhập chính xác `ROLLBACK`.
 - **Cách khôi phục:** backend tạo **một commit mới** với *tree của commit đích* và *parent là HEAD tại thời điểm preview*. Sau đó update ref với `force:false`. Lịch sử Git cũ không bị xóa hay reset; rollback này khôi phục **toàn bộ snapshot** của commit đích, không chỉ đảo một commit đơn lẻ.
 - **Trạng thái không rõ:** lưu metadata (owner/repo/branch/HEAD trước đó/target SHA) trong `sessionStorage` trước mutation. Nếu mất mạng hoặc đóng PWA giữa chừng, quay lại tab History và bấm **Xác minh rollback**, tuyệt đối không rollback lần nữa cho đến khi kiểm tra xong.
-- **Giới hạn an toàn:** commit đích phải là tổ tiên của branch hiện tại; HEAD không được đổi sau preview; proof HMAC trong 10 phút; chặn thay đổi `.env`/khóa riêng, symlink/submodule, rollback vượt 1.200 file, Git tree bị cắt ngắn; kiểm tra Contents/Workflows write ngay trước tạo commit. Branch protection/ruleset vẫn có thể chặn thao tác, Zipverra không bypass.
+- **Giới hạn an toàn:** commit đích phải là tổ tiên của branch hiện tại; HEAD không được đổi sau preview; proof HMAC trong 10 phút; chặn thay đổi `.env`/khóa riêng, symlink/submodule, rollback vượt 2.500 file, Git tree bị cắt ngắn; kiểm tra Contents/Workflows write ngay trước tạo commit. Branch protection/ruleset vẫn có thể chặn thao tác, Zipverra không bypass.
 - **Không yêu cầu database hay biến môi trường mới**. Dùng `SESSION_SECRET` hiện có để ký preview rollback, không trả GitHub token xuống client.
 - **Chú ý:** Rollback có thể vô hiệu hóa các thay đổi vừa deploy, vì vậy nên xem kỹ `package.json`, CI workflow, database migration và mọi file bị xóa trước khi xác nhận. Không hỗ trợ tự tạo Pull Request khi branch được bảo vệ trong v1.6.0.
 
 ## 2. Đưa source lên GitHub và Vercel
 
-1. Giải nén bản ZIP; upload **các file bên trong `Zipverra-v1.6.0/`** vào **gốc repository** của Zipverra (chứa ngay `package.json`, `app/`, `lib/`, `public/`). Không upload nguyên file ZIP lên GitHub với kỳ vọng Vercel tự giải nén.
+1. Giải nén bản ZIP; upload **các file bên trong `Zipverra-v1.7.0/`** vào **gốc repository** của Zipverra (chứa ngay `package.json`, `app/`, `lib/`, `public/`). Không upload nguyên file ZIP lên GitHub với kỳ vọng Vercel tự giải nén.
 2. Vercel → **Add New Project** → import repository → Next.js / Root Directory `./`.
 3. Trước khi triển khai hoạt động đăng nhập, tạo GitHub App theo Mục 3 và cấu hình environment variables Mục 4.
 4. Deploy → Vercel Logs phải chạy `npm run build` thành công. Các phiên bản trước không thể sử dụng lại Client ID/Secret OAuth App cũ.
@@ -64,33 +89,34 @@ Vercel → Project → Settings → Environment Variables → Add (Production), 
 | `GITHUB_APP_SLUG` | Slug trong `github.com/apps/SLUG` |
 | `SESSION_SECRET` | Chuỗi ngẫu nhiên tối thiểu 32 ký tự, khuyến cáo 64 ký tự hex, ví dụ `openssl rand -hex 32` |
 
-Không cần `DATABASE_URL`, `GITHUB_APP_PRIVATE_KEY` hoặc `GITHUB_APP_ID`. Các biến `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` cũ **không được sử dụng** trong v1.6.0; có thể xóa sau khi đảm bảo migration thành công. Tuyệt đối không đưa `.env.local` chứa secret vào GitHub.
+Không cần `DATABASE_URL`, `GITHUB_APP_PRIVATE_KEY` hoặc `GITHUB_APP_ID`. Các biến `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` cũ **không được sử dụng** trong v1.7.0; có thể xóa sau khi đảm bảo migration thành công. Tuyệt đối không đưa `.env.local` chứa secret vào GitHub.
 
 ## 5. Quy trình Push từ iPhone
 
-1. Đăng nhập GitHub App → cấp quyền repository trong Install/Manage → nhấn Refresh.
-2. Chọn repo, branch mặc định `main` (có thể nhập branch khác có sẵn).
-3. Chọn file ZIP trong Files; commit message tự lấy từ tên ZIP.
-4. Chọn `Merge` (không xóa file vắng mặt trong ZIP) hoặc `Sync` (có thể xóa file, cần xác nhận riêng).
-5. Phân tích ZIP; so sánh file thêm/sửa/xóa; đồng ý thay đổi.
-6. Commit & Push; màn hình Activity theo dõi `Validate → Upload → Commit → Verify`.
-7. Nếu kết quả không rõ sau lỗi mạng, dùng **Xác minh push**; **không tự retry Commit**. Link commit chỉ hiển thị khi GitHub đã xác minh.
+1. Trong **Repos**, đăng nhập GitHub App nếu cần; chọn repo đã cài quyền, `main` mặc định. Chọn xong → tự mở **Upload**.
+2. Trong **Upload**, chọn ZIP từ Files → chọn `Merge` hoặc `Sync` → nhấn **Phân tích ZIP và xem thay đổi**.
+3. Chờ Web Worker giải nén, preflight và tải HEAD → kiểm tra số file thêm/sửa/xóa → tick **Tôi đồng ý** (và tick xác nhận xóa riêng nếu Sync).
+4. Nhấn **Commit & Push** → Zipverra tự chuyển sang **Activity**, theo dõi trạng thái và tiến độ batch.
+5. Sau thành công, GitHub commit URL xuất hiện. Nếu mất mạng/timeout tại commit, chỉ nhấn **Xác minh push**, không retry commit mù quáng.
+6. Nếu lỗi xảy ra **trước commit**, chọn lại **cùng repo + ZIP** và phân tích lại; checkpoint 24 giờ giúp bỏ qua blob SHA đã upload, miễn là HEAD chưa đổi.
+
+**Settings:** GitHub Account & App Access, quản lý installation/quyền repo, đăng xuất và đổi Dark/Light.
 
 ## 6. Security và giới hạn
 
-- Session lưu token truy cập + refresh token trong cookie `HttpOnly`, `SameSite=Lax`, `Secure` trên HTTPS, nội dung AES-256-GCM. Mã cookie v1.4.0 không hợp lệ trên v1.6.0, nên người dùng phải đăng nhập lại **một lần**.
+- Session lưu token truy cập + refresh token trong cookie `HttpOnly`, `SameSite=Lax`, `Secure` trên HTTPS, nội dung AES-256-GCM. Mã cookie v1.4.0 không hợp lệ trên v1.7.0, nên người dùng phải đăng nhập lại **một lần**.
 - GitHub App user access tokens có hạn 8 giờ; refresh token được xoay vòng server-side khi gần hết hạn. Refresh đồng thời trong **cùng một Function isolate** được hợp nhất. **Giới hạn MVP:** nếu nhiều Vercel instances cùng refresh một cookie cũ đúng lúc, vẫn có thể xảy ra tranh chấp refresh token; khi đó đăng nhập lại. Giải pháp lâu dài: phiên tập trung/atomic refresh trong database/KV.
 - Session trong cookie 7 ngày (ngắn hơn refresh token GitHub). Đăng xuất xóa cookie của Zipverra; không thu hồi ngay token ở phía GitHub. Người dùng có thể thu hồi quyền ứng dụng từ GitHub Settings → Applications.
 - Mutation API yêu cầu origin chính xác với `APP_URL`, `Content-Type: application/json`; frontend không đọc hoặc truyền token GitHub. Tránh cài Zipverra trên domain không đáng tin.
 - Không thể vượt qua GitHub branch protection, ruleset, yêu cầu status checks hoặc organization policy; các repo đó phải dùng PR (tính năng tương lai).
-- ZIP tối đa 20 MB; tối đa 2,5 MB/file; tối đa 1.200 file; không hỗ trợ tạo branch mới, Git LFS, symlink Git hoặc submodule phức tạp. Xử lý ZIP trực tiếp trong trình duyệt để hạn chế giới hạn request 4,5 MB của Vercel Functions.
+- ZIP tối đa 80 MiB; giải nén tối đa 160 MiB; tối đa 2,5 MB/file; tối đa 2.500 file; không hỗ trợ tạo branch mới, Git LFS, symlink Git hoặc submodule phức tạp. Xử lý ZIP trực tiếp trong trình duyệt để hạn chế giới hạn request 4,5 MB của Vercel Functions.
 - Không ghi token ra logs, không lưu source ZIP trên server. PWA recovery journal giữ **metadata commit** cục bộ trong sessionStorage, không lưu access token.
 
 ## 7. Migration từ v1.4.0
 
 1. **Đảm bảo có cách rollback**: lưu commit/ZIP v1.4.0. Chưa xóa GitHub OAuth App cũ ngay.
 2. Tạo GitHub App mới, thiết lập callback, permission, client secret, slug; cấu hình 5 biến env mới.
-3. Deploy v1.6.0; mọi người dùng sẽ phải đăng nhập lại vì session mới không chấp nhận cookie OAuth cũ.
+3. Deploy v1.7.0; mọi người dùng sẽ phải đăng nhập lại vì session mới không chấp nhận cookie OAuth cũ.
 4. Install GitHub App trên đúng repository và organization; login/Refresh; push thử vào **repo/branch thử nghiệm**, xác minh commit.
 5. Khi mọi thao tác đã ổn định, mới xóa biến env OAuth cũ và cân nhắc thu hồi OAuth App cũ.
 
@@ -139,3 +165,13 @@ Không gửi secret qua tin nhắn, ảnh chụp hoặc commit source lên GitHu
 | `/api/github/rollback/verify` | Chỉ đọc/đối chiếu SHA khi kết quả chưa rõ |
 
 Tất cả API sử dụng GitHub App user token trong cookie HttpOnly, xác nhận Origin/JSON và trả `Cache-Control: no-store`. Không chấp nhận token GitHub trực tiếp từ trình duyệt.
+
+
+## 9. Kiểm thử đặc thù v1.7.0
+
+- Unit tests cho manifest fingerprint, giới hạn ZIP, batch concurrency/resume, bỏ qua blob theo SHA, lỗi mạng, SHA sai và vòng đời Web Worker.
+- Kiểm tra repo-first UX và việc chuyển GitHub App Access sang Settings; kiểm thử Repos/Upload/Activity/History/Settings trên thiết bị thực khi triển khai.
+- Trước khi dùng ZIP lớn với source quan trọng, thử ở repository sandbox với ZIP lớn nhưng **mỗi file <= 2,5 MB**, kiểm tra Vercel Runtime Logs, GitHub commit SHA và memory Safari/PWA.
+- `npm run build` phải được kiểm tra qua Vercel hoặc GitHub Actions. Môi trường đóng gói có thể không truy cập được npm registry; không coi source là đã production-verified khi chưa chạy build/E2E thật.
+
+**Next:** Zipverra v1.8.0 — Vercel Deployment Tracking.

@@ -1,4 +1,4 @@
-# QA & Deployment Checklist — Zipverra v1.6.0
+# QA & Deployment Checklist — Zipverra v1.7.0
 
 ## Before deploying
 
@@ -23,7 +23,7 @@
 8. Pull permission or uninstall app → future requests deny, no new commits.
 9. Force near-expired token in test environment → refresh and new cookie; ensure no token appears in UI/HTML/API response/logs.
 10. Test Sync deletion confirmation, stale HEAD, branch protected, offline network and Verify Push journal.
-11. Open on iPhone Safari and installed PWA: splash, status bar safe area, no horizontal overflow, tabs Home/Repos/Activity/Settings.
+11. Open on iPhone Safari and installed PWA: splash, status bar safe area, no horizontal overflow, tabs Repos/Upload/Activity/History/Settings.
 12. Review GitHub App authorization in GitHub Settings → Applications; logout clears Zipverra session.
 
 ## Testing limitations
@@ -45,7 +45,25 @@
 8. Bật branch protection/ruleset → rollback phải từ chối quyền, không làm lệch HEAD; tạo Pull Request bằng GitHub thủ công nếu cần.
 9. Thử repo có `.github/workflows/ci.yml` bị thay đổi khi quyền Workflows chỉ read → preview phải từ chối trước mutation.
 10. Giả lập mạng mất sau PATCH → dùng History → Xác minh rollback để phát hiện đúng trạng thái; không tạo thêm commit.
-11. Thử symlink, submodule, `.env.production`, hơn 1.200 thay đổi hoặc Git tree bị truncated → không được rollback.
+11. Thử symlink, submodule, `.env.production`, hơn 2.500 thay đổi hoặc Git tree bị truncated → không được rollback.
 12. Kiểm thử iPhone PWA độc lập: đồng hồ/Dynamic Island không che UI, tab History hiển thị trên màn hình 320/375/390/430 px, scrolling/diff không tràn ngang; Light/Dark.
 
 Rollback v1.6.0 khôi phục **toàn bộ tree của commit cũ** chứ không chỉ revert một commit. Phải sao lưu trạng thái source quan trọng và đánh giá database migrations trước khi xác nhận.
+
+
+## v1.7.0 — Advanced ZIP / Flow E2E (cần thực hiện trên Vercel + iPhone thật)
+
+1. Mở PWA mới, mặc định **Repos**. Chọn một repo được phép ghi → tự chuyển **Upload**; chưa chọn repo không được chọn file ZIP.
+2. Chọn repo B sau repo A đã gắn ZIP → ZIP cũ bị xóa, mode trở về Merge; không push nhầm A sang B.
+3. Phân tích ZIP hợp lệ, xác nhận Commit & Push → **Activity** phải xuất hiện ngay khi bắt đầu gửi blob; hiển thị 4 bước và batch progress.
+4. Thử Sync có file xóa → ngoài tick thường phải xác nhận riêng số file xóa.
+5. Kiểm tra **Settings** chứa GitHub Account & App Access, nút Manage App, Refresh, Logout; Repos không chứa bảng installation dài.
+6. ZIP đến 80 MiB (số file <= 2.500, mỗi file <= 2,5 MB), giải nén tổng <= 160 MiB; so sánh kết quả GitHub bằng SHA.
+7. ZIP 81 MiB, file > 2,5 MB, quá 2.500 file, archive traversal, symlink, `.env.local` và ZIP bomb phải bị chặn rõ lý do.
+8. Ngắt Wi-Fi khi upload blob; hoạt động lại, chọn lại cùng ZIP/repo, phân tích lại; kiểm tra file blob đã xác thực SHA được bỏ qua và không duplicate commit.
+9. Thử HEAD thay đổi kể từ checkpoint → không áp dụng checkpoint cũ, phải tạo preview theo HEAD mới.
+10. Giả lập offline **sau mutation** → Activity hiển thị trạng thái chưa xác minh và nút xác minh, không tự commit lại.
+11. Kiểm tra iPhone PWA standalone: safe area, thanh Home, cỡ màn 320/375/390/430; chuyển tab và loading không tràn ngang; Light/Dark.
+12. History và Safe Rollback cũ không hồi quy; không force-push; branch protection/Workflows permissions được giữ.
+
+Không có multipart upload cho file đơn > 2,5 MB trong bản này. Giới hạn tăng của ZIP là dung lượng **tổng** do phân chia theo file.

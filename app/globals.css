@@ -300,3 +300,31 @@ html[data-theme="light"] .history-warning{background:#fff4e5;color:#875820;borde
 html[data-theme="light"] .history-warning p,html[data-theme="light"] .history-warning strong{color:#80521e}
 html[data-theme="light"] .history-notice{background:#e2f9ef;color:#14664e;border-color:#87cbb2}
 html[data-theme="light"] .history-empty{color:#536c83;border-color:#abc0cf}
+
+
+/* Zipverra v1.7.0 — repo-first, focused one-hand PWA workflow */
+.workflow-strip{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:0 0 20px}
+.workflow-strip span{display:flex;min-width:0;justify-content:center;align-items:center;gap:5px;text-align:center;border-radius:9px;padding:10px 5px;border:1px solid #2d4055;background:#101b2a;color:#8b9eb7;font-size:11px;font-weight:750}
+.workflow-strip span.current{border-color:#39b995;background:#153c34;color:#8df2cd}.workflow-strip span.done{border-color:#286f60;background:#12372f;color:#65ddae}
+.repo-auth-minimal{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:11px 12px;background:#102a2a;border:1px solid #295e55;border-radius:12px;color:#a3e8d3;font-size:12px;min-width:0}
+.repo-auth-minimal .button{min-height:38px;padding:8px 11px;flex-shrink:0}.repo-auth-user{display:flex;align-items:center;gap:6px;min-width:0;flex-wrap:wrap;font-weight:700}.repo-auth-user span{font-size:10px;color:#7be8bf;font-weight:650}
+.repo-advanced{margin:15px 0;border-top:1px solid #24374b;border-bottom:1px solid #24374b;padding:11px 0}.repo-advanced summary{cursor:pointer;font-size:11px;color:#a1b7ce;font-weight:750}.repo-advanced .two-col{margin-top:13px}
+.source-repo-context{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:#a7c3d2;background:#0d292b;border:1px solid #285d54;border-radius:12px;padding:12px 13px;font-size:11px;margin-bottom:14px;overflow-wrap:anywhere}
+.source-repo-context svg{color:#6cddbd;flex-shrink:0}.source-repo-context strong{color:#e1fdf0}.source-repo-context button{border:0;background:transparent;color:#75eac8;font-weight:800;padding:0;text-decoration:underline;min-height:28px}
+.drop-zone.locked{opacity:.6;cursor:not-allowed;border-style:solid;pointer-events:none}.archive-size-hint{display:block;margin:-12px 0 16px;color:#8fa5ba;font-size:10.5px;line-height:1.6}
+.settings-section{margin:23px 0 18px;padding:15px;border:1px solid #2f4e58;background:#10272c;border-radius:13px}.settings-section h3{display:flex;align-items:center;gap:8px;font-size:14px;margin:0 0 14px;color:#d5f2e6}.settings-account{display:flex;justify-content:space-between;gap:9px;align-items:center;font-size:13px}.settings-app-actions{display:flex;align-items:stretch;gap:9px;flex-wrap:wrap;margin-top:13px}.settings-app-actions .button{flex:1 1 125px;min-width:0;font-size:11px}.settings-logout{margin-top:12px;border-color:#405669;background:#122333;color:#e5bfba;width:100%;min-height:39px}
+@media(max-width:760px){
+  .workflow-strip{gap:4px;margin:0 0 14px;grid-template-columns:repeat(5,minmax(0,1fr))}.workflow-strip span{padding:9px 2px;font-size:9px;letter-spacing:-.2px}
+  .repository-panel .step-heading{margin-bottom:15px}.repository-panel .field{margin:12px 0}.repository-panel .recents-block{margin:13px 0}
+  .upload-panel .step-heading{margin-bottom:15px}.upload-panel .limits{margin-bottom:17px}
+  .settings-section{padding:13px}.settings-app-actions .button{font-size:10px}
+  .mobile-quick-card{display:flex;min-width:0}.mobile-bottom-nav{grid-template-columns:repeat(5,minmax(0,1fr))}
+}
+@media(max-width:360px){.workflow-strip span{font-size:8px}.repo-auth-minimal{padding:9px}.repo-auth-minimal .button{font-size:10px}}
+html[data-theme="light"] .workflow-strip span{background:#f0f6fa;color:#516c7d;border-color:#cadce7}
+html[data-theme="light"] .workflow-strip span.current{background:#def8ef;color:#086a50;border-color:#73bea8}
+html[data-theme="light"] .workflow-strip span.done{background:#e5f8ec;color:#167056;border-color:#b0dccc}
+html[data-theme="light"] .repo-auth-minimal,html[data-theme="light"] .source-repo-context,html[data-theme="light"] .settings-section{background:#eaf6f2;color:#23485a;border-color:#aed8cc}
+html[data-theme="light"] .source-repo-context strong,html[data-theme="light"] .settings-section h3{color:#164a40}
+html[data-theme="light"] .repo-auth-user span,html[data-theme="light"] .source-repo-context button{color:#11765c}
+html[data-theme="light"] .repo-advanced{border-color:#d5e5ef}html[data-theme="light"] .repo-advanced summary{color:#506981}

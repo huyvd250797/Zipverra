@@ -1,26 +1,28 @@
-# Zipverra v1.6.0 — Release Validation
+# Zipverra v1.7.0 — Release Validation
 
-**Build date:** 2026-10-13
+**Date:** 2026-10-13
 
-## Executed in packaging environment
+## Performed during source packaging
 
-- `npm test`: **73/73 tests passed**, including safe rollback and GitHub mocked API failure cases.
-- TypeScript syntax parser checked **43 JS/JSX/MJS modules**: 0 parse errors.
-- ZIP to be verified after packaging.
-- History/Compare/Rollback route paths checked; GitHub App OAuth, Push, PWA remain from v1.5.1.
+- `npm test`: **83/83 unit tests passed**, including new worker/batch/resume/repo-first workflow checks.
+- TypeScript parser validated **47 JS/JSX/MJS modules**: 0 syntax errors; relative import paths were checked: 0 missing.
+- Confirmed files still include existing GitHub App auth, PWA components, History/Rollback and GitHub API routes.
+- File names, branch flow and batch/resume logic reviewed.
+- ZIP archive integrity and contents verified after packaging.
 
-## Not yet verified
+## Not verified in this environment
 
-- `npm install` returned `EAI_AGAIN` contacting `registry.npmjs.org`. Dependencies were not installed; `next build` **could not be run** here.
-- No authenticated live GitHub App E2E rollback or private repository test was performed; the tests use mocked GitHub responses.
-- No real iPhone WebKit PWA manual tests performed. Mobile layout and safe-area behavior require device validation.
+- `npm install` failed with `EAI_AGAIN` reaching `registry.npmjs.org`, therefore no local `next build` or Next.js browser E2E.
+- No live GitHub App private-repo commit/rollback or Vercel production deploy.
+- iPhone Safari PWA standalone and memory handling for 80 MiB ZIP need actual-device tests.
 
-## Required before production use
+## Production release checklist
 
-1. Deploy to Vercel; inspect `next build` output and runtime logs for API routes.
-2. Validate GitHub App env vars (`APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`). Existing v1.5.1 variables remain compatible; do not commit secret values.
-3. Run complete rollback E2E on a noncritical sandbox branch, including branch protection and Workflows permissions.
-4. Inspect the exact list of files on preview; rollback restores **entire historical Git tree**, not a single commit.
-5. Only then use rollback on important repositories. GitHub branch protection may require a manual PR.
+1. Push source to a **test branch** first when possible, let Vercel build and confirm Next.js 16/React 19/Worker bundling succeeds.
+2. Run `npm test` and `npm run build` in GitHub Actions or Vercel, check runtime logs.
+3. Confirm GitHub App 5 env variables remain configured; no new environment variables needed.
+4. Validate Repo→ZIP→Preview→Commit & Push→Activity→SHA verified on a sandbox repository.
+5. Confirm resume after disconnect before commit, verify unknown status after commit, and rollback safety.
+6. On real iPhone, confirm safe area, small-screen navigation, Dark/Light, ZIP memory behavior.
 
-See `QA_NOTES.md` for detailed test procedures and `ROADMAP_NEXT.md` for v1.7.0.
+**User-visible release status:** Source ready to test on Vercel; production acceptance is conditional on successful build and E2E.

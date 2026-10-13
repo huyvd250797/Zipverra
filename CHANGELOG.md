@@ -1,5 +1,17 @@
 # Zipverra Changelog
 
+## v1.7.0 — Advanced ZIP & Repo-first Mobile Flow (2026-10-13)
+
+- **Repo-first mobile:** Repos mặc định → chọn repo (main) → Upload ZIP → Phân tích/Preview → Xác nhận & Push → tự mở Activity.
+- Di chuyển GitHub Account & App Access, Install/Manage và Logout vào Settings; Repos chỉ còn thao tác chính, repo gần đây lọc theo quyền được cấp; thay repo xóa ZIP đã chọn và reset Merge.
+- Bỏ đoạn giới thiệu dài theo yêu cầu; giữ slogan ngắn Push to GitHub. From Your Phone.
+- Worker giải nén ZIP + Git SHA-1 ngoài UI thread, transfer buffers; fallback lazy-load khi Worker không có.
+- Giới hạn tổng: 80 MiB ZIP, 160 MiB unpacked, 2.500 file/commit, 12.000 file snapshot; 2,5 MB một file theo Vercel API body.
+- Upload blobs thành batch 12, concurrency 2, progress trên Activity; checkpoint metadata trong localStorage 24 giờ, SHA-256 manifest ràng buộc repo/HEAD/mode/content; reselect ZIP để tiếp tục sau lỗi trước commit.
+- Giữ GitHub App user auth, Push Verify và Safe Rollback; không tự retry mutation commit.
+- Unit tests bổ sung cho batch/recovery/worker/UX; production build và E2E GitHub cần chạy khi deploy.
+
+
 ## v1.6.0 — History & Safe Rollback (2026-10-13)
 
 - Thêm tab History cho PWA: liệt kê commit, SHA, tác giả, thời gian, phân trang 20/trang và link GitHub.
