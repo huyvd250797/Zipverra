@@ -1,5 +1,17 @@
 # Zipverra Changelog
 
+## v1.9.0 — Repository Explorer & Quick Edit (2026-10-14)
+
+- Repo-first workflow giữ nguyên; mở Workspace từ **Repos**, không thêm tab điều hướng.
+- Duyệt thư mục, tìm file toàn repo giới hạn 60 kết quả, xem UTF-8 text 64 KiB với syntax highlighting cơ bản.
+- Chỉnh sửa một file hiện có, review diff, xác nhận, commit qua GitHub Contents API với SHA guard.
+- Preview ký HMAC (5 phút), bind GitHub user ID, repo, branch, HEAD và nội dung; chặn token bị sửa/hết hạn, branch/file SHA stale.
+- Kiểm tra Workflows permission, chặn credentials, binary, symlink, submodule và source quá lớn; xác minh Git blob SHA trước khi hiển thị.
+- File history ngay trong Explorer; liên kết GitHub commit; trạng thái save chưa xác minh không bị tự replay.
+- Không có Vercel Deployment Tracking, không có token Vercel mới hoặc database.
+- Unit tests: 113/113 đạt; responsive fixture Chromium: 320–1280 px không tràn ngang. Production build/E2E cần chạy sau triển khai do npm registry EAI_AGAIN.
+
+
 ## v1.8.0 — Smart Push & Workflow 3.0 (2026-10-13)
 
 - Source baseline v1.7.0. **Không có Vercel Deployment Tracking.**

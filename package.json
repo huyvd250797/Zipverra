@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "private": true,
   "type": "module",
-  "description": "Zipverra v1.8.0: Smart Push & Workflow 3.0, selective change staging, source analyzer, safe text diff, live progress",
+  "description": "Zipverra v1.9.0: Repository Explorer & Quick Edit with preview-signed text edits and safe GitHub commits",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

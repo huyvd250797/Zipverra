@@ -1,7 +1,9 @@
-# QA Notes — Zipverra v1.8.0
+# QA Notes — Zipverra v1.9.0
 
-- Smart Push workflow, selective staging, text diff, analyzer and live upload counters added.
-- **96/96 unit tests passed**. Parser check, ZIP integrity and import graph are validated separately.
+- Added Repository Explorer & Quick Edit without modifying the 5-tab mobile ZIP Push flow.
+- One-file UTF-8 editing with HMAC preview, HEAD/file SHA checks, GitHub Contents API conditional update, and workflow permission check.
+- Tested signed proof tamper/expiry/identity binding, concurrent HEAD changes, text-size caps, unsafe paths, branch protection, Search and read-only File History.
+- **113/113 unit tests passed**. Parser check, ZIP integrity and import graph are validated separately.
 - `next build` NOT verified locally (npm registry DNS EAI_AGAIN); requires successful build on Vercel.
 - Test with a disposable repository before `main`, including omitted Sync deletes and stale-HEAD prevention.
 - The analyzer is heuristic and **not** a complete secrets scanner; full security analysis is in v1.10.0.

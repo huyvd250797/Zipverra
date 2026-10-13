@@ -1,9 +1,38 @@
-# Zipverra v1.8.0 — Smart Push & Workflow 3.0
+# Zipverra v1.9.0 — Repository Explorer & Quick Edit
 
 **Next.js 16 · React 19 · Vercel-targeted · Installable mobile PWA**  
 **Slogan:** Push to GitHub. From Your Phone.
 
 Zipverra nhận ZIP do ChatGPT xuất, đọc và đối chiếu file với một repository GitHub, dùng **tên ZIP bỏ `.zip` làm commit message**, cho chọn branch (mặc định `main`), xem preview Merge/Sync, commit rồi xác minh thay đổi trên GitHub. App chạy trên Vercel; không cần chạy Node server lâu dài hoặc Python để giải nén.
+
+## 1. Điểm mới v1.9.0 — Repository Explorer & Quick Edit
+
+**Source nâng cấp từ v1.8.0 Smart Push & Workflow 3.0**, không tích hợp Vercel Deployment Tracking. Giữ nguyên 5 tab mobile **Repos · Upload · Activity · History · Settings**, GitHub App Authentication, ZIP upload/Sync/Review, Push Recovery và History/Safe Rollback.
+
+### Thao tác nhanh trên điện thoại
+
+1. Vào **Repos**, đăng nhập GitHub App và chọn repo + branch (mặc định `main`).
+2. Chạm **Repository Explorer · Quick Edit** ngay dưới lựa chọn repository. Không thêm tab thứ 6.
+3. Duyệt thư mục bằng breadcrumb, lọc tên trong thư mục hoặc **Tìm toàn repo** (tối đa 60 kết quả/truy vấn).
+4. Chạm file UTF-8 nhỏ để mở **read-only Code Viewer** có syntax highlighting cơ bản. Có thể **File history** và mở file trực tiếp trên GitHub.
+5. Chạm **Edit file**, thay đổi source, nhập commit message (mặc định `Quick edit: <path>`), nhấn **Review Changes**.
+6. Xem diff text, tick xác nhận và nhấn **Commit & Save File**. Xem commit SHA/link GitHub nếu thành công.
+7. Nếu GitHub trả lỗi hoặc mạng gián đoạn trong lúc ghi, kiểm tra file/History trên GitHub trước khi thử lại. Zipverra không tự lặp yêu cầu PUT.
+
+### Giới hạn và bảo vệ dữ liệu Quick Edit
+
+- **Chỉ cập nhật một file text UTF-8 hiện có**, tối đa 64 KiB; không tạo mới, xóa file, sửa file nhị phân, symlink/submodule hoặc credentials `.env.local`, `.pem`, v.v. trong Workspace.
+- Backend chỉ đọc file trong branch do người dùng chọn sau khi xác minh GitHub App installation và quyền `Contents: write`; workflow YAML cần `Workflows: write`.
+- Preview có chữ ký HMAC `SESSION_SECRET`, gắn GitHub user ID, repo, branch, file path, `HEAD`, file SHA và digest nội dung mới; **hết hạn sau 5 phút**.
+- Khi commit, kiểm tra lại HEAD và SHA file. GitHub Contents API yêu cầu SHA file cũ, giúp tránh ghi đè bản sửa của người khác; không force-push, không vượt qua branch ruleset.
+- Lưu file rỗng yêu cầu xác nhận riêng. Khi rời file có nội dung chưa commit, app hỏi xác nhận trước khi bỏ bản nháp. **Draft không được lưu vào localStorage**.
+- Code Viewer chỉ hiện tối đa 900 dòng đầu để giới hạn DOM; editor cho phép sửa toàn bộ file trong giới hạn 64 KiB. Diff tối đa 320 dòng mỗi phía; khi vượt ngưỡng, giao diện cảnh báo thay vì hiện diff không đầy đủ như một diff hoàn chỉnh.
+- Chỉ trả token/credential trong cookie `HttpOnly` mã hóa; không đưa GitHub token tới JavaScript client. Nếu Save timeout và kết quả chưa rõ, app chỉ đọc lại GitHub để xác minh nội dung mới trước khi cho phép tiếp tục.
+- Phiên bản này **chưa hỗ trợ tạo branch/Pull Request**. Khi branch protection chặn commit, app hiển thị lỗi. Chức năng branch/PR dự kiến v1.11.0.
+
+### Backend/API Workspace
+
+`POST /api/github/workspace/list`, `/search`, `/file`, `/history`, `/preview`, `/save` — các API đều thông qua phiên GitHub App server-side, Origin check và các kiểm tra path/HEAD/permission. Không cần thêm environment variables hoặc database.
 
 ## 1. Điểm mới v1.8.0 — Smart Push & Workflow 3.0
 

@@ -13,12 +13,13 @@ import { FAVORITES_KEY, analyzeSource, selectChanges, toggleExcluded, filterRevi
 import SplashScreen from './components/SplashScreen.jsx';
 import MobileViewportGuard from './components/MobileViewportGuard.jsx';
 import HistoryPanel from './components/HistoryPanel.jsx';
+import WorkspacePanel from './components/WorkspacePanel.jsx';
 
 async function requestOnce(endpoint, data) {
   let response;
   const controller = new AbortController();
   // A timeout on `commit` is deliberately ambiguous; journal + Verify Push resolve it.
-  const timer = setTimeout(() => controller.abort(), ['commit', 'rollback/execute'].includes(endpoint) ? 110000 : 38000);
+  const timer = setTimeout(() => controller.abort(), ['commit', 'rollback/execute', 'workspace/save'].includes(endpoint) ? 110000 : 38000);
   try {
     response = await fetch(`/api/github/${endpoint}`, {
       method: 'POST',
@@ -93,6 +94,7 @@ function Icon({ name, size = 20 }) {
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('repositories');
+  const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [theme, setTheme] = useState('dark');
   const [repoSearch, setRepoSearch] = useState('');
   const [loadingRepos, setLoadingRepos] = useState(false);
@@ -231,7 +233,7 @@ export default function Home() {
       setAuth({ loading: false, authenticated: false, user: null });
       setFile(null); setMode('merge');
       setRepos([]); setOwner(''); setRepo(''); setBranch('main'); reset();
-      setActiveTab('repositories');
+      setActiveTab('repositories'); setWorkspaceOpen(false);
       clearUploadCheckpoint();
       setPendingCommit(null); clearPending(); setPhase(PUSH_STAGES.IDLE);
       try { sessionStorage.removeItem('zipverra.rollback.pending.v1'); } catch { /* no-op */ }
@@ -479,7 +481,7 @@ export default function Home() {
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar">
       <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span></strong><small>ZIP TO GITHUB · GITHUB APP</small></div></div>
-      <div className="version"><span className="live-dot"/> v1.8.0</div>
+      <div className="version"><span className="live-dot"/> v1.9.0</div>
     </header>
     <div className="mobile-context"><div><span className="mobile-eyebrow">ZIPVERRA / {({ home: 'HOME', repositories: 'REPOSITORIES', activity: 'ACTIVITY', history: 'HISTORY', settings: 'SETTINGS' })[activeTab]}</span><h2>{({ home: 'Upload ZIP', repositories: 'GitHub repositories', activity: 'Push activity', history: 'Version history', settings: 'Preferences' })[activeTab]}</h2></div><span className={`mobile-connection ${online ? 'connected' : 'disconnected'}`} aria-label={online ? 'Online' : 'Offline'}>{online ? 'Online' : 'Offline'}</span></div>
     {activeTab !== 'activity' && (error || busy) && <button type="button" className={`mobile-global-status ${error ? 'has-error' : ''}`} onClick={() => goToTab('activity')}><span>{error ? `Cần kiểm tra: ${error}` : `${status || 'Đang xử lý...'} · ${progress}%`}</span><Icon name="arrow" size={17}/></button>}
@@ -500,7 +502,7 @@ export default function Home() {
       {pendingCommit && activeTab !== 'activity' && <button type="button" className="mobile-recovery-shortcut" onClick={() => goToTab('activity')}>Có lần push chưa xác minh · Mở Activity <Icon name="arrow" size={15}/></button>}
       <section className="content-grid" data-active-view={activeTab}>
         <div className="form-column">
-          <article className="panel repository-panel" data-mobile-view="repositories">
+          <article className="panel repository-panel" data-mobile-view="repositories" style={workspaceOpen ? {display:'none'} : undefined}>
             <StepTitle n="01" title="Chọn repository" desc="Chọn nơi nhận source trước khi tải ZIP."/>
             {auth.loading ? <div className="repo-auth-minimal">Đang kết nối GitHub...</div> : !auth.authenticated ? <div className="auth-card">
               <p className="auth-muted">Kết nối GitHub để chọn repository được cấp quyền.</p>
@@ -513,8 +515,10 @@ export default function Home() {
             <div className="field"><label htmlFor="repo-select">Chọn repository</label><select id="repo-select" disabled={busy || !auth.authenticated || !repos.length} value={displayedRepos.some((x) => x.full_name === `${owner}/${repo}`) ? `${owner}/${repo}` : ''} onChange={(e) => chooseRepo(e.target.value)}><option value="">{repos.length ? (displayedRepos.length ? 'Chọn repository được cấp quyền' : 'Không có repo phù hợp') : 'Chưa có repo được GitHub App cấp quyền'}</option>{displayedRepos.map((x) => <option key={x.full_name} value={x.full_name}>{x.full_name}{x.private ? ' 🔒' : ''}</option>)}</select>{chosenRepo && <button type="button" className="favorite-toggle" onClick={() => toggleFavorite(`${owner}/${repo}`)}>{favorites.includes(`${owner}/${repo}`) ? '★ Đã ghim repository' : '☆ Ghim repository này'}</button>}</div>
             <details className="repo-advanced"><summary>Tùy chọn nâng cao · Nhập repo thủ công</summary><div className="two-col"><div className="field"><label htmlFor="owner">Owner</label><input id="owner" value={owner} disabled={busy || !auth.authenticated} placeholder="huyvd250797" onChange={(e) => change(setOwner, e.target.value)}/></div><div className="field"><label htmlFor="repo">Repository</label><input id="repo" value={repo} disabled={busy || !auth.authenticated} placeholder="Finzaro" onChange={(e) => change(setRepo, e.target.value)}/></div></div><p className="hint">Chỉ có thể push lên repository đã được GitHub App cấp quyền.</p></details>
             <div className="field"><label htmlFor="branch">Branch đích <span className="tag">Mặc định: main</span></label><div className="input-icon"><Icon name="branch" size={17}/><input id="branch" value={branch} disabled={busy || !auth.authenticated} placeholder="main" onChange={(e) => change(setBranch, e.target.value)}/></div></div>
+            {chosenRepo && <button type="button" className="button secondary full workspace-launch" disabled={busy || !auth.authenticated} onClick={()=>{setWorkspaceOpen(true);goToTab('repositories');}}><Icon name="file" size={18}/> Repository Explorer · Quick Edit <Icon name="arrow" size={16}/></button>}
             <button type="button" className="button secondary full mobile-repo-next" onClick={() => goToTab('home')} disabled={!auth.authenticated || !owner || !repo || busy}>Tiếp tục · Upload ZIP <Icon name="arrow" size={17}/></button>
           </article>
+          {workspaceOpen && <WorkspacePanel key={`${owner}/${repo}@${branch}`} authenticated={auth.authenticated} owner={owner} repo={repo} branch={branch} online={online} busy={busy} onBack={()=>{setWorkspaceOpen(false);goToTab('repositories');}} api={api} onCommit={()=>{reset();}} />}
 
           <article className="panel upload-panel" data-mobile-view="home">
             <StepTitle n="02" title="Upload ZIP" desc="Giải nén trong Web Worker, không chặn thao tác điện thoại."/>
@@ -568,7 +572,7 @@ export default function Home() {
                 <button type="button" className="button ghost settings-logout" onClick={logout} disabled={busy}>Đăng xuất GitHub</button>
               </> : <a className="button primary full" href="/api/auth/login"><Icon name="github" size={18}/> Continue with GitHub</a>}
             </div>
-            <div className="settings-info"><span>Phiên bản</span><strong>v1.8.0</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v1.9.0</strong></div>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
             <div className="settings-info"><span>Commit message</span><strong>Tên file ZIP</strong></div>
             <p className="hint">Chỉ lưu metadata phục hồi upload, không lưu GitHub token trên JavaScript phía trình duyệt.</p>
@@ -577,7 +581,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v1.8.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v1.9.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <nav className="mobile-bottom-nav" aria-label="Điều hướng Zipverra">{[{id:'repositories',label:'Repos',icon:'branch'},{id:'home',label:'Upload',icon:'upload'},{id:'activity',label:'Activity',icon:'activity'},{id:'history',label:'History',icon:'history'},{id:'settings',label:'Settings',icon:'settings'}].map((tab) => <button type="button" key={tab.id} className={`mobile-nav-item ${activeTab === tab.id ? 'active' : ''}`} aria-current={activeTab === tab.id ? 'page' : undefined} onClick={() => goToTab(tab.id)}><Icon name={tab.icon} size={21}/><span>{tab.label}</span>{tab.id === 'activity' && pendingCommit && <i className="nav-alert" aria-label="Có push cần xác minh"/>}</button>)}</nav>
   </>;

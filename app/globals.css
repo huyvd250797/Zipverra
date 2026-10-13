@@ -348,3 +348,64 @@ html[data-theme="light"] .favorite-row button,html[data-theme="light"] .favorite
 .review-toolbar .input-icon input:focus{border-color:#55d5b2;box-shadow:0 0 0 3px #57d9b022}
 .review-toolbar .input-icon input::placeholder{color:#839eb2}
 html[data-theme="light"] .review-toolbar .input-icon input{background:#fff;color:#214258;border-color:#abc6d5}
+
+/* Zipverra v1.9.0 — Repository Explorer & Quick Edit; contained in Repos, not a sixth tab. */
+.workspace-launch{margin:12px 0 8px;display:flex;justify-content:center;align-items:center;gap:9px}
+.workspace-panel{min-width:0;overflow:hidden}
+.workspace-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.workspace-heading h2{font-size:21px;color:#eef7ff;margin:5px 0 6px;letter-spacing:-.4px}
+.workspace-heading p{font-size:12px;color:#9ab5c9;margin:0;overflow-wrap:anywhere}
+.workspace-heading code,.workspace-editor-meta code{font-family:ui-monospace,monospace}
+.workspace-heading .mini-label{letter-spacing:1.7px;font-size:10px;font-weight:800;color:#65e4ba}
+.workspace-back{min-height:42px}
+.workspace-intro{border:1px solid #2b5b59;color:#a6d5cb;background:#102d2e;padding:12px 14px;border-radius:12px;font-size:12px;line-height:1.65;margin-bottom:16px}
+.workspace-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;margin-bottom:13px}
+.workspace-toolbar>.button{flex-shrink:0;min-height:42px}
+.workspace-crumbs{display:flex;align-items:center;gap:3px;flex-wrap:wrap;min-width:0}
+.workspace-crumbs button{border:0;background:transparent;font-weight:650;color:#7eeac9;cursor:pointer;font-size:12px;min-height:35px;overflow-wrap:anywhere;padding:4px 3px}
+.workspace-crumbs button:disabled{color:#bfd7e1;cursor:default}
+.workspace-slash{color:#708ca0;margin:0 5px}
+.workspace-search label,.workspace-input-label{display:block;font-size:12px;color:#b7cbda;margin:14px 0 7px;font-weight:700}
+.workspace-search input,.workspace-editor input:not([type=checkbox]){display:block;width:100%;min-width:0;min-height:45px;border:1px solid #3c596a;border-radius:11px;background:#081626;color:#eef7ff;padding:11px 13px;outline:0;font-size:16px}
+.workspace-search input:focus,.workspace-editor input:focus,.workspace-textarea:focus{border-color:#62e9be;box-shadow:0 0 0 3px #58e4b41e}
+.workspace-file-list{border:1px solid #2d4557;border-radius:13px;overflow:hidden;margin-top:13px;background:#091726;max-height:440px;overflow-y:auto}
+.workspace-file{display:flex;align-items:center;gap:12px;padding:12px 14px;width:100%;background:none;border:0;border-bottom:1px solid #2b3c4e;color:#dae8f4;text-align:left;cursor:pointer;min-height:60px}
+.workspace-file:last-child{border-bottom:0}.workspace-file:hover:not(:disabled),.workspace-file:focus-visible{background:#153343}
+.workspace-file:disabled{opacity:.45;cursor:not-allowed}
+.workspace-file-icon{width:35px;height:35px;flex-shrink:0;display:grid;place-items:center;background:#17433e;color:#7ce9c9;border-radius:10px;font-size:20px}
+.workspace-file-info{flex:1;min-width:0;display:grid;gap:4px}.workspace-file-info strong{font-size:13px;overflow-wrap:anywhere;font-weight:680}.workspace-file-info small{font-size:10px;color:#8caac0}
+.workspace-file-chevron{font-size:25px;color:#7e9db5}.workspace-loading,.workspace-empty{padding:18px 8px;color:#9cbbcc;font-size:12px;text-align:center}
+.workspace-note{font-size:10.5px;color:#8cabc0;line-height:1.6;display:block;margin-top:12px}
+.workspace-editor-title{display:grid;gap:8px;grid-template-columns:1fr auto;align-items:center;margin:16px 0 8px}
+.workspace-editor-title strong{font-size:13px;overflow-wrap:anywhere;grid-column:1/-1;color:#e7f5fe}
+.workspace-return{background:none;border:0;cursor:pointer;justify-self:start;padding:8px 0;color:#7deec6;font-weight:750;font-size:12px}
+.workspace-language{font-size:10px;background:#214339;border:1px solid #3d7564;padding:6px 10px;border-radius:20px;color:#a9f4dc}
+.workspace-editor-meta{color:#91aac0;font-size:10px;line-height:1.6;overflow-wrap:anywhere;margin:4px 0 14px}
+.workspace-editor-actions{display:flex;flex-wrap:wrap;gap:9px;margin:13px 0}
+.workspace-editor-actions .button{min-height:42px;font-size:12px;text-decoration:none}
+.workspace-code{background:#071321;border:1px solid #294051;border-radius:12px;max-height:480px;min-height:190px;overflow:auto;color:#c1e4db;padding:16px 14px;font-size:12px;line-height:1.65;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;tab-size:2;white-space:pre}
+.workspace-textarea{display:block;width:100%;min-height:330px;max-width:100%;resize:vertical;background:#071321;border:1px solid #375368;color:#dcefea;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:16px;line-height:1.6;tab-size:2;border-radius:12px;padding:13px;white-space:pre;overflow:auto;outline:0;touch-action:pan-x pan-y}
+.workspace-editor-foot{display:flex;justify-content:space-between;gap:8px;margin:8px 0 14px;color:#9bbbc6;font-size:11px;flex-wrap:wrap}
+.workspace-empty-confirm{display:flex;gap:9px;align-items:center;color:#f0c492;font-size:12px;margin:14px 0;line-height:1.5}
+.workspace-empty-confirm input{width:19px;height:19px;accent-color:#5cdbad;flex-shrink:0}
+.workspace-review{background:#10282e;border:1px solid #377567;border-radius:13px;padding:14px;margin:18px 0 4px;min-width:0}
+.workspace-review>strong{color:#98f4d2;font-size:14px;overflow-wrap:anywhere}.workspace-review p{font-size:11px;color:#a8c2c8;line-height:1.65;margin:9px 0}
+.workspace-diff{max-height:310px;overflow:auto;background:#091621;border:1px solid #3a575b;border-radius:10px;font-size:11px;margin:12px 0}.workspace-diff>p{padding:12px}
+.workspace-review .button{margin-top:14px}.workspace-review .confirm-row{margin-top:15px}
+.workspace-success{border:1px solid #348d72;background:#133c33;border-radius:12px;color:#b4efda;margin:12px 0;padding:12px 14px;display:grid;gap:5px;font-size:12px;overflow-wrap:anywhere}.workspace-success a{color:#98f4d2;text-decoration:underline}
+.workspace-history{display:grid;gap:10px;border:1px solid #37576b;background:#112536;padding:12px;border-radius:12px;margin:12px 0}.workspace-history strong{font-size:12px;color:#cde6ed}.workspace-history a{font-size:11px;color:#91edd1;line-height:1.55;overflow-wrap:anywhere;text-decoration:none}.workspace-caution{color:#f9cb92;font-size:12px}
+@media(max-width:760px){.workspace-panel{padding:18px}.workspace-heading h2{font-size:19px}.workspace-heading>.button{padding:9px 11px;min-height:44px}.workspace-file{padding:11px;min-height:63px}.workspace-editor-actions .button{flex:1 1 auto;justify-content:center}.workspace-review .confirm-row{min-height:49px}.workspace-textarea{font-size:16px}}
+@media(max-width:360px){.workspace-panel{padding:14px}.workspace-heading{gap:9px}.workspace-toolbar{gap:5px}.workspace-crumbs button{font-size:11px}.workspace-editor-actions .button{font-size:11px;padding:9px}}
+html[data-theme="light"] .workspace-panel .workspace-heading h2,html[data-theme="light"] .workspace-editor-title strong{color:#194155}
+html[data-theme="light"] .workspace-intro,html[data-theme="light"] .workspace-review,html[data-theme="light"] .workspace-success{background:#e5f7f0;color:#255f4c;border-color:#aad4c4}
+html[data-theme="light"] .workspace-intro,html[data-theme="light"] .workspace-editor-meta,html[data-theme="light"] .workspace-note{color:#496b73}
+html[data-theme="light"] .workspace-file-list,html[data-theme="light"] .workspace-file,html[data-theme="light"] .workspace-code,html[data-theme="light"] .workspace-textarea,html[data-theme="light"] .workspace-diff{background:#f5fafc;color:#25475c;border-color:#c8dce7}
+html[data-theme="light"] .workspace-file{border-bottom-color:#d2e2eb}html[data-theme="light"] .workspace-file:hover:not(:disabled){background:#e5f1f7}
+html[data-theme="light"] .workspace-file-info small,html[data-theme="light"] .workspace-heading p{color:#5c7b8f}html[data-theme="light"] .workspace-crumbs button,html[data-theme="light"] .workspace-return{color:#0d7960}
+html[data-theme="light"] .workspace-search input,html[data-theme="light"] .workspace-editor input:not([type=checkbox]){background:#fff;color:#20445a;border-color:#adc9d9}
+html[data-theme="light"] .workspace-review>strong,html[data-theme="light"] .workspace-success a{color:#1a735d}html[data-theme="light"] .workspace-history{background:#eff7fa;border-color:#cadce7}html[data-theme="light"] .workspace-history a{color:#116b56}html[data-theme="light"] .workspace-history strong{color:#204a5c}
+.workspace-search-row{display:flex;gap:8px;align-items:stretch}.workspace-search-row input{flex:1;min-width:0}.workspace-search-row .button{white-space:nowrap;min-height:45px;font-size:11px;padding:8px 11px}
+.workspace-clear{background:none;border:0;color:#6ce8bd;text-decoration:underline;cursor:pointer;font-size:11px}
+.workspace-code-line{display:inline}.workspace-syntax-keyword{color:#9eb7ff;font-weight:680}.workspace-syntax-string{color:#a8e7a1}.workspace-syntax-number{color:#ffcca3}.workspace-syntax-comment{color:#8196ab;font-style:italic}.workspace-syntax-function{color:#8bddf6}
+html[data-theme="light"] .workspace-syntax-keyword{color:#5842b8}html[data-theme="light"] .workspace-syntax-string{color:#218044}html[data-theme="light"] .workspace-syntax-number{color:#b65c14}html[data-theme="light"] .workspace-syntax-comment{color:#68818e}html[data-theme="light"] .workspace-syntax-function{color:#126d99}
+@media(max-width:360px){.workspace-search-row{flex-wrap:wrap}.workspace-search-row .button{flex:1}}
