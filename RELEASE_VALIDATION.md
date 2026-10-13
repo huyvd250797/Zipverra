@@ -1,33 +1,26 @@
-# Zipverra v1.5.1 — Release Validation
+# Zipverra v1.6.0 — Release Validation
 
 **Build date:** 2026-10-13
 
-## Executed checks
+## Executed in packaging environment
 
-- `npm test`: **56 passed, 0 failed**.
-- Parsed **35 JavaScript/JSX/MJS modules** via TypeScript syntax parser: **0 parse errors**.
-- ZIP artifact integrity: verified after packaging.
-- Original v1.4.0 mobile PWA features and GitHub safe push/recovery tests retained.
+- `npm test`: **73/73 tests passed**, including safe rollback and GitHub mocked API failure cases.
+- TypeScript syntax parser checked **43 JS/JSX/MJS modules**: 0 parse errors.
+- ZIP to be verified after packaging.
+- History/Compare/Rollback route paths checked; GitHub App OAuth, Push, PWA remain from v1.5.1.
 
-## Not executable in this packaging environment
+## Not yet verified
 
-- `npm install` failed with `EAI_AGAIN` resolving `registry.npmjs.org` (network/DNS unavailable). No `node_modules` or lockfile generated.
-- Consequently **`next build` / Vercel production deployment not verified here**.
-- Real GitHub App OAuth login/installation, permissions acceptance, protected branches and live Commit & Push require external credentials and an owner-approved sandbox repository; **not tested**.
+- `npm install` returned `EAI_AGAIN` contacting `registry.npmjs.org`. Dependencies were not installed; `next build` **could not be run** here.
+- No authenticated live GitHub App E2E rollback or private repository test was performed; the tests use mocked GitHub responses.
+- No real iPhone WebKit PWA manual tests performed. Mobile layout and safe-area behavior require device validation.
 
-## Required before production rollout
+## Required before production use
 
-1. Set new GitHub App environment variables on Vercel (README §4).
-2. Complete `npm run build` on Vercel/GitHub Actions and inspect build logs.
-3. Install App on a sandbox repository and run manual E2E checklist in `QA_NOTES.md`.
-4. Verify Workflows:write or avoid changing `.github/workflows/*` without the grant.
-5. Only switch over production workflows after verified successful push on sandbox.
+1. Deploy to Vercel; inspect `next build` output and runtime logs for API routes.
+2. Validate GitHub App env vars (`APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`). Existing v1.5.1 variables remain compatible; do not commit secret values.
+3. Run complete rollback E2E on a noncritical sandbox branch, including branch protection and Workflows permissions.
+4. Inspect the exact list of files on preview; rollback restores **entire historical Git tree**, not a single commit.
+5. Only then use rollback on important repositories. GitHub branch protection may require a manual PR.
 
-
-## v1.5.1 targeted fix verification
-
-- Fix source: `lib/auth/github-app.js` regex no longer mandates `Iv1.`. Valid modern GitHub App IDs like `Iv23...` now pass.
-- Login error source: `app/api/auth/login/route.js` returns sanitized, variable-specific configuration errors rather than a blanket error.
-- Automated suite: 58/58 tests passed (`npm test`), including two new tests for modern IDs and safe errors.
-- `node --check` for JS/MJS files passed.
-- Next.js `npm run build` and real GitHub authorization were not exercised in packaging environment; verify on Vercel after deploy.
+See `QA_NOTES.md` for detailed test procedures and `ROADMAP_NEXT.md` for v1.7.0.

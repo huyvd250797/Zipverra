@@ -1,5 +1,17 @@
 # Zipverra Changelog
 
+## v1.6.0 — History & Safe Rollback (2026-10-13)
+
+- Thêm tab History cho PWA: liệt kê commit, SHA, tác giả, thời gian, phân trang 20/trang và link GitHub.
+- So sánh hai Git trees đầy đủ, xem file Thêm/Sửa/Xóa.
+- Preview rollback signed HMAC (10 phút), kiểm tra commit đích là tổ tiên branch, HEAD guard và cấp quyền workflow.
+- Tạo commit khôi phục trỏ đến tree cũ với parent là HEAD hiện tại; cập nhật branch `force:false` và xác minh commit SHA. Không reset, force-push hoặc viết lại lịch sử.
+- Journal phục hồi sessionStorage + Verify rollback chỉ đọc, không tạo thêm commit nếu mạng chập chờn.
+- Chặn rollback nhạy cảm (env secrets, key files), symlink/submodule, >1.200 thay đổi và GitHub truncated tree.
+- Giữ nguyên GitHub App Authentication v1.5.1, ZIP upload, Merge/Sync, push recovery, PWA safe area và light/dark.
+- Node unit tests 73/73 đạt; chưa xác minh Next production build hay E2E GitHub thật tại môi trường đóng gói.
+
+
 ## v1.5.1 — GitHub App Client ID compatibility hotfix (2026-10-13)
 
 - Chấp nhận GitHub App Client ID mới dạng `Iv23...` không có dấu chấm, ngoài dạng cũ `Iv1...`.

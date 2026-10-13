@@ -1,30 +1,31 @@
-# Next release — Zipverra v1.6.0: History & Safe Rollback
+# Zipverra v1.7.0 — Advanced ZIP & Large Source (Next Release)
 
-## Product goal
+## Mục tiêu
 
-Sau khi v1.5.0 giới hạn truy cập thông qua GitHub App, v1.6.0 sẽ cung cấp khả năng **xem lịch sử commit/push và khôi phục phiên bản có kiểm soát ngay trên iPhone**. Không cần biết lệnh Git.
+Hỗ trợ source ZIP lớn hơn giới hạn MVP mà vẫn push ổn định trên iPhone và Vercel. Ưu tiên độ tin cậy, bảo mật ZIP và khả năng phục hồi upload hơn việc tăng dung lượng đơn thuần.
 
-## Planned modules
+## Phạm vi đề xuất
 
-1. **Push History:** truy vấn lịch sử GitHub của repo/branch đã cấp quyền, hiển thị commit message, SHA, tác giả, thời gian và link mở GitHub.
-2. **Compare Versions:** so sánh commit được chọn với HEAD hiện tại, hiển thị danh sách file thêm/sửa/xóa.
-3. **Safe Rollback:** tạo commit đảo thay đổi hoặc PR khôi phục; **không force-push**, không ghi đè lịch sử `main` và không mặc định xóa nhầm commit của cộng tác viên.
-4. **Rollback Preflight:** xác minh HEAD chưa thay đổi, branch rules và xác nhận tác động của thay đổi; nếu là commit merge hoặc có conflict, chuyển sang hướng dẫn PR thủ công.
-5. **Mobile UX:** timeline lịch sử, bộ lọc commit Zipverra, xem diff trên điện thoại, chọn commit mục tiêu và xác nhận 2 bước.
-6. **Recovery/E2E:** verify SHA sau khôi phục, test concurrency, test branch protection và private repositories.
+1. **Web Worker archive processing:** giải nén, tính hash và so sánh file trong Worker để UI không bị treo; streaming/chunking để hạn chế bộ nhớ trên iPhone.
+2. **Larger ZIP support:** phân tầng xử lý ZIP; trước khi tăng giới hạn cần kiểm soát ZIP bomb, tổng kích thước giải nén, tỉ lệ nén bất thường và tổng số file.
+3. **Chunked upload strategy:** chia file thành lô phù hợp giới hạn body Vercel Functions 4.5MB; thiết kế cho file >2.5MB bằng storage/worker path, không giả định GitHub blob REST API có chunk upload.
+4. **Resume uploads:** manifest có checksum, checkpoint giữa phiên, xác thực SHA phía GitHub; không auto-replay commit/branch writes.
+5. **Smart asset handling:** file ảnh, icon, font, binary; Git LFS chỉ khi có quy trình riêng vì GitHub REST blob không tự upload LFS content.
+6. **UX large source:** tiến trình upload theo file/batch, đánh dấu phần có thể tiếp tục, bộ lọc file lỗi, cảnh báo dung lượng/mạng di động.
+7. **Quality:** unit + integration tests ZIP lớn, network interruption, throttling 429, branch contention và PWA background/foreground.
 
-## Security / architecture
+## Architecture decision cần chốt
 
-- Dùng GitHub App user token hiện tại, không yêu cầu thêm quyền ngoài Contents: read/write cho rollback thông thường.
-- Chưa cần database nếu chỉ đọc lịch sử GitHub; có thể ghi metadata commit vào sessionStorage mà không chứa token.
-- Lưu rõ phân biệt `Revert a commit` và `Restore repository tree at a prior commit` vì phạm vi và tác động khác nhau.
+- Giữ Next.js 16 + React 19, GitHub App user token và Vercel.
+- Với upload thực sự lớn: cân nhắc Vercel Blob/S3 + queue/worker nền, thay vì chạy một Function lâu hoặc vượt request body.
+- Không tự đồng bộ/xóa file nằm ngoài phạm vi ZIP nếu không có xác nhận rõ ràng.
+- Nếu thêm cloud storage hoặc queue sẽ phát sinh biến môi trường và chi phí dịch vụ; document rõ trước khi triển khai.
 
-## Acceptance criteria
+## Definition of Done
 
-- Có thể xem ít nhất 30 commit gần nhất trên repo người dùng được phép truy cập.
-- Không rollback nếu HEAD đã đổi sau preview.
-- Không có thao tác force-push/force-reset qua app.
-- Hỗ trợ preview thay đổi và khôi phục an toàn trên màn hình 320–430 px.
-- `npm test`, `npm run build`, cùng kiểm thử GitHub repository sandbox đều đạt trước khi phát hành.
+- Full Next.js production build thành công; test E2E với private sandbox repo và source đủ lớn.
+- Push thành công được xác minh bằng commit SHA, idempotent khi retry; không force-push.
+- ZIP traversal, bomb, oversize, file-count limit và secrets đều bị từ chối an toàn.
+- Giữ History & Safe Rollback v1.6.0 không hồi quy.
 
-**After v1.6.0:** v1.7.0 — Advanced ZIP & Large Source.
+**After v1.7.0:** Zipverra v1.8.0 — Vercel Deployment Tracking.

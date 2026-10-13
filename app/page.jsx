@@ -9,12 +9,13 @@ import { PUSH_STAGES, JOURNAL_KEY, withSafeRetry, validJournal } from '../lib/re
 import { MOBILE_TABS, RECENTS_KEY, THEME_KEY, filterChanges, updateRecentRepositories, getPushTimeline } from '../lib/mobile-ui.js';
 import SplashScreen from './components/SplashScreen.jsx';
 import MobileViewportGuard from './components/MobileViewportGuard.jsx';
+import HistoryPanel from './components/HistoryPanel.jsx';
 
 async function requestOnce(endpoint, data) {
   let response;
   const controller = new AbortController();
   // A timeout on `commit` is deliberately ambiguous; journal + Verify Push resolve it.
-  const timer = setTimeout(() => controller.abort(), endpoint === 'commit' ? 110000 : 38000);
+  const timer = setTimeout(() => controller.abort(), ['commit', 'rollback/execute'].includes(endpoint) ? 110000 : 38000);
   try {
     response = await fetch(`/api/github/${endpoint}`, {
       method: 'POST',
@@ -82,6 +83,7 @@ function Icon({ name, size = 20 }) {
     search: <><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></>,
     moon: <path d="M20 16.4A8 8 0 0 1 7.6 4 8 8 0 1 0 20 16.4Z"/>,
     sun: <><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M19 5l-1.5 1.5m-11 11L5 19"/></>,
+    history: <><path d="M3 12a9 9 0 1 0 3-6.7M3 3v4h4"/><path d="M12 7v5l3 2"/></>,
   };
   return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{shapes[name] || shapes.file}</svg>;
 }
@@ -197,6 +199,7 @@ export default function Home() {
       setRepos([]); setOwner(''); setRepo(''); setBranch('main'); reset();
       setActiveTab('repositories');
       setPendingCommit(null); clearPending(); setPhase(PUSH_STAGES.IDLE);
+      try { sessionStorage.removeItem('zipverra.rollback.pending.v1'); } catch { /* no-op */ }
     } catch (e) { setError(e.message); }
     finally { setBusy(false); }
   }
@@ -384,9 +387,9 @@ export default function Home() {
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar">
       <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span></strong><small>ZIP TO GITHUB · GITHUB APP</small></div></div>
-      <div className="version"><span className="live-dot"/> v1.5.1</div>
+      <div className="version"><span className="live-dot"/> v1.6.0</div>
     </header>
-    <div className="mobile-context"><div><span className="mobile-eyebrow">ZIPVERRA / {({ home: 'HOME', repositories: 'REPOSITORIES', activity: 'ACTIVITY', settings: 'SETTINGS' })[activeTab]}</span><h2>{({ home: 'Upload source', repositories: 'GitHub repositories', activity: 'Push activity', settings: 'Preferences' })[activeTab]}</h2></div><span className={`mobile-connection ${online ? 'connected' : 'disconnected'}`} aria-label={online ? 'Online' : 'Offline'}>{online ? 'Online' : 'Offline'}</span></div>
+    <div className="mobile-context"><div><span className="mobile-eyebrow">ZIPVERRA / {({ home: 'HOME', repositories: 'REPOSITORIES', activity: 'ACTIVITY', history: 'HISTORY', settings: 'SETTINGS' })[activeTab]}</span><h2>{({ home: 'Upload source', repositories: 'GitHub repositories', activity: 'Push activity', history: 'Version history', settings: 'Preferences' })[activeTab]}</h2></div><span className={`mobile-connection ${online ? 'connected' : 'disconnected'}`} aria-label={online ? 'Online' : 'Offline'}>{online ? 'Online' : 'Offline'}</span></div>
     {activeTab !== 'activity' && (error || busy) && <button type="button" className={`mobile-global-status ${error ? 'has-error' : ''}`} onClick={() => goToTab('activity')}><span>{error ? `Cần kiểm tra: ${error}` : `${status || 'Đang xử lý...'} · ${progress}%`}</span><Icon name="arrow" size={17}/></button>}
     <main data-active-view={activeTab}>
       <section className="hero">
@@ -457,13 +460,14 @@ export default function Home() {
             {error && <div className="error-banner" role="alert">{error}{errorHint && <p className="error-hint">{errorHint}</p>}</div>}
             {result && <div className="success-banner"><div className="success-title"><Icon name="check" size={17}/> Push thành công!</div><p>Đã cập nhật {result.changed} file. Commit: <code>{result.sha.slice(0, 12)}</code></p><a href={result.url} target="_blank" rel="noopener noreferrer">Xem commit trên GitHub <Icon name="external" size={15}/></a></div>}
           </article>
-          <article className="panel settings-panel" data-mobile-view="settings"><div className="settings-heading"><Icon name="settings" size={21}/><div><h2>Tùy chỉnh Zipverra</h2><p>Cài đặt giao diện chỉ lưu trên thiết bị.</p></div></div><div className="field"><label>Giao diện</label><div className="theme-options" role="group" aria-label="Chế độ hiển thị"><button type="button" className={theme === 'dark' ? 'selected' : ''} aria-pressed={theme === 'dark'} onClick={() => setTheme('dark')}><Icon name="moon" size={18}/> Dark</button><button type="button" className={theme === 'light' ? 'selected' : ''} aria-pressed={theme === 'light'} onClick={() => setTheme('light')}><Icon name="sun" size={18}/> Light</button></div></div><div className="settings-info"><span>Phiên bản</span><strong>v1.5.1</strong></div><div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div><div className="settings-info"><span>Commit message</span><strong>Tên file ZIP</strong></div><p className="hint">Danh sách repo gần đây và giao diện được lưu trên thiết bị, không chứa GitHub token.</p></article>
+          <HistoryPanel authenticated={auth.authenticated} owner={owner} repo={repo} branch={branch} online={online} busy={busy} setBusy={setBusy} pendingPush={pendingCommit} api={api} requestOnce={requestOnce}/>
+          <article className="panel settings-panel" data-mobile-view="settings"><div className="settings-heading"><Icon name="settings" size={21}/><div><h2>Tùy chỉnh Zipverra</h2><p>Cài đặt giao diện chỉ lưu trên thiết bị.</p></div></div><div className="field"><label>Giao diện</label><div className="theme-options" role="group" aria-label="Chế độ hiển thị"><button type="button" className={theme === 'dark' ? 'selected' : ''} aria-pressed={theme === 'dark'} onClick={() => setTheme('dark')}><Icon name="moon" size={18}/> Dark</button><button type="button" className={theme === 'light' ? 'selected' : ''} aria-pressed={theme === 'light'} onClick={() => setTheme('light')}><Icon name="sun" size={18}/> Light</button></div></div><div className="settings-info"><span>Phiên bản</span><strong>v1.6.0</strong></div><div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div><div className="settings-info"><span>Commit message</span><strong>Tên file ZIP</strong></div><p className="hint">Danh sách repo gần đây và giao diện được lưu trên thiết bị, không chứa GitHub token.</p></article>
           <article className="hint-card" data-mobile-view="settings"><Icon name="shield" size={22}/><div><strong>Quyền GitHub tối thiểu</strong><p>GitHub App dùng token người dùng có thời hạn, giới hạn bởi quyền người dùng và các repository được cài đặt. Cần <b>Contents: Read & write</b> và <b>Workflows: Read & write</b> khi sửa CI. Token/refresh token ở cookie HttpOnly được mã hóa; branch protection vẫn có thể yêu cầu Pull Request.</p></div></article>
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v1.5.1</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v1.6.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
-  <nav className="mobile-bottom-nav" aria-label="Điều hướng Zipverra">{[{id:'home',label:'Home',icon:'home'},{id:'repositories',label:'Repos',icon:'branch'},{id:'activity',label:'Activity',icon:'activity'},{id:'settings',label:'Settings',icon:'settings'}].map((tab) => <button type="button" key={tab.id} className={`mobile-nav-item ${activeTab === tab.id ? 'active' : ''}`} aria-current={activeTab === tab.id ? 'page' : undefined} onClick={() => goToTab(tab.id)}><Icon name={tab.icon} size={21}/><span>{tab.label}</span>{tab.id === 'activity' && pendingCommit && <i className="nav-alert" aria-label="Có push cần xác minh"/>}</button>)}</nav>
+  <nav className="mobile-bottom-nav" aria-label="Điều hướng Zipverra">{[{id:'home',label:'Home',icon:'home'},{id:'repositories',label:'Repos',icon:'branch'},{id:'activity',label:'Activity',icon:'activity'},{id:'history',label:'History',icon:'history'},{id:'settings',label:'Settings',icon:'settings'}].map((tab) => <button type="button" key={tab.id} className={`mobile-nav-item ${activeTab === tab.id ? 'active' : ''}`} aria-current={activeTab === tab.id ? 'page' : undefined} onClick={() => goToTab(tab.id)}><Icon name={tab.icon} size={21}/><span>{tab.label}</span>{tab.id === 'activity' && pendingCommit && <i className="nav-alert" aria-label="Có push cần xác minh"/>}</button>)}</nav>
   </>;
 }

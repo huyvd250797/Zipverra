@@ -1,4 +1,4 @@
-# QA & Deployment Checklist — Zipverra v1.5.1
+# QA & Deployment Checklist — Zipverra v1.6.0
 
 ## Before deploying
 
@@ -31,3 +31,21 @@
 - Node built-in unit tests cover business logic and mocked GitHub API. They **do not** prove the live GitHub app is installed/authorized or Vercel production build succeeds.
 - Refresh token singleflight currently works in one running Function instance; multi-instance atomic refresh needs a central session store in a future version. Under races, re-login may be required.
 - Branch rules, organization policies, and permission changes need live GitHub integration tests.
+
+
+## v1.6.0 — History & Rollback E2E (cần chạy trên GitHub sandbox)
+
+1. Install GitHub App trên repo thử nghiệm, cấp Contents write; Workflows write khi cần.
+2. Tạo ba commit thử nghiệm A → B → C trên branch riêng có thể push; mở History và xác nhận message/SHA/ngày tác giả khớp GitHub.
+3. So sánh A và C, kiểm tra số file added/modified/deleted; thử commit có executable bit.
+4. Preview rollback về A, kiểm tra warning về việc xóa/sửa file và proof thời hạn 10 phút.
+5. Nhập sai mã xác nhận `ROLLBACK`, đảm bảo nút mutation vẫn disabled.
+6. Sau preview, tạo commit D trên GitHub → rollback phải bị chặn `ROLLBACK_STALE_HEAD`, không cập nhật branch.
+7. Refresh preview khi HEAD thay đổi, xác nhận, thực thi rollback → GitHub phải có một commit mới, parent chính là HEAD trước đó, tree SHA bằng commit A; không có force-push.
+8. Bật branch protection/ruleset → rollback phải từ chối quyền, không làm lệch HEAD; tạo Pull Request bằng GitHub thủ công nếu cần.
+9. Thử repo có `.github/workflows/ci.yml` bị thay đổi khi quyền Workflows chỉ read → preview phải từ chối trước mutation.
+10. Giả lập mạng mất sau PATCH → dùng History → Xác minh rollback để phát hiện đúng trạng thái; không tạo thêm commit.
+11. Thử symlink, submodule, `.env.production`, hơn 1.200 thay đổi hoặc Git tree bị truncated → không được rollback.
+12. Kiểm thử iPhone PWA độc lập: đồng hồ/Dynamic Island không che UI, tab History hiển thị trên màn hình 320/375/390/430 px, scrolling/diff không tràn ngang; Light/Dark.
+
+Rollback v1.6.0 khôi phục **toàn bộ tree của commit cũ** chứ không chỉ revert một commit. Phải sao lưu trạng thái source quan trọng và đánh giá database migrations trước khi xác nhận.

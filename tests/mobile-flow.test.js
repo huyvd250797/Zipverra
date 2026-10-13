@@ -3,11 +3,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const read = (name) => readFileSync(new URL(`../${name}`, import.meta.url), 'utf8');
 
-test('mobile navigation has four functional sections and retains GitHub/OAuth fields', () => {
+test('mobile navigation includes five sections and retains GitHub/OAuth fields', () => {
  const page = read('app/page.jsx');
  for (const view of ['home','repositories','activity','settings']) {
    assert.match(page, new RegExp(`data-mobile-view="${view}"`));
  }
+ assert.match(read('app/components/HistoryPanel.jsx'), /data-mobile-view="history"/);
  assert.match(page, /onClick=\{\(\) => goToTab\(tab\.id\)\}/);
  assert.match(page, /aria-current=\{activeTab === tab\.id/);
  assert.match(page, /\/api\/auth\/login/);

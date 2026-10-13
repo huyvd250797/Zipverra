@@ -240,3 +240,63 @@ html[data-theme="light"] .timeline-step small{color:#59748b}
   .app-install-actions {display:grid; grid-template-columns:minmax(0, 1fr);}
   .app-install-reload {width:100%;}
 }
+
+/* Zipverra v1.6.0 — History & Safe Rollback; all controls touch-safe on iPhone. */
+.history-panel{min-width:0;overflow:hidden}
+.history-heading{margin-bottom:16px}
+.history-eyebrow{font-size:10px;font-weight:800;color:#6ee9c5;letter-spacing:1.6px}
+.history-heading h2{font-size:20px;margin:7px 0;color:#e8f5ff}
+.history-heading p,.history-section>p{font-size:12px;line-height:1.65;color:#9cb2c9;margin:6px 0 14px}
+.history-repo-label{display:flex;align-items:center;gap:10px;justify-content:space-between;background:#142438;border:1px solid #294459;border-radius:11px;padding:12px;min-width:0;font-size:12px}
+.history-repo-label strong{overflow-wrap:anywhere;min-width:0}.history-repo-label code{font-size:11px;color:#74ecc4}
+.history-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:14px 0}
+.history-actions .button{min-height:44px}
+.history-list{display:grid;gap:8px;max-height:380px;overflow:auto;overscroll-behavior:contain;padding:2px 1px}
+.history-commit{display:flex;align-items:stretch;gap:6px;background:#132336;border:1px solid #284052;border-radius:11px;padding:3px}
+.history-commit.selected{border-color:#49c9a6;background:#143c36}
+.history-commit-select{min-width:0;flex:1;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:5px;color:#e7f2ff;background:transparent;border:0;padding:11px;cursor:pointer}
+.history-commit-title{font-weight:750;font-size:12px;line-height:1.4;overflow-wrap:anywhere}
+.history-commit-meta{font-size:10px;color:#95b0c5;line-height:1.5;overflow-wrap:anywhere}
+.history-commit-meta code{font-size:10px;color:#7aebc2}
+.history-commit>a{align-self:center;font-size:21px;padding:9px 12px;color:#73e7c2;text-decoration:none}
+.history-section{margin-top:19px;border-top:1px solid #2a4055;padding-top:18px}
+.history-section h3{font-size:15px;margin:0 0 12px;color:#e6f3ff}
+.history-compare-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.history-compare-grid label,.history-phrase{display:flex;flex-direction:column;gap:7px;font-size:11px;font-weight:700;color:#a5b8ce;min-width:0}
+.history-compare-grid select,.history-phrase input{width:100%;min-width:0;min-height:46px;padding:9px 12px;font-size:16px;color:#e3f1ff;border-radius:9px;border:1px solid #35536a;background:#101e2f}
+.history-preview{margin-top:15px;border:1px solid #315167;background:#102334;padding:12px;border-radius:11px;min-width:0}
+.history-preview>p{font-size:12px;line-height:1.65;color:#abc2d8}
+.history-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:12px 0}
+.history-stats span{min-width:0;text-align:center;font-size:11px;font-weight:850;padding:10px 3px;border:1px solid #29485b;border-radius:9px;background:#162a3d}
+.history-stats .good{color:#6ce2b5}.history-stats .warn{color:#efcf85}.history-stats .bad{color:#ff9fa3}
+.history-file-list{max-height:250px;overflow:auto;overscroll-behavior:contain;border:1px solid #294255;border-radius:9px}
+.history-file{display:flex;align-items:flex-start;gap:9px;min-width:0;padding:9px 10px;font-size:11px;line-height:1.45;border-bottom:1px solid #2b4054;color:#c5d8e9}
+.history-file:last-child{border:0}.history-file>span:last-child{overflow-wrap:anywhere;min-width:0}
+.history-warning{padding:12px;background:#3a2d23;color:#ffdfb3;border:1px solid #84613d;border-radius:10px;font-size:11px;line-height:1.65;overflow-wrap:anywhere;margin:12px 0}
+.history-warning strong{color:#ffe5c0}.history-warning p{margin:6px 0 0;color:#f5d2a9}.history-warning small{display:block;margin-top:9px}
+.history-warning code{overflow-wrap:anywhere}.history-expiry{font-size:10px!important;color:#a8bed5!important}
+.history-phrase{margin:13px 0}.history-phrase strong{color:#f7d39d}
+.button.history-danger{background:#b94758;border-color:#e8808b;color:#fff;font-size:13px;min-height:48px}
+.button.history-danger:disabled{opacity:.5;cursor:not-allowed}
+.history-empty,.history-muted{font-size:12px;line-height:1.65;color:#92aac1;border:1px dashed #3b536b;border-radius:10px;padding:14px;margin:13px 0}
+.history-notice{margin-top:14px;padding:12px;background:#173c33;color:#9bf5d1;font-size:11px;line-height:1.6;border:1px solid #317961;border-radius:9px}
+.history-panel button:focus-visible,.history-panel a:focus-visible,.history-panel select:focus-visible,.history-panel input:focus-visible{outline:2px solid #6eebc6;outline-offset:3px}
+@media(max-width:760px){
+  .content-grid[data-active-view="history"] [data-mobile-view="history"]{display:block}
+  .mobile-bottom-nav{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .mobile-nav-item{min-width:0;padding-inline:1px}
+  .mobile-nav-item span{font-size:9px}
+  .history-panel{scroll-margin-top:18px}
+}
+@media(max-width:360px){.history-compare-grid{grid-template-columns:minmax(0,1fr)}.history-heading h2{font-size:18px}.history-panel{padding:14px}.mobile-nav-item span{font-size:8.5px}}
+html[data-theme="light"] .history-heading h2,html[data-theme="light"] .history-section h3,html[data-theme="light"] .history-commit-title{color:#18334b}
+html[data-theme="light"] .history-heading p,html[data-theme="light"] .history-section>p,html[data-theme="light"] .history-commit-meta{color:#536c83}
+html[data-theme="light"] .history-repo-label,html[data-theme="light"] .history-commit,html[data-theme="light"] .history-preview,html[data-theme="light"] .history-stats span{background:#f2f8fc;color:#214058;border-color:#d1e1e9}
+html[data-theme="light"] .history-commit.selected{background:#ddf7ed;border-color:#3db18b}
+html[data-theme="light"] .history-compare-grid select,html[data-theme="light"] .history-phrase input{background:#fff;color:#1b374f;border-color:#bdd1df}
+html[data-theme="light"] .history-file-list{border-color:#cadce7}
+html[data-theme="light"] .history-file{border-color:#d9e5ed;color:#2c4a62}
+html[data-theme="light"] .history-warning{background:#fff4e5;color:#875820;border-color:#e3b76e}
+html[data-theme="light"] .history-warning p,html[data-theme="light"] .history-warning strong{color:#80521e}
+html[data-theme="light"] .history-notice{background:#e2f9ef;color:#14664e;border-color:#87cbb2}
+html[data-theme="light"] .history-empty{color:#536c83;border-color:#abc0cf}
