@@ -1,9 +1,40 @@
-# Zipverra v1.7.0 — Advanced ZIP & Large Source
+# Zipverra v1.8.0 — Smart Push & Workflow 3.0
 
 **Next.js 16 · React 19 · Vercel-targeted · Installable mobile PWA**  
 **Slogan:** Push to GitHub. From Your Phone.
 
 Zipverra nhận ZIP do ChatGPT xuất, đọc và đối chiếu file với một repository GitHub, dùng **tên ZIP bỏ `.zip` làm commit message**, cho chọn branch (mặc định `main`), xem preview Merge/Sync, commit rồi xác minh thay đổi trên GitHub. App chạy trên Vercel; không cần chạy Node server lâu dài hoặc Python để giải nén.
+
+## 1. Điểm mới v1.8.0 — Smart Push & Workflow 3.0
+
+**Phiên bản cơ sở: v1.7.0.** Không có chức năng Vercel Deployment Tracking, không cần Vercel API Token hay biến môi trường mới. Vercel chỉ là nơi chạy Zipverra.
+
+Quy trình mobile giữ nguyên: **Repos → Upload ZIP → Phân tích/Review → Xác nhận & Push → Activity**. Tab Repos mặc định, sau khi chọn repo tự chuyển Upload. GitHub App Access vẫn trong Settings.
+
+### Smart repositories
+
+- Tìm kiếm repository, ưu tiên **ghim yêu thích** (favorite) và repository gần đây. Ghim được lưu cục bộ trên thiết bị, không chứa token.
+- Đổi repository sẽ xóa ZIP/preview cũ để tránh push sang nhầm repo; branch mặc định `main`.
+
+### Smart ZIP analyzer
+
+- Giải nén ở Web Worker từ v1.7.0; hiển thị framework phát hiện từ manifest (`Next.js`, `Vite`, `React`, `Node.js`, `Python`, `Flutter`, v.v.) và số file binary.
+- Cảnh báo thay đổi lockfile, `package.json`, `next.config`, workflows và dự kiến xóa file bằng Sync; mô tả những file hoặc thư mục build/cache đã bỏ qua.
+- Đường dẫn nguy hiểm (`.env.local`, credentials, private keys, symlink, path traversal) tiếp tục bị **chặn bởi ZIP parser hiện tại**; analyzer là kiểm tra bổ trợ, không thay thế audit bảo mật.
+
+### Review & selective staging
+
+- Bộ lọc Thêm / Sửa / Xóa, tìm theo tên file, checkbox chọn/bỏ từng file, chọn/bỏ toàn bộ; danh sách hiển thị 100 mục mỗi lần để tránh render hàng nghìn hàng trên iPhone.
+- Bỏ chọn nghĩa là **không tạo thay đổi cho path đó**, kể cả khi mode Sync đang dự định xóa file trên GitHub.
+- `Xác nhận & Push` chỉ cho phép khi còn file được chọn. Mọi thay đổi lựa chọn đều đặt lại checkbox đồng ý; xóa trong Sync cần xác nhận riêng.
+- Chỉ kiểm tra quyền Workflows: write cho file `.github/workflows` **đang được chọn**. HEAD vẫn được kiểm tra lại trong backend trước commit.
+- **Text diff** cho file UTF-8 nhỏ (tối đa 64 KiB mỗi bản, 320 dòng/phía); backend đọc blob từ đúng SHA ở HEAD đã phân tích, xác minh repo + installation; không chấp nhận SHA tùy ý từ trình duyệt. Không hỗ trợ nhị phân hoặc file quá lớn, không làm thay đổi file trên GitHub.
+
+### Live Push Activity
+
+- Tự chuyển Activity ngay lúc nhấn Push; hiển thị số file/batch và lượng dữ liệu đã upload, tốc độ/ETA **ước tính**. Batch 12 file, tối đa 2 request song song.
+- Fingerprint/checkpoint dùng **chỉ các file được chọn**, ngăn tái dùng blob của danh sách thay đổi khác. Giữ xác minh HEAD/commit SHA, trạng thái unconfirmed, nút Verify Push, retry an toàn từ v1.7.0.
+- Không có background upload nếu đóng PWA. Không tự retry commit có kết quả chưa xác nhận.
 
 ## 1. Điểm mới v1.7.0
 
@@ -54,7 +85,7 @@ Tab **Repos** chỉ chứa repo, branch, tìm kiếm và repo gần đây (đã 
 
 ## 2. Đưa source lên GitHub và Vercel
 
-1. Giải nén bản ZIP; upload **các file bên trong `Zipverra-v1.7.0/`** vào **gốc repository** của Zipverra (chứa ngay `package.json`, `app/`, `lib/`, `public/`). Không upload nguyên file ZIP lên GitHub với kỳ vọng Vercel tự giải nén.
+1. Giải nén bản ZIP; upload **các file bên trong `Zipverra-v1.8.0/`** vào **gốc repository** của Zipverra (chứa ngay `package.json`, `app/`, `lib/`, `public/`). Không upload nguyên file ZIP lên GitHub với kỳ vọng Vercel tự giải nén.
 2. Vercel → **Add New Project** → import repository → Next.js / Root Directory `./`.
 3. Trước khi triển khai hoạt động đăng nhập, tạo GitHub App theo Mục 3 và cấu hình environment variables Mục 4.
 4. Deploy → Vercel Logs phải chạy `npm run build` thành công. Các phiên bản trước không thể sử dụng lại Client ID/Secret OAuth App cũ.

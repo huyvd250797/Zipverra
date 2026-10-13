@@ -1,3 +1,13 @@
+# QA Notes — Zipverra v1.8.0
+
+- Smart Push workflow, selective staging, text diff, analyzer and live upload counters added.
+- **96/96 unit tests passed**. Parser check, ZIP integrity and import graph are validated separately.
+- `next build` NOT verified locally (npm registry DNS EAI_AGAIN); requires successful build on Vercel.
+- Test with a disposable repository before `main`, including omitted Sync deletes and stale-HEAD prevention.
+- The analyzer is heuristic and **not** a complete secrets scanner; full security analysis is in v1.10.0.
+- Activity throughput and ETA are estimates and reset each push; they are not guarantees.
+- In-app GitHub blob previews are read-only, UTF-8, max 64 KiB/side; protect private repositories and avoid sharing screenshots of sensitive source.
+
 # QA & Deployment Checklist — Zipverra v1.7.0
 
 ## Before deploying

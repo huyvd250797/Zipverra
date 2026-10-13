@@ -1,5 +1,17 @@
 # Zipverra Changelog
 
+## v1.8.0 — Smart Push & Workflow 3.0 (2026-10-13)
+
+- Source baseline v1.7.0. **Không có Vercel Deployment Tracking.**
+- Repositories: pin favorite + ưu tiên repo gần đây; vẫn repo-first và App Access trong Settings.
+- Analyzer nhận diện framework, cảnh báo file cấu hình/workflow/Sync deletion, thông tin ZIP ignored paths.
+- Review: tìm file, chọn/bỏ chọn từng thay đổi, chọn tất cả, view text diff với HEAD SHA guard.
+- Sync bảo toàn file bỏ chọn; chỉ gửi file đã chọn đến backend, checkpoint hash tính lại theo tập thay đổi được chọn.
+- Activity: tiến độ upload blob theo file và byte, batch, estimated throughput/ETA; giữ Verify Push/Recovery.
+- Read-only endpoint `api/github/text`, kiểm tra quyền GitHub App và tránh lộ file lớn/nhị phân.
+- Automated tests: 96/96 đạt; parser JS/JSX, relative imports và ZIP integrity kiểm tra riêng. Production build/E2E cần xác minh trên Vercel vì không truy cập npm registry ở môi trường đóng gói.
+
+
 ## v1.7.0 — Advanced ZIP & Repo-first Mobile Flow (2026-10-13)
 
 - **Repo-first mobile:** Repos mặc định → chọn repo (main) → Upload ZIP → Phân tích/Preview → Xác nhận & Push → tự mở Activity.

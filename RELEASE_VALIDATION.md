@@ -1,28 +1,28 @@
-# Zipverra v1.7.0 — Release Validation
+# Zipverra v1.8.0 — Release Validation
 
-**Date:** 2026-10-13
+Release: 2026-10-13 · Based on v1.7.0
 
-## Performed during source packaging
+## Verified locally
 
-- `npm test`: **83/83 unit tests passed**, including new worker/batch/resume/repo-first workflow checks.
-- TypeScript parser validated **47 JS/JSX/MJS modules**: 0 syntax errors; relative import paths were checked: 0 missing.
-- Confirmed files still include existing GitHub App auth, PWA components, History/Rollback and GitHub API routes.
-- File names, branch flow and batch/resume logic reviewed.
-- ZIP archive integrity and contents verified after packaging.
+- `node --test tests/*.test.js`: **96/96 passed**.
+- JS/JSX syntax parsed using global TypeScript parser; 50 modules passed (record the final count in QA_NOTES if changed).
+- GitHub App, Safe Rollback, Worker archive, PWA, and batch checkpoint modules preserved.
+- ZIP integrity to be checked after packaging.
 
-## Not verified in this environment
+## Not verified
 
-- `npm install` failed with `EAI_AGAIN` reaching `registry.npmjs.org`, therefore no local `next build` or Next.js browser E2E.
-- No live GitHub App private-repo commit/rollback or Vercel production deploy.
-- iPhone Safari PWA standalone and memory handling for 80 MiB ZIP need actual-device tests.
+- `npm install` could not reach `registry.npmjs.org` (EAI_AGAIN); therefore **`npm run build` was not performed locally**.
+- GitHub App live login, push of selected files, Vercel deploy, and Safari PWA full-device E2E require testing after deployment.
 
-## Production release checklist
+## Acceptance checklist
 
-1. Push source to a **test branch** first when possible, let Vercel build and confirm Next.js 16/React 19/Worker bundling succeeds.
-2. Run `npm test` and `npm run build` in GitHub Actions or Vercel, check runtime logs.
-3. Confirm GitHub App 5 env variables remain configured; no new environment variables needed.
-4. Validate Repo→ZIP→Preview→Commit & Push→Activity→SHA verified on a sandbox repository.
-5. Confirm resume after disconnect before commit, verify unknown status after commit, and rollback safety.
-6. On real iPhone, confirm safe area, small-screen navigation, Dark/Light, ZIP memory behavior.
-
-**User-visible release status:** Source ready to test on Vercel; production acceptance is conditional on successful build and E2E.
+1. On a test branch, run `npm install`, `npm test`, `npm run build` (GitHub Actions / Vercel Build Logs).
+2. Login with GitHub App; pick repo, branch `main`; verify favorites persist.
+3. Analyze a ZIP with Next.js and `.github/workflows` files, confirm warnings.
+4. Exclude one add/modify/delete path and push to test repo; verify the excluded path remains untouched.
+5. For Sync mode, exclude a deletion; ensure it remains on GitHub after push.
+6. Test text diff read on same HEAD, and stale preview detection after a concurrent commit.
+7. Test Activity telemetry, completion and SHA verification, reconnect/resume, uncertain commit journal.
+8. Test History + Safe Rollback to sandbox commit; never force push.
+9. Verify iPhone PWA safe area, dark/light layout at 320px and larger, offline handling.
+10. No additional environment variables; keep GitHub App secrets server-side.

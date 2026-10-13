@@ -9,6 +9,7 @@ import { zipCommitMessage } from '../lib/paths.js';
 import { LIMITS } from '../lib/constants.js';
 import { PUSH_STAGES, JOURNAL_KEY, withSafeRetry, validJournal } from '../lib/reliability.js';
 import { MOBILE_TABS, RECENTS_KEY, THEME_KEY, filterChanges, updateRecentRepositories, getPushTimeline } from '../lib/mobile-ui.js';
+import { FAVORITES_KEY, analyzeSource, selectChanges, toggleExcluded, filterReview, sortedRepositories, updateFavorites, isTextPreviewable, decodePreview, makeLineDiff, transferEstimate } from '../lib/smart-push.js';
 import SplashScreen from './components/SplashScreen.jsx';
 import MobileViewportGuard from './components/MobileViewportGuard.jsx';
 import HistoryPanel from './components/HistoryPanel.jsx';
@@ -96,6 +97,13 @@ export default function Home() {
   const [repoSearch, setRepoSearch] = useState('');
   const [loadingRepos, setLoadingRepos] = useState(false);
   const [recents, setRecents] = useState([]);
+  const [favorites, setFavorites] = useState([]);
+  const [excludedPaths, setExcludedPaths] = useState([]);
+  const [reviewSearch, setReviewSearch] = useState('');
+  const [visibleLimit, setVisibleLimit] = useState(100);
+  const [diffViewer, setDiffViewer] = useState(null);
+  const diffRequestRef = useRef(0);
+  const [transfer, setTransfer] = useState(null);
   const [changeFilter, setChangeFilter] = useState('all');
   const [syncConfirmed, setSyncConfirmed] = useState(false);
   const [auth, setAuth] = useState({ loading: true, authenticated: false, user: null });
@@ -127,6 +135,8 @@ export default function Home() {
       if (oldTheme === 'dark' || oldTheme === 'light') setTheme(oldTheme);
       const oldRecents = JSON.parse(window.localStorage.getItem(RECENTS_KEY) || '[]');
       if (Array.isArray(oldRecents)) setRecents(oldRecents.filter((v) => typeof v === 'string').slice(0, 5));
+      const oldFavorites = JSON.parse(window.localStorage.getItem(FAVORITES_KEY) || '[]');
+      if (Array.isArray(oldFavorites)) setFavorites(oldFavorites.filter((v) => typeof v === 'string').slice(0, 8));
     } catch { /* private browsing may block local storage */ }
   }, []);
   useEffect(() => {
@@ -150,6 +160,13 @@ export default function Home() {
   }
   function clearUploadCheckpoint() {
     try { window.localStorage.removeItem(UPLOAD_CHECKPOINT_KEY); } catch { /* no persistent storage available */ }
+  }
+  function toggleFavorite(value) {
+    setFavorites((current) => {
+      const next = updateFavorites(current, value);
+      try { window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(next)); } catch { /* optional preference */ }
+      return next;
+    });
   }
   function saveRecent(value) {
     setRecents((current) => {
@@ -223,10 +240,13 @@ export default function Home() {
   }
 
   const commitMessage = useMemo(() => zipCommitMessage(file?.name), [file]);
-  const stats = preview ? countChanges(preview.changes) : null;
-  const shownChanges = preview ? filterChanges(preview.changes, changeFilter) : [];
+  const selectedChanges = useMemo(() => preview ? selectChanges(preview.changes, excludedPaths) : [], [preview, excludedPaths]);
+  const stats = preview ? countChanges(selectedChanges) : null;
+  const totalStats = preview ? countChanges(preview.changes) : null;
+  const shownChanges = preview ? filterReview(preview.changes, changeFilter, reviewSearch) : [];
+  const selectedBytes = selectedChanges.filter(c => c.kind !== 'delete').reduce((sum, c) => sum + (c.bytes || 0), 0);
   const timeline = getPushTimeline(phase, { preview: Boolean(preview), result: Boolean(result), pending: Boolean(pendingCommit) });
-  const displayedRepos = repos.filter((item) => item.full_name.toLowerCase().includes(repoSearch.trim().toLowerCase()) || item.full_name === `${owner}/${repo}`);
+  const displayedRepos = sortedRepositories(repos, favorites, recents).filter((item) => item.full_name.toLowerCase().includes(repoSearch.trim().toLowerCase()) || item.full_name === `${owner}/${repo}`);
   const authorizedRecents = recents.filter((name) => repos.some((item) => item.full_name === name));
   const chosenRepo = Boolean(owner.trim() && repo.trim() && repos.some((item) => item.full_name.toLowerCase() === `${owner}/${repo}`.toLowerCase()));
   const flowStep = phase === PUSH_STAGES.SUCCEEDED ? 5 : [PUSH_STAGES.UPLOADING, PUSH_STAGES.COMMITTING, PUSH_STAGES.VERIFYING, PUSH_STAGES.UNCONFIRMED].includes(phase) ? 4 : !chosenRepo ? 0 : !file ? 1 : !preview ? 2 : !confirmed ? 3 : 4;
@@ -235,6 +255,8 @@ export default function Home() {
     setConfirmed(false);
     setSyncConfirmed(false);
     setChangeFilter('all');
+    setExcludedPaths([]); setReviewSearch(''); setVisibleLimit(100); setDiffViewer(null); diffRequestRef.current += 1;
+    setTransfer(null);
     setResult(null);
     setError(''); setErrorHint('');
     setStatus('');
@@ -294,14 +316,10 @@ export default function Home() {
       setProgress(75);
       const remote = await api('snapshot', input);
       const changes = calculateChanges(archive.files, remote.files, mode);
-      const workflowPaths = changes.filter((c) => /^\.github\/workflows\/[^/]+\.ya?ml$/i.test(c.path)).map((c) => c.path);
-      if (workflowPaths.length) {
-        setStatus('Đang kiểm tra quyền Workflows: write cho file CI...');
-        await api('preflight', { ...input, workflowPaths });
-      }
-      setPreview({ archive, remote, changes, input: { owner: input.owner, repo: input.repo, branch: input.branch }, mode, filename: file.name });
+      const insights = analyzeSource({ ...archive, changes });
+      setPreview({ archive, remote, changes, insights, input: { owner: input.owner, repo: input.repo, branch: input.branch }, mode, filename: file.name });
       saveRecent(`${input.owner}/${input.repo}`);
-      setChangeFilter('all');
+      setChangeFilter('all'); setReviewSearch(''); setVisibleLimit(100); setExcludedPaths([]); setDiffViewer(null); diffRequestRef.current += 1;
       setConfirmed(false);
       setStatus(changes.length ? `Đã phân tích: ${changes.length} thay đổi cần xử lý.` : 'ZIP và repository đã đồng bộ, không có gì cần push.');
       setProgress(100);
@@ -321,7 +339,7 @@ export default function Home() {
     setPreview(null);
     setConfirmed(false);
     setSyncConfirmed(false);
-    setChangeFilter('all');
+    setChangeFilter('all'); setExcludedPaths([]); setDiffViewer(null);
     setError(''); setErrorHint('');
   }
 
@@ -350,29 +368,67 @@ export default function Home() {
     } finally { setBusy(false); }
   }
 
+  function updateSelection(path) {
+    setExcludedPaths(current => toggleExcluded(preview?.changes || [], current, path));
+    setConfirmed(false); setSyncConfirmed(false);
+  }
+  function bulkSelection(keep) {
+    if (!preview) return;
+    setExcludedPaths(keep ? [] : preview.changes.map(change => change.path));
+    setConfirmed(false); setSyncConfirmed(false);
+  }
+  async function inspectChange(change) {
+    if (!preview || busy) return;
+    const requestId = ++diffRequestRef.current;
+    setDiffViewer({ path:change.path, loading:true, message:'Đang tải nội dung để so sánh…' });
+    try {
+      const localFile = preview.archive.files.find(f => f.path === change.path);
+      let after = '';
+      if (change.kind !== 'delete') {
+        if (!isTextPreviewable(localFile)) throw new Error('File này lớn, dạng nhị phân hoặc không phù hợp để hiển thị text diff.');
+        after = decodePreview(localFile.data);
+        if (after === null) throw new Error('File không phải UTF-8 text.');
+      }
+      let before = '';
+      if (change.kind !== 'add') {
+        const response = await api('text', { ...preview.input, expectedHead:preview.remote.head, path:change.path });
+        if (!response.available) throw new Error(response.reason || 'Không xem được nội dung cũ.');
+        before = response.content;
+      }
+      const diff=makeLineDiff(before, after);
+      if (requestId === diffRequestRef.current) setDiffViewer({ path:change.path, ...diff, loading:false });
+    } catch (e) {
+      if (requestId === diffRequestRef.current) setDiffViewer({path:change.path, loading:false, message:e.message, lines:[]});
+    }
+  }
+
   async function push() {
-    if (!preview || !confirmed || (mode === 'sync' && stats?.delete > 0 && !syncConfirmed) || busy || pendingCommit) return;
-    setBusy(true); setResult(null); setError(''); setErrorHint(''); setProgress(0);
+    if (!preview || !selectedChanges.length || preview.insights?.hasBlockingWarning || !confirmed || (mode === 'sync' && stats?.delete > 0 && !syncConfirmed) || busy || pendingCommit) return;
+    setBusy(true); setResult(null); setError(''); setErrorHint(''); setProgress(0); setTransfer(null);
     setPhase(PUSH_STAGES.UPLOADING);
     let commitPayload = null;
     try {
-      if (!online) throw new Error('Thiết bị đang offline. Hãy kết nối Internet rồi thử lại.');
       goToTab('activity');
+      if (!online) throw new Error('Thiết bị đang offline. Hãy kết nối Internet rồi thử lại.');
       const input = getInputs();
       if (input.owner !== preview.input.owner || input.repo !== preview.input.repo || input.branch !== preview.input.branch || mode !== preview.mode || file?.name !== preview.filename) {
         throw new Error('Cấu hình đã thay đổi. Hãy preview lại.');
       }
+      // Validate only selected changes: an excluded workflow must not require Workflows: write.
+      const workflowPaths = selectedChanges.filter(c => /^\.github\/workflows\/[^/]+\.ya?ml$/i.test(c.path)).map(c => c.path);
+      await api('preflight', { ...input, workflowPaths });
       // Refresh expiring GitHub App credentials once before parallel blob workers.
       // This reduces refresh-token races between concurrent serverless requests.
       const sessionResponse = await fetch('/api/auth/session', { cache: 'no-store' });
       const sessionState = await sessionResponse.json().catch(() => ({}));
       if (!sessionResponse.ok || !sessionState.authenticated) throw new Error('Phiên GitHub App đã hết hạn. Hãy đăng nhập lại trước khi push.');
       const fingerprint = await manifestFingerprint({ ...input, head: preview.remote.head, mode,
-        changes: preview.changes, files: preview.archive.files });
-      const existing = validatedCheckpoint(loadUploadCheckpoint(), fingerprint, preview.changes);
+        changes: selectedChanges, files: preview.archive.files });
+      const existing = validatedCheckpoint(loadUploadCheckpoint(), fingerprint, selectedChanges);
       const checkpoint = Object.assign(Object.create(null), existing);
+      const transferStarted = Date.now();
       const { blobShas, reused } = await uploadBlobsInBatches({
-        changes: preview.changes,
+        changes: selectedChanges,
         files: preview.archive.files,
         existing,
         concurrency: 2,
@@ -386,13 +442,14 @@ export default function Home() {
           Object.assign(checkpoint, completed);
           saveUploadCheckpoint(makeCheckpoint(fingerprint, checkpoint));
         },
-        onProgress: ({ completed, total, batch, totalBatches, reused: reusedCount }) => {
+        onProgress: ({ completed, total, batch, totalBatches, reused: reusedCount, completedBytes, totalBytes, uploadedBytes }) => {
           setProgress(Math.round((completed / Math.max(1, total)) * 80));
+          setTransfer({ ...transferEstimate(uploadedBytes, Math.max(0, totalBytes - (completedBytes - uploadedBytes)), Date.now() - transferStarted), completed, total, batch, totalBatches, reused: reusedCount, completedBytes, totalBytes });
           setStatus(`Git blobs: ${completed}/${total} · Batch ${batch}/${totalBatches}${reusedCount ? ` · Phục hồi ${reusedCount} file` : ''}`);
         },
       });
       if (reused) setStatus(`Đã tái sử dụng ${reused} Git blob từ lần upload trước; bắt đầu commit...`);
-      const entries = preview.changes.map((c) => ({ path: c.path, mode: c.mode, sha: c.kind === 'delete' ? null : blobShas.get(c.path) }));
+      const entries = selectedChanges.map((c) => ({ path: c.path, mode: c.mode, sha: c.kind === 'delete' ? null : blobShas.get(c.path) }));
       commitPayload = { ...input, expectedHead: preview.remote.head, message: commitMessage, entries };
       rememberPending(commitPayload);
       setPendingCommit(commitPayload);
@@ -422,13 +479,13 @@ export default function Home() {
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar">
       <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span></strong><small>ZIP TO GITHUB · GITHUB APP</small></div></div>
-      <div className="version"><span className="live-dot"/> v1.7.0</div>
+      <div className="version"><span className="live-dot"/> v1.8.0</div>
     </header>
     <div className="mobile-context"><div><span className="mobile-eyebrow">ZIPVERRA / {({ home: 'HOME', repositories: 'REPOSITORIES', activity: 'ACTIVITY', history: 'HISTORY', settings: 'SETTINGS' })[activeTab]}</span><h2>{({ home: 'Upload ZIP', repositories: 'GitHub repositories', activity: 'Push activity', history: 'Version history', settings: 'Preferences' })[activeTab]}</h2></div><span className={`mobile-connection ${online ? 'connected' : 'disconnected'}`} aria-label={online ? 'Online' : 'Offline'}>{online ? 'Online' : 'Offline'}</span></div>
     {activeTab !== 'activity' && (error || busy) && <button type="button" className={`mobile-global-status ${error ? 'has-error' : ''}`} onClick={() => goToTab('activity')}><span>{error ? `Cần kiểm tra: ${error}` : `${status || 'Đang xử lý...'} · ${progress}%`}</span><Icon name="arrow" size={17}/></button>}
     <main data-active-view={activeTab}>
       <section className="hero">
-        <div className="eyebrow"><Icon name="shield" size={15}/> SECURE SOURCE DELIVERY</div>
+        <div className="eyebrow"><Icon name="shield" size={15}/> SMART PUSH · MOBILE WORKFLOW 3.0</div>
         <h1>Push to GitHub.<br/><span>From Your Phone.</span></h1>
         
         <div className="highlights"><span><Icon name="check" size={15}/> Vercel-native</span><span><Icon name="check" size={15}/> Hỗ trợ binary</span><span><Icon name="check" size={15}/> So sánh trước khi push</span></div>
@@ -452,7 +509,8 @@ export default function Home() {
             <div className="field"><label htmlFor="repo-search">Tìm repository</label><div className="input-icon"><Icon name="search" size={17}/><input id="repo-search" type="search" value={repoSearch} disabled={busy || !auth.authenticated} placeholder="Lọc theo tên repository" onChange={(e) => setRepoSearch(e.target.value)}/></div></div>
             {loadingRepos && <div className="repo-skeleton" aria-label="Đang tải danh sách repository"><span/><span/><span/></div>}
             {authorizedRecents.length > 0 && <div className="recents-block"><span className="mini-label">GẦN ĐÂY · lưu trên thiết bị</span><div className="recent-list">{authorizedRecents.slice(0, 3).map((name) => <button type="button" key={name} className="recent-chip" disabled={busy || !auth.authenticated} onClick={() => chooseRepo(name)}>{name}</button>)}</div></div>}
-            <div className="field"><label htmlFor="repo-select">Chọn repository</label><select id="repo-select" disabled={busy || !auth.authenticated || !repos.length} value={displayedRepos.some((x) => x.full_name === `${owner}/${repo}`) ? `${owner}/${repo}` : ''} onChange={(e) => chooseRepo(e.target.value)}><option value="">{repos.length ? (displayedRepos.length ? 'Chọn repository được cấp quyền' : 'Không có repo phù hợp') : 'Chưa có repo được GitHub App cấp quyền'}</option>{displayedRepos.map((x) => <option key={x.full_name} value={x.full_name}>{x.full_name}{x.private ? ' 🔒' : ''}</option>)}</select></div>
+            {favorites.length > 0 && <div className="favorites-block"><span className="mini-label">PINNED REPOSITORIES</span><div className="favorite-list">{displayedRepos.filter(r => favorites.includes(r.full_name)).map(r => <div key={r.full_name} className="favorite-row"><button type="button" disabled={busy} onClick={() => chooseRepo(r.full_name)}>{r.full_name}</button><button type="button" className="favorite-star" onClick={() => toggleFavorite(r.full_name)} aria-label={`Bỏ ghim ${r.full_name}`}>★</button></div>)}</div></div>}
+            <div className="field"><label htmlFor="repo-select">Chọn repository</label><select id="repo-select" disabled={busy || !auth.authenticated || !repos.length} value={displayedRepos.some((x) => x.full_name === `${owner}/${repo}`) ? `${owner}/${repo}` : ''} onChange={(e) => chooseRepo(e.target.value)}><option value="">{repos.length ? (displayedRepos.length ? 'Chọn repository được cấp quyền' : 'Không có repo phù hợp') : 'Chưa có repo được GitHub App cấp quyền'}</option>{displayedRepos.map((x) => <option key={x.full_name} value={x.full_name}>{x.full_name}{x.private ? ' 🔒' : ''}</option>)}</select>{chosenRepo && <button type="button" className="favorite-toggle" onClick={() => toggleFavorite(`${owner}/${repo}`)}>{favorites.includes(`${owner}/${repo}`) ? '★ Đã ghim repository' : '☆ Ghim repository này'}</button>}</div>
             <details className="repo-advanced"><summary>Tùy chọn nâng cao · Nhập repo thủ công</summary><div className="two-col"><div className="field"><label htmlFor="owner">Owner</label><input id="owner" value={owner} disabled={busy || !auth.authenticated} placeholder="huyvd250797" onChange={(e) => change(setOwner, e.target.value)}/></div><div className="field"><label htmlFor="repo">Repository</label><input id="repo" value={repo} disabled={busy || !auth.authenticated} placeholder="Finzaro" onChange={(e) => change(setRepo, e.target.value)}/></div></div><p className="hint">Chỉ có thể push lên repository đã được GitHub App cấp quyền.</p></details>
             <div className="field"><label htmlFor="branch">Branch đích <span className="tag">Mặc định: main</span></label><div className="input-icon"><Icon name="branch" size={17}/><input id="branch" value={branch} disabled={busy || !auth.authenticated} placeholder="main" onChange={(e) => change(setBranch, e.target.value)}/></div></div>
             <button type="button" className="button secondary full mobile-repo-next" onClick={() => goToTab('home')} disabled={!auth.authenticated || !owner || !repo || busy}>Tiếp tục · Upload ZIP <Icon name="arrow" size={17}/></button>
@@ -477,16 +535,22 @@ export default function Home() {
             {!preview ? <div className="empty-preview"><div className="circle-placeholder"><Icon name="branch" size={27}/></div><h3>Chưa có bản preview</h3><p>Chọn repository, upload file ZIP rồi nhấn <b>Phân tích ZIP</b> để xem danh sách file được cập nhật.</p></div> : <>
               <div className="summary-line"><span className="pill">{preview.input.owner}/{preview.input.repo}</span><span className="pill branch-pill"><Icon name="branch" size={14}/> {preview.input.branch}</span></div>
               <div className="stat-grid"><div><strong className="good">+{stats.add}</strong><span>Thêm</span></div><div><strong className="warn">~{stats.modify}</strong><span>Sửa</span></div><div><strong className="bad">−{stats.delete}</strong><span>Xóa</span></div></div>
+              <div className="smart-insights"><div className="insight-header"><span className="insight-mark">✦</span><div><strong>Smart ZIP Analyzer</strong><small>{preview.insights.framework.type} · {preview.insights.binaryCount} file nhị phân</small></div></div>{preview.insights.warnings.length ? <div className="insight-warnings">{preview.insights.warnings.map(w => <div className={`insight-notice insight-${w.severity}`} key={w.code}><strong>{w.title}</strong><span>{w.description}</span></div>)}</div> : <p className="insight-clean">Không phát hiện cảnh báo cấu trúc phổ biến. Vẫn cần review source trước khi push.</p>}</div>
+              <div className="review-select-summary"><div><strong>{selectedChanges.length}/{preview.changes.length} thay đổi được chọn</strong><small>File bỏ chọn sẽ giữ nguyên trên GitHub, kể cả trong Sync.</small></div><span>{prettyBytes(selectedBytes)}</span></div>
               <div className="archive-meta">{preview.archive.files.length} file · {prettyBytes(preview.archive.unpackedSize)} đã giải nén{preview.archive.wrapper ? ` · Bỏ thư mục gốc: ${preview.archive.wrapper}/` : ''}{preview.archive.ignored ? ` · Bỏ qua ${preview.archive.ignored} file` : ''}</div>
-              <div className="diff-filters" role="group" aria-label="Lọc file thay đổi">{[{id:'all',label:'Tất cả',n:preview.changes.length},{id:'add',label:'Thêm',n:stats.add},{id:'modify',label:'Sửa',n:stats.modify},{id:'delete',label:'Xóa',n:stats.delete}].map((option) => <button type="button" key={option.id} className={`diff-filter ${changeFilter === option.id ? 'selected' : ''}`} aria-pressed={changeFilter === option.id} onClick={() => setChangeFilter(option.id)}>{option.label} <span>{option.n}</span></button>)}</div>
-              <div className="change-list" aria-label="Danh sách thay đổi">{shownChanges.length ? shownChanges.map((item) => <div className="change-row" key={item.path}><span className={`change-mark ${item.kind}`}>{item.kind === 'add' ? 'A' : item.kind === 'modify' ? 'M' : 'D'}</span><span title={item.path}>{item.path}</span></div>) : <div className="empty-change">{preview.changes.length ? 'Không có file thuộc bộ lọc này.' : 'Không có thay đổi để commit.'}</div>}</div>
+              <div className="diff-filters" role="group" aria-label="Lọc file thay đổi">{[{id:'all',label:'Tất cả',n:preview.changes.length},{id:'add',label:'Thêm',n:totalStats.add},{id:'modify',label:'Sửa',n:totalStats.modify},{id:'delete',label:'Xóa',n:totalStats.delete}].map((option) => <button type="button" key={option.id} className={`diff-filter ${changeFilter === option.id ? 'selected' : ''}`} aria-pressed={changeFilter === option.id} onClick={() => setChangeFilter(option.id)}>{option.label} <span>{option.n}</span></button>)}</div>
+              <div className="review-toolbar"><div className="input-icon"><Icon name="search" size={16}/><input type="search" aria-label="Tìm file thay đổi" placeholder="Tìm file trong diff" value={reviewSearch} onChange={e => {setReviewSearch(e.target.value);setVisibleLimit(100);}}/></div><div className="review-bulk"><button type="button" disabled={busy} onClick={() => bulkSelection(true)}>Chọn tất cả</button><button type="button" disabled={busy} onClick={() => bulkSelection(false)}>Bỏ chọn tất cả</button></div></div>
+              <div className="change-list review-list" aria-label="Danh sách thay đổi">{shownChanges.length ? shownChanges.slice(0,visibleLimit).map((item) => <div className={`change-row review-row ${excludedPaths.includes(item.path) ? 'excluded' : ''}`} key={item.path}><label className="review-check"><input type="checkbox" checked={!excludedPaths.includes(item.path)} disabled={busy} onChange={() => updateSelection(item.path)} aria-label={`Chọn ${item.path} để push`}/></label><span className={`change-mark ${item.kind}`}>{item.kind === 'add' ? 'A' : item.kind === 'modify' ? 'M' : 'D'}</span><span title={item.path} className="change-path">{item.path}</span><button type="button" className="review-diff-button" disabled={busy} onClick={() => inspectChange(item)} aria-label={`Xem diff ${item.path}`}>Diff</button></div>) : <div className="empty-change">{preview.changes.length ? 'Không có file thuộc bộ lọc này.' : 'Không có thay đổi để commit.'}</div>}</div>
+              {shownChanges.length > visibleLimit && <button type="button" className="button secondary full review-more" onClick={() => setVisibleLimit(v => v + 100)}>Hiển thị thêm {Math.min(100,shownChanges.length-visibleLimit)} file · {shownChanges.length-visibleLimit} còn lại</button>}
+              {diffViewer && <div className="inline-diff" aria-live="polite"><div className="inline-diff-heading"><strong>Diff · {diffViewer.path}</strong><button type="button" onClick={() => {diffRequestRef.current++;setDiffViewer(null);}} aria-label="Đóng diff">✕</button></div>{diffViewer.loading ? <p>Đang tải file từ commit đang review…</p> : diffViewer.message ? <p>{diffViewer.message}</p> : <div className="inline-diff-lines">{diffViewer.lines.map((line,index)=><div key={index} className={`diff-line diff-${line.kind}`}><span>{line.kind==='add'?'+':line.kind==='delete'?'−':' '}</span><code>{line.text || ' '}</code></div>)}</div>}</div>}
               {stats.delete > 0 && <div className="warning-banner"><strong>Cảnh báo Sync</strong><p>Chế độ Sync sẽ xóa {stats.delete} file đang có trên GitHub. Các file này có thể bao gồm cấu hình deploy.</p><label className="confirm-row sync-confirm"><input type="checkbox" checked={syncConfirmed} disabled={busy} onChange={(e) => setSyncConfirmed(e.target.checked)}/><span>Tôi đồng ý xóa {stats.delete} file trong repository.</span></label></div>}
-              {preview.changes.length > 0 && <><label className="confirm-row"><input type="checkbox" checked={confirmed} disabled={busy} onChange={(e) => setConfirmed(e.target.checked)}/><span>Tôi đã kiểm tra thay đổi và đồng ý push lên <b>{preview.input.branch}</b>.</span></label><button className="button primary full push-button" disabled={busy || !confirmed || (mode === 'sync' && stats.delete > 0 && !syncConfirmed) || !auth.authenticated || !online || Boolean(pendingCommit)} onClick={push}><Icon name="upload" size={18}/> {busy ? 'Đang push...' : `Commit & Push (${preview.changes.length} file)`}</button></>}
+              {selectedChanges.length > 0 && !preview.insights.hasBlockingWarning && <><label className="confirm-row"><input type="checkbox" checked={confirmed} disabled={busy} onChange={(e) => setConfirmed(e.target.checked)}/><span>Tôi đã kiểm tra thay đổi và đồng ý push lên <b>{preview.input.branch}</b>.</span></label><button className="button primary full push-button" disabled={busy || !selectedChanges.length || !confirmed || (mode === 'sync' && stats.delete > 0 && !syncConfirmed) || !auth.authenticated || !online || Boolean(pendingCommit)} onClick={push}><Icon name="upload" size={18}/> {busy ? 'Đang push...' : `Commit & Push (${selectedChanges.length} file)`}</button></>}
             </>}
           </article>
           <article ref={activityRef} className="panel activity-panel" data-mobile-view="activity"><div className="activity-title"><h2>Activity · Tiến trình Push</h2><span className={`activity-dot ${busy ? 'pulse' : ''}`}/></div>
             <div className="push-timeline" aria-label="Tiến trình push">{timeline.map((step, index) => <div key={step.id} className={`timeline-step timeline-${step.state}`}><span className="timeline-icon">{step.state === 'complete' ? <Icon name="check" size={14}/> : index + 1}</span><div><strong>{({validate:'Validate',upload:'Upload',commit:'Commit',verify:'Verify'})[step.id]}</strong><small>{({complete:'Hoàn tất',active:'Đang xử lý',uncertain:'Chưa xác minh',failed:'Cần kiểm tra',waiting:'Chờ xử lý'})[step.state]}</small></div></div>)}</div>
             <div className="progress-track"><div className="progress-fill" style={{ width: `${progress}%` }}/></div><p className="status-text" role="status">{status || 'Sẵn sàng nhận file ZIP.'}</p>
+            {transfer && <div className="transfer-card"><div className="transfer-card-head"><strong>Upload Git blobs</strong><span>{transfer.completed}/{transfer.total} file</span></div><div className="transfer-meter"><span style={{width:`${Math.round(transfer.completed/Math.max(1,transfer.total)*100)}%`}}/></div><div className="transfer-stats"><span>{prettyBytes(transfer.completedBytes)} / {prettyBytes(transfer.totalBytes)}</span><span>{transfer.speedBytesPerSec > 0 ? `${prettyBytes(transfer.speedBytesPerSec)}/s` : 'Đang chuẩn bị…'}</span><span>{transfer.etaSeconds !== null && transfer.etaSeconds < 3600 ? `ETA ~${transfer.etaSeconds}s` : 'ETA chưa xác định'}</span></div><small>Batch {transfer.batch}/{transfer.totalBatches} · Đã dùng lại {transfer.reused} blob · Ước tính có thể dao động theo mạng</small></div>}
             <div className="push-status-line"><span className={`network-chip ${online ? 'online' : 'offline'}`}>{online ? '● Online' : '● Offline'}</span><span className="stage-chip">{phase.replaceAll('_', ' ')}</span></div>
             {pendingCommit && <div className="recovery-banner" role="status"><strong>Cần xác minh lần push trước</strong><p>{pendingCommit.owner}/{pendingCommit.repo} · {pendingCommit.branch} · {pendingCommit.message}</p><button type="button" className="button secondary full" disabled={busy || !online || !auth.authenticated} onClick={() => verifyPending()}><Icon name="refresh" size={16}/> {busy && phase === PUSH_STAGES.VERIFYING ? 'Đang xác minh...' : 'Xác minh push trên GitHub'}</button><small>Chỉ kiểm tra trạng thái, không tạo commit mới.</small></div>}
             {error && <div className="error-banner" role="alert">{error}{errorHint && <p className="error-hint">{errorHint}</p>}</div>}
@@ -504,7 +568,7 @@ export default function Home() {
                 <button type="button" className="button ghost settings-logout" onClick={logout} disabled={busy}>Đăng xuất GitHub</button>
               </> : <a className="button primary full" href="/api/auth/login"><Icon name="github" size={18}/> Continue with GitHub</a>}
             </div>
-            <div className="settings-info"><span>Phiên bản</span><strong>v1.7.0</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v1.8.0</strong></div>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
             <div className="settings-info"><span>Commit message</span><strong>Tên file ZIP</strong></div>
             <p className="hint">Chỉ lưu metadata phục hồi upload, không lưu GitHub token trên JavaScript phía trình duyệt.</p>
@@ -513,7 +577,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v1.7.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v1.8.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <nav className="mobile-bottom-nav" aria-label="Điều hướng Zipverra">{[{id:'repositories',label:'Repos',icon:'branch'},{id:'home',label:'Upload',icon:'upload'},{id:'activity',label:'Activity',icon:'activity'},{id:'history',label:'History',icon:'history'},{id:'settings',label:'Settings',icon:'settings'}].map((tab) => <button type="button" key={tab.id} className={`mobile-nav-item ${activeTab === tab.id ? 'active' : ''}`} aria-current={activeTab === tab.id ? 'page' : undefined} onClick={() => goToTab(tab.id)}><Icon name={tab.icon} size={21}/><span>{tab.label}</span>{tab.id === 'activity' && pendingCommit && <i className="nav-alert" aria-label="Có push cần xác minh"/>}</button>)}</nav>
   </>;

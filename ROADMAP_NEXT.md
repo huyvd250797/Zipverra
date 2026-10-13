@@ -1,31 +1,35 @@
-# Zipverra v1.8.0 — Vercel Deployment Tracking (Next Release)
+# Zipverra Product Roadmap — Sau v1.8.0
 
-## Mục tiêu
+**Baseline:** v1.8.0 Smart Push & Workflow 3.0. Tập trung quản lý source GitHub ngay trên điện thoại. Không tích hợp Vercel Deployment Tracking.
 
-Đóng vòng phát hành source ngay trên điện thoại: **Upload ZIP → GitHub commit/verify → theo dõi build/deployment → mở ứng dụng production**. Push GitHub thành công không tự đồng nghĩa deploy thành công.
+## v1.9.0 — Repository Explorer & Quick Edit (next)
 
-## Các module dự kiến
+- Duyệt cây thư mục trong repository và branch được chọn (read-only first).
+- Tìm file theo path, đọc code UTF-8 với syntax highlight và giới hạn dung lượng.
+- Chỉnh sửa trực tiếp một file text nhỏ, xem diff và commit với xác minh HEAD, tránh ghi đè thay đổi đồng thời.
+- Chế độ tạo branch để chỉnh file nếu `main` protected; cảnh báo và không bypass branch rules.
+- Từ Explorer mở History để xem các phiên bản file.
+- Explorer là màn hình chức năng nâng cao, không đưa vào workflow ZIP mặc định.
 
-1. **Vercel Connect:** cấu hình kết nối dự án Vercel tương ứng với GitHub repository theo cơ chế cấp quyền rõ ràng (OAuth / token mã hóa server-side). Không commit token vào source.
-2. **Deployment mapping:** mapping `owner/repo + branch` ↔ Vercel project, hỗ trợ nhiều repository/organization và lựa chọn Production/Preview.
-3. **Live deployment status:** Ready / Building / Error / Canceled; lấy status bằng API hoặc webhooks có signature, xử lý polling/rate limits.
-4. **Commit → Deployment link:** liên kết SHA GitHub do Zipverra vừa push đến deployment tương ứng, hiển thị URL, mốc thời gian và trạng thái.
-5. **Build diagnostics:** tóm tắt lỗi build, liên kết trực tiếp logs/deployment; không nhúng/công khai môi trường hay secret.
-6. **Mobile Activity Integration:** Activity thêm giai đoạn **Deploy**, lịch sử nguồn và nút mở trang production trên iPhone.
-7. **Safe controls:** xem lịch sử deploy, cân nhắc redeploy/rollback deployment với xác nhận riêng; không tự ghi đè GitHub branch.
-8. **Notifications (optional):** PWA push notification hoặc in-app notification khi Vercel deploy xong/hỏng; chỉ triển khai nếu yêu cầu và hạ tầng phù hợp.
+**DoD:** thay đổi nhỏ trên repo thử nghiệm, so sánh đúng, commit đúng SHA, giữ GitHub App Permissions và không ghi đè source khi HEAD thay đổi; unit/E2E + Next build + iPhone PWA UI.
 
-## Chú ý thiết kế
+## v1.10.0 — Security & Smart Source Validation
 
-- Giữ GitHub App và History & Safe Rollback hiện tại; Vercel Deploy rollback khác với Git rollback.
-- Không đưa token Vercel lên browser JS, không gửi Vercel API request trực tiếp bằng token ở client.
-- Tách state Git push thành công với Vercel build Ready/Error; Vercel có thể deploy nhiều lần cho cùng commit.
-- Khả năng lấy logs và metadata tùy quyền Vercel workspace; phải có thông báo khi không đủ quyền.
+- Quét credential có độ tin cậy cao, phân loại/block thông minh, kiểm tra ZIP traversal/bomb và file nhạy cảm.
+- Kiểm tra manifest, lockfile, branch protection, lint/check cơ bản theo loại dự án (không chạy code ZIP không tin cậy trên server).
+- Cải thiện báo cáo an toàn trước push, cơ chế override có kiểm soát.
 
-## Definition of Done
+## v1.11.0 — Branch & Pull Request Manager
 
-- E2E trên GitHub repo sandbox kết nối Vercel project sandbox, mapping đúng SHA.
-- Hiển thị thành công + lỗi build rõ ràng; retry/polling không gây rate-limit quá mức.
-- Unit/integration tests, production build, iPhone PWA UI/safe area đã kiểm tra thực tế.
+- Tạo/chuyển branch, push vào branch mới, xem diff và tạo PR theo GitHub App permissions.
+- Không force-push và không vượt qua branch ruleset.
 
-**After v1.8.0:** Zipverra v1.9.0 — Repository Workspace.
+## v1.12.0 — Advanced Performance & Recovery
+
+- Xử lý số file lớn hiệu quả hơn trên mobile, checkpoint theo file và quản lý RAM.
+- Hỗ trợ blob >2,5 MB bằng kiến trúc upload thích hợp, đánh giá đối chiếu SHA, tránh vượt giới hạn Vercel Functions.
+
+## v2.0.0 — Zipverra Pro Mobile Git Workspace
+
+- Repository workspace đa dự án, History, Safe Rollback, ZIP Push, PR và các quy tắc phát hành.
+- Ưu tiên trải nghiệm PWA an toàn, tối giản, chỉ thêm hạ tầng khi thực sự cần.

@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "private": true,
   "type": "module",
-  "description": "Zipverra v1.7.0: repo-first mobile workflow, background ZIP processing, resumable Git blob batches, history and safe rollback",
+  "description": "Zipverra v1.8.0: Smart Push & Workflow 3.0, selective change staging, source analyzer, safe text diff, live progress",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
