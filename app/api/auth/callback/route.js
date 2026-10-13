@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { appUrl, cookieName, oauthOptions, encodeSession, sessionOptions, secureEquals } from '../../../../lib/auth/session.js';
-import { github } from '../../../../lib/github.js';
+import { github, parseOAuthScopes } from '../../../../lib/github.js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,9 +26,10 @@ export async function GET(request) {
     });
     const tokenData = await tokenResponse.json();
     if (!tokenResponse.ok || typeof tokenData.access_token !== 'string' || !tokenData.access_token) throw new Error('exchange_failed');
-    if (!(tokenData.scope || '').split(',').map((s) => s.trim()).includes('repo')) throw new Error('missing_scope');
+    const scopes = parseOAuthScopes(tokenData.scope);
+    if (!scopes.includes('repo')) throw new Error('missing_scope');
     const user = await github(tokenData.access_token, '/user');
-    session = encodeSession({ token: tokenData.access_token, user });
+    session = encodeSession({ token: tokenData.access_token, user, scopes });
   } catch (err) {
     errorCode = ['cancelled', 'invalid_state', 'missing_scope'].includes(err?.message) ? err.message : 'exchange_failed';
   }

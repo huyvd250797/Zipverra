@@ -15,7 +15,7 @@ export async function GET() {
     const authorize = new URL('https://github.com/login/oauth/authorize');
     authorize.searchParams.set('client_id', process.env.GITHUB_CLIENT_ID);
     authorize.searchParams.set('redirect_uri', `${origin}/api/auth/callback`);
-    authorize.searchParams.set('scope', 'repo');
+    authorize.searchParams.set('scope', 'repo workflow');
     authorize.searchParams.set('state', state);
     authorize.searchParams.set('code_challenge', challenge);
     authorize.searchParams.set('code_challenge_method', 'S256');

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createCommit, createBlob, github } from '../lib/github.js';
+import { createCommit, createBlob, github, githubStage, validateWorkflowScope, parseOAuthScopes, preflight } from '../lib/github.js';
 
 const SHA = 'a'.repeat(40);
 const TREE = 'b'.repeat(40);
@@ -22,7 +22,7 @@ test('GitHub request sends auth in header and never in URL', async () => {
 test('GitHub error does not include the supplied token', async () => {
   await assert.rejects(
     () => github('SECRET', '/user', 'GET', undefined, async () => mockResponse(403, { message: 'Access denied' })),
-    (e) => e.message === 'GitHub 403: Access denied',
+    (e) => e.status === 403 && e.stage === 'GITHUB_API' && e.message.includes('Access denied') && !e.message.includes('SECRET'),
   );
 });
 
@@ -89,5 +89,67 @@ test('empty source files can be uploaded as Git blobs', async () => {
     const sha = await createBlob('TOKEN', 'owner', 'repo', '');
     assert.equal(sha, 'e69de29bb2d1d6434b8b29ae775ad8c2e48c5391');
     assert.deepEqual(posted, { content: '', encoding: 'base64' });
+  } finally { globalThis.fetch = oldFetch; }
+});
+
+
+test('GitHub error identifies exact failed operation and preserves 404 status', async () => {
+  assert.equal(githubStage('/repos/a/b/git/refs/heads/main', 'PATCH'), 'UPDATE_BRANCH');
+  await assert.rejects(() => github('SECRET', '/repos/a/b/git/refs/heads/main', 'PATCH', { sha: SHA, force: false },
+    async () => mockResponse(404, { message: 'Not Found' })),
+    (error) => error.status === 404 && error.stage === 'UPDATE_BRANCH' &&
+      error.message.includes('UPDATE_BRANCH') && error.hint.includes('Owner/Repository'));
+});
+
+test('OAuth scopes parsed from GitHub token response', () => {
+  assert.deepEqual(parseOAuthScopes('repo,workflow'), ['repo', 'workflow']);
+  assert.deepEqual(parseOAuthScopes('repo workflow'), ['repo', 'workflow']);
+  assert.deepEqual(parseOAuthScopes(undefined), []);
+});
+
+test('workflow changes require workflow scope but ordinary files do not', () => {
+  assert.doesNotThrow(() => validateWorkflowScope([{ path: 'src/page.jsx' }], ['repo']));
+  assert.doesNotThrow(() => validateWorkflowScope([{ path: '.github/workflows/ci.yml' }], ['repo', 'workflow']));
+  assert.throws(() => validateWorkflowScope([{ path: '.github/workflows/ci.yaml' }], ['repo']),
+    (error) => error.status === 403 && error.code === 'WORKFLOW_SCOPE_REQUIRED' && error.stage === 'PREFLIGHT');
+});
+
+test('preflight rejects missing workflow grant before any GitHub network request', async () => {
+  const oldFetch = globalThis.fetch;
+  let count = 0;
+  globalThis.fetch = async () => { count++; throw Error('Should not fetch'); };
+  try {
+    await assert.rejects(() => preflight('TOKEN', 'owner', 'repo', 'main', ['.github/workflows/ci.yml'], ['repo']),
+      (error) => error.code === 'WORKFLOW_SCOPE_REQUIRED');
+    assert.equal(count, 0);
+  } finally { globalThis.fetch = oldFetch; }
+});
+
+test('preflight verifies repository write permission from GitHub', async () => {
+  const oldFetch = globalThis.fetch;
+  globalThis.fetch = async () => mockResponse(200, { permissions: { pull: true, push: false }, archived: false });
+  try {
+    await assert.rejects(() => preflight('TOKEN', 'owner', 'repo', 'main', [], ['repo']),
+      (error) => error.code === 'REPO_WRITE_DENIED' && error.status === 403);
+  } finally { globalThis.fetch = oldFetch; }
+});
+
+test('preflight allows writable repository with workflow scope', async () => {
+  const oldFetch = globalThis.fetch;
+  globalThis.fetch = async () => mockResponse(200, { permissions: { push: true }, archived: false });
+  try {
+    const result = await preflight('TOKEN', 'owner', 'repo', 'main', ['.github/workflows/build.yml'], ['repo', 'workflow']);
+    assert.deepEqual(result, { writable: true, workflowPermission: true });
+  } finally { globalThis.fetch = oldFetch; }
+});
+
+test('create commit refuses workflow edit with inadequate scope before write API', async () => {
+  const oldFetch = globalThis.fetch;
+  globalThis.fetch = async () => { throw Error('Should not call API'); };
+  try {
+    await assert.rejects(() => createCommit('TOKEN', {
+      owner: 'owner', repo: 'repo', branch: 'main', expectedHead: SHA,
+      message: 'sample', entries: [{ path: '.github/workflows/ci.yml', mode: '100644', sha: TREE }],
+    }, ['repo']), (error) => error.code === 'WORKFLOW_SCOPE_REQUIRED');
   } finally { globalThis.fetch = oldFetch; }
 });

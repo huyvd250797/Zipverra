@@ -14,3 +14,28 @@
 .button.ghost:hover{background:#223447}
 .login-button{text-decoration:none}
 @media(max-width:550px){.auth-card{padding:13px}.account-row{gap:9px}.auth-chip{padding:5px 6px}}
+
+/* Mobile PWA: no pinch-to-zoom, keep horizontal/vertical scrolling usable. */
+html,body{width:100%;overscroll-behavior-y:none;touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}
+button,a,input,select,label{touch-action:pan-x pan-y}
+@media(max-width:700px){
+  /* iOS Safari auto-zooms focused inputs when their font size is below 16px. */
+  .field input,.field select{font-size:16px}
+  .shell{padding-left:max(15px,env(safe-area-inset-left));padding-right:max(15px,env(safe-area-inset-right))}
+  footer{padding-bottom:max(10px,env(safe-area-inset-bottom))}
+}
+/* The brand launch overlay is server-rendered and fades after hydration/session check. */
+.app-splash{position:fixed;inset:0;z-index:9999;display:grid;place-items:center;overflow:hidden;background:#080c17;color:#ecf7ff;opacity:1;visibility:visible;transition:opacity .28s ease,visibility .28s ease;isolation:isolate;padding:calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom))}
+.app-splash--hidden{opacity:0;visibility:hidden;pointer-events:none}
+.app-splash__glow{position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse 57% 38% at 50% 44%,#144a4b70,transparent 78%)}
+.app-splash__content{display:flex;align-items:center;flex-direction:column;text-align:center;transform:translateY(-2%)}
+.app-splash__logo{display:grid;place-items:center;width:108px;height:108px;border-radius:30px;background:linear-gradient(145deg,#17334b,#0e3435);color:#65e9c3;border:1px solid #316a68;box-shadow:0 16px 50px #0007,0 0 35px #3ce6a622;margin-bottom:22px}
+.app-splash__logo img{display:block;border-radius:21px}.app-splash__name{font-size:34px;letter-spacing:-1.5px;font-weight:850}.app-splash__name span{color:#63e6b8}
+.app-splash__tagline{font-size:13px;color:#a6bad2;margin:9px 0 29px;letter-spacing:.1px}
+.app-splash__loader{width:32px;height:32px;border:3px solid #2c4a55;border-top-color:#65e9c3;border-radius:50%;animation:zipverra-loader-spin .8s linear infinite}
+.app-splash__status{font-size:11px;letter-spacing:.25px;color:#829bb3;margin-top:15px}
+.app-splash__footer{position:absolute;bottom:max(25px,calc(16px + env(safe-area-inset-bottom)));font-size:10px;letter-spacing:3px;color:#50657d;font-weight:700}
+@keyframes zipverra-loader-spin{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.app-splash{transition:none}.app-splash__loader{animation-duration:1.6s}}
+
+.error-hint { margin: 10px 0 0; font-size: .88rem; line-height: 1.6; opacity: .92; }

@@ -5,6 +5,8 @@ import { readArchive, encodeBase64 } from '../lib/archive.js';
 import { calculateChanges, countChanges } from '../lib/operations.js';
 import { zipCommitMessage } from '../lib/paths.js';
 import { LIMITS } from '../lib/constants.js';
+import SplashScreen from './components/SplashScreen.jsx';
+import MobileViewportGuard from './components/MobileViewportGuard.jsx';
 
 async function api(endpoint, data) {
   let response;
@@ -19,7 +21,12 @@ async function api(endpoint, data) {
     throw new Error('Không kết nối được máy chủ. Kiểm tra Internet và thử lại.');
   }
   const result = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(result.error || `Lỗi API HTTP ${response.status}`);
+  if (!response.ok) {
+    const problem = new Error(result.error || `Lỗi API HTTP ${response.status}`);
+    problem.stage = result.stage || null;
+    problem.hint = result.hint || null;
+    throw problem;
+  }
   return result;
 }
 
@@ -61,6 +68,7 @@ export default function Home() {
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
+  const [errorHint, setErrorHint] = useState('');
   const fileInput = useRef(null);
 
   useEffect(() => {
@@ -104,7 +112,7 @@ export default function Home() {
     setPreview(null);
     setConfirmed(false);
     setResult(null);
-    setError('');
+    setError(''); setErrorHint('');
     setStatus('');
     setProgress(0);
   };
@@ -116,7 +124,7 @@ export default function Home() {
     return { owner: owner.trim(), repo: repo.trim(), branch: branch.trim() };
   }
   async function loadRepos() {
-    setBusy(true); setError(''); setStatus('Đang tải repository từ GitHub...');
+    setBusy(true); setError(''); setErrorHint(''); setStatus('Đang tải repository từ GitHub...');
     try {
       if (!auth.authenticated) throw new Error('Hãy đăng nhập GitHub trước.');
       const result = await api('repos', {});
@@ -137,7 +145,7 @@ export default function Home() {
     change(setFile, next || null);
   }
   async function analyze() {
-    setBusy(true); setError(''); setResult(null); setProgress(0);
+    setBusy(true); setError(''); setErrorHint(''); setResult(null); setProgress(0);
     try {
       const input = getInputs();
       if (!file) throw new Error('Hãy chọn file ZIP chứa source code.');
@@ -146,16 +154,18 @@ export default function Home() {
       setStatus('Đang đọc HEAD và so sánh với repository...');
       const remote = await api('snapshot', input);
       const changes = calculateChanges(archive.files, remote.files, mode);
+      setStatus('Đang kiểm tra quyền push và GitHub Actions workflow...');
+      await api('preflight', { ...input, workflowPaths: changes.filter((c) => /\.github\/workflows\/[^/]+\.ya?ml$/i.test(c.path)).map((c) => c.path) });
       setPreview({ archive, remote, changes, input: { owner: input.owner, repo: input.repo, branch: input.branch }, mode, filename: file.name });
       setConfirmed(false);
       setStatus(changes.length ? `Đã phân tích: ${changes.length} thay đổi cần xử lý.` : 'ZIP và repository đã đồng bộ, không có gì cần push.');
       setProgress(100);
-    } catch (e) { setError(e.message); setPreview(null); setStatus(''); }
+    } catch (e) { setError(e.message); setErrorHint(e.hint || ''); setPreview(null); setStatus(''); }
     finally { setBusy(false); }
   }
   async function push() {
     if (!preview || !confirmed || busy) return;
-    setBusy(true); setResult(null); setError(''); setProgress(0);
+    setBusy(true); setResult(null); setError(''); setErrorHint(''); setProgress(0);
     try {
       const input = getInputs();
       if (input.owner !== preview.input.owner || input.repo !== preview.input.repo || input.branch !== preview.input.branch || mode !== preview.mode || file?.name !== preview.filename) {
@@ -194,20 +204,27 @@ export default function Home() {
       setConfirmed(false);
     } catch (e) {
       setError(e.message);
-      setStatus('Không xác nhận được kết quả push. Hãy kiểm tra GitHub trước khi thử lại.');
+      setErrorHint(e.hint || '');
+      setProgress(0);
+      setStatus(e.stage === 'UPDATE_BRANCH'
+        ? 'GitHub chưa xác nhận cập nhật branch. Kiểm tra lịch sử commit trên GitHub trước khi thử lại.'
+        : `Push chưa hoàn tất${e.stage ? ` (bước ${e.stage})` : ''}. Không nhấn lại trước khi kiểm tra GitHub.`);
     } finally { setBusy(false); }
   }
 
-  return <div className="shell">
+  return <>
+    <MobileViewportGuard/>
+    <SplashScreen loading={auth.loading}/>
+    <div className="shell">
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar">
       <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span></strong><small>ZIP TO GITHUB · GITHUB OAUTH</small></div></div>
-      <div className="version"><span className="live-dot"/> v1.3.0</div>
+      <div className="version"><span className="live-dot"/> v1.3.2</div>
     </header>
     <main>
       <section className="hero">
         <div className="eyebrow"><Icon name="shield" size={15}/> SECURE SOURCE DELIVERY</div>
-        <h1>Đẩy source lên GitHub.<br/><span>Ngay trên điện thoại.</span></h1>
+        <h1>Push to GitHub.<br/><span>From Your Phone.</span></h1>
         <p>Upload ZIP do ChatGPT tạo, chọn repo và branch. App sẽ tự tạo commit theo tên ZIP rồi push lên GitHub — không cần Terminal.</p>
         <div className="highlights"><span><Icon name="check" size={15}/> Vercel-native</span><span><Icon name="check" size={15}/> Hỗ trợ binary</span><span><Icon name="check" size={15}/> So sánh trước khi push</span></div>
       </section>
@@ -222,7 +239,7 @@ export default function Home() {
             </div> : <div className="auth-card">
               <p className="auth-muted">Đăng nhập để chọn repository và cấp quyền tạo commit. Token OAuth chỉ được xử lý trên máy chủ.</p>
               <a className="button primary full login-button" href="/api/auth/login"><Icon name="github" size={19}/> Continue with GitHub <Icon name="arrow" size={16}/></a>
-              <small className="hint">GitHub OAuth App yêu cầu quyền <b>repo</b> để push vào cả repository private. Chỉ đăng nhập khi bạn tin cậy ứng dụng này.</small>
+              <small className="hint">GitHub OAuth App yêu cầu quyền <b>repo</b> và <b>workflow</b> để push source bao gồm GitHub Actions. Chỉ đăng nhập khi bạn tin cậy ứng dụng này.</small>
             </div>}
             <div className="field"><label htmlFor="repo-select">Chọn repository</label><select id="repo-select" disabled={busy || !auth.authenticated || !repos.length} value={repos.some((x) => x.full_name === `${owner}/${repo}`) ? `${owner}/${repo}` : ''} onChange={(e) => chooseRepo(e.target.value)}><option value="">{repos.length ? 'Chọn repository hoặc nhập bên dưới' : 'Chưa tải — có thể nhập thủ công'}</option>{repos.map((x) => <option key={x.full_name} value={x.full_name}>{x.full_name}{x.private ? ' 🔒' : ''}</option>)}</select></div>
             <div className="two-col"><div className="field"><label htmlFor="owner">Owner</label><input id="owner" value={owner} disabled={busy || !auth.authenticated} placeholder="huyvd250797" onChange={(e) => change(setOwner, e.target.value)}/></div><div className="field"><label htmlFor="repo">Repository</label><input id="repo" value={repo} disabled={busy || !auth.authenticated} placeholder="Finzaro" onChange={(e) => change(setRepo, e.target.value)}/></div></div>
@@ -253,13 +270,14 @@ export default function Home() {
             </>}
           </article>
           <article className="panel activity-panel"><div className="activity-title"><h2>Trạng thái xử lý</h2><span className={`activity-dot ${busy ? 'pulse' : ''}`}/></div><div className="progress-track"><div className="progress-fill" style={{ width: `${progress}%` }}/></div><p className="status-text" role="status">{status || 'Sẵn sàng nhận file ZIP.'}</p>
-            {error && <div className="error-banner" role="alert">{error}</div>}
+            {error && <div className="error-banner" role="alert">{error}{errorHint && <p className="error-hint">{errorHint}</p>}</div>}
             {result && <div className="success-banner"><div className="success-title"><Icon name="check" size={17}/> Push thành công!</div><p>Đã cập nhật {result.changed} file. Commit: <code>{result.sha.slice(0, 12)}</code></p><a href={result.url} target="_blank" rel="noopener noreferrer">Xem commit trên GitHub <Icon name="external" size={15}/></a></div>}
           </article>
-          <article className="hint-card"><Icon name="shield" size={22}/><div><strong>Quyền GitHub tối thiểu</strong><p>GitHub OAuth App hiện yêu cầu scope <b>repo</b> (quyền rộng cho repository). Không lưu token trong JavaScript phía trình duyệt. Nếu branch được bảo vệ, GitHub có thể từ chối push và yêu cầu Pull Request.</p></div></article>
+          <article className="hint-card"><Icon name="shield" size={22}/><div><strong>Quyền GitHub tối thiểu</strong><p>GitHub OAuth App yêu cầu scope <b>repo</b> và <b>workflow</b> để cập nhật cả workflow CI. Không lưu token trong JavaScript phía trình duyệt. Nếu branch được bảo vệ, GitHub có thể từ chối push và yêu cầu Pull Request.</p></div></article>
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v1.3.0</span><span>OAuth cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
-  </div>;
+    <footer><span>Zipverra · v1.3.2</span><span>OAuth cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+  </div>
+  </>;
 }
