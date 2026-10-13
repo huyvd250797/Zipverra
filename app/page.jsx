@@ -5,29 +5,55 @@ import { readArchive, encodeBase64 } from '../lib/archive.js';
 import { calculateChanges, countChanges } from '../lib/operations.js';
 import { zipCommitMessage } from '../lib/paths.js';
 import { LIMITS } from '../lib/constants.js';
+import { PUSH_STAGES, JOURNAL_KEY, withSafeRetry, validJournal } from '../lib/reliability.js';
 import SplashScreen from './components/SplashScreen.jsx';
 import MobileViewportGuard from './components/MobileViewportGuard.jsx';
 
-async function api(endpoint, data) {
+async function requestOnce(endpoint, data) {
   let response;
+  const controller = new AbortController();
+  // A timeout on `commit` is deliberately ambiguous; journal + Verify Push resolve it.
+  const timer = setTimeout(() => controller.abort(), endpoint === 'commit' ? 110000 : 38000);
   try {
     response = await fetch(`/api/github/${endpoint}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       cache: 'no-store',
       body: JSON.stringify(data),
+      signal: controller.signal,
     });
   } catch {
-    throw new Error('Không kết nối được máy chủ. Kiểm tra Internet và thử lại.');
-  }
+    const problem = new Error('Không kết nối được máy chủ hoặc yêu cầu quá thời gian. Kiểm tra Internet và thử lại.');
+    problem.network = true;
+    throw problem;
+  } finally { clearTimeout(timer); }
   const result = await response.json().catch(() => ({}));
   if (!response.ok) {
     const problem = new Error(result.error || `Lỗi API HTTP ${response.status}`);
     problem.stage = result.stage || null;
+    problem.code = result.code || null;
+    problem.httpStatus = response.status;
     problem.hint = result.hint || null;
     throw problem;
   }
   return result;
+}
+
+async function api(endpoint, data, onRetry) {
+  // Intentionally excluded: 'commit'. Never blind-retry a potentially successful mutation.
+  return withSafeRetry(() => requestOnce(endpoint, data), { endpoint, onRetry });
+}
+function readPending() {
+  try {
+    const value = JSON.parse(window.sessionStorage.getItem(JOURNAL_KEY) || 'null');
+    return validJournal(value) ? value : null;
+  } catch { return null; }
+}
+function rememberPending(value) {
+  try { window.sessionStorage.setItem(JOURNAL_KEY, JSON.stringify(value)); } catch { /* storage may be unavailable */ }
+}
+function clearPending() {
+  try { window.sessionStorage.removeItem(JOURNAL_KEY); } catch { /* no-op */ }
 }
 
 function prettyBytes(count) {
@@ -69,7 +95,24 @@ export default function Home() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState('');
   const [errorHint, setErrorHint] = useState('');
+  const [phase, setPhase] = useState(PUSH_STAGES.IDLE);
+  const [online, setOnline] = useState(true);
+  const [pendingCommit, setPendingCommit] = useState(null);
   const fileInput = useRef(null);
+
+  useEffect(() => {
+    setOnline(navigator.onLine);
+    const onNetwork = () => setOnline(navigator.onLine);
+    window.addEventListener('online', onNetwork);
+    window.addEventListener('offline', onNetwork);
+    const pending = readPending();
+    if (pending) {
+      setPendingCommit(pending);
+      setPhase(PUSH_STAGES.UNCONFIRMED);
+      setStatus('Có một lần push chưa xác nhận từ phiên trước. Hãy xác minh trước khi thử lại.');
+    }
+    return () => { window.removeEventListener('online', onNetwork); window.removeEventListener('offline', onNetwork); };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -102,6 +145,7 @@ export default function Home() {
       if (!response.ok) throw new Error('Không thể đăng xuất.');
       setAuth({ loading: false, authenticated: false, user: null });
       setRepos([]); setOwner(''); setRepo(''); setBranch('main'); reset();
+      setPendingCommit(null); clearPending(); setPhase(PUSH_STAGES.IDLE);
     } catch (e) { setError(e.message); }
     finally { setBusy(false); }
   }
@@ -115,6 +159,7 @@ export default function Home() {
     setError(''); setErrorHint('');
     setStatus('');
     setProgress(0);
+    if (!pendingCommit) setPhase(PUSH_STAGES.IDLE);
   };
   function change(setter, value) { setter(value); reset(); }
   function getInputs() {
@@ -145,8 +190,9 @@ export default function Home() {
     change(setFile, next || null);
   }
   async function analyze() {
-    setBusy(true); setError(''); setErrorHint(''); setResult(null); setProgress(0);
+    setBusy(true); setError(''); setErrorHint(''); setResult(null); setProgress(0); setPhase(PUSH_STAGES.ANALYZING);
     try {
+      if (!online) throw new Error('Thiết bị đang offline. Hãy kết nối Internet rồi phân tích lại.');
       const input = getInputs();
       if (!file) throw new Error('Hãy chọn file ZIP chứa source code.');
       setStatus('Đang giải nén, kiểm tra file và tính Git SHA...');
@@ -154,19 +200,61 @@ export default function Home() {
       setStatus('Đang đọc HEAD và so sánh với repository...');
       const remote = await api('snapshot', input);
       const changes = calculateChanges(archive.files, remote.files, mode);
+      setPhase(PUSH_STAGES.PREFLIGHT);
       setStatus('Đang kiểm tra quyền push và GitHub Actions workflow...');
       await api('preflight', { ...input, workflowPaths: changes.filter((c) => /\.github\/workflows\/[^/]+\.ya?ml$/i.test(c.path)).map((c) => c.path) });
       setPreview({ archive, remote, changes, input: { owner: input.owner, repo: input.repo, branch: input.branch }, mode, filename: file.name });
       setConfirmed(false);
       setStatus(changes.length ? `Đã phân tích: ${changes.length} thay đổi cần xử lý.` : 'ZIP và repository đã đồng bộ, không có gì cần push.');
       setProgress(100);
-    } catch (e) { setError(e.message); setErrorHint(e.hint || ''); setPreview(null); setStatus(''); }
+      setPhase(PUSH_STAGES.IDLE);
+    } catch (e) { setError(e.message); setErrorHint(e.hint || ''); setPreview(null); setStatus(''); setPhase(PUSH_STAGES.FAILED); }
     finally { setBusy(false); }
   }
-  async function push() {
-    if (!preview || !confirmed || busy) return;
-    setBusy(true); setResult(null); setError(''); setErrorHint(''); setProgress(0);
+  function finishVerified(outcome) {
+    setResult(outcome);
+    setStatus(outcome.recovered ? 'Push đã thành công, được xác minh lại trên GitHub.' : 'Đã push và xác minh commit trên GitHub.');
+    setProgress(100);
+    setPhase(PUSH_STAGES.SUCCEEDED);
+    setPendingCommit(null);
+    clearPending();
+    setPreview(null);
+    setConfirmed(false);
+    setError(''); setErrorHint('');
+  }
+
+  async function verifyPending(data = pendingCommit) {
+    if (!data || busy) return;
+    setBusy(true); setPhase(PUSH_STAGES.VERIFYING); setError(''); setErrorHint('');
+    setStatus('Đang đối chiếu GitHub HEAD, commit và danh sách file, không tạo commit mới...');
     try {
+      const checked = await api('verify', data, (attempt) => setStatus(`Đang thử đọc lại GitHub (${attempt}/2)...`));
+      if (checked.state === 'applied') {
+        finishVerified({ ...checked, recovered: true });
+      } else if (checked.state === 'not_applied') {
+        clearPending(); setPendingCommit(null);
+        setPhase(PUSH_STAGES.FAILED); setProgress(0);
+        setStatus('Đã xác minh: branch chưa nhận commit. Có thể phân tích ZIP lại để tiếp tục.');
+        setError('GitHub HEAD vẫn ở commit cũ. Chưa có thay đổi nào được push lên branch.');
+      } else {
+        setPhase(PUSH_STAGES.UNCONFIRMED);
+        setStatus('HEAD đã thay đổi nhưng không trùng commit dự kiến. Không tự động push lại.');
+        setError('Không xác minh được kết quả. Kiểm tra lịch sử commit trên GitHub và phân tích lại khi đã rõ trạng thái.');
+      }
+    } catch (e) {
+      setPhase(PUSH_STAGES.UNCONFIRMED);
+      setError(`Chưa xác minh được GitHub: ${e.message}`);
+      setErrorHint(e.hint || 'Giữ nguyên bản ghi phục hồi. Hãy thử xác minh khi kết nối ổn định.');
+    } finally { setBusy(false); }
+  }
+
+  async function push() {
+    if (!preview || !confirmed || busy || pendingCommit) return;
+    setBusy(true); setResult(null); setError(''); setErrorHint(''); setProgress(0);
+    setPhase(PUSH_STAGES.UPLOADING);
+    let commitPayload = null;
+    try {
+      if (!online) throw new Error('Thiết bị đang offline. Hãy kết nối Internet rồi thử lại.');
       const input = getInputs();
       if (input.owner !== preview.input.owner || input.repo !== preview.input.repo || input.branch !== preview.input.branch || mode !== preview.mode || file?.name !== preview.filename) {
         throw new Error('Cấu hình đã thay đổi. Hãy preview lại.');
@@ -180,35 +268,39 @@ export default function Home() {
           const change = uploadChanges[i];
           const source = byPath.get(change.path);
           if (!source) throw new Error(`Thiếu file nguồn: ${change.path}`);
-          const res = await api('blob', { owner: input.owner, repo: input.repo, content: encodeBase64(source.data) });
+          const res = await api('blob', { owner: input.owner, repo: input.repo, content: encodeBase64(source.data) },
+            (attempt) => setStatus(`GitHub chậm với ${source.path}. Retry an toàn (${attempt}/2)...`));
           if (res.sha !== source.sha) throw new Error(`GitHub trả về SHA không khớp cho ${source.path}; đã dừng push.`);
           blobShas.set(change.path, res.sha);
           finished += 1;
-          setProgress(Math.round((finished / Math.max(1, uploadChanges.length)) * 95));
-          setStatus(`Đang upload Git blobs: ${finished}/${uploadChanges.length} file...`);
+          setProgress(Math.round((finished / Math.max(1, uploadChanges.length)) * 80));
+          setStatus(`Đã upload Git blobs: ${finished}/${uploadChanges.length} file...`);
         }
       });
-      await Promise.all(workers);
+      // Do not leave concurrent blob workers writing status after the UI reports failure.
+      const workerResults = await Promise.allSettled(workers);
+      const firstFailure = workerResults.find((item) => item.status === 'rejected');
+      if (firstFailure) throw firstFailure.reason;
       const entries = preview.changes.map((c) => ({ path: c.path, mode: c.mode, sha: c.kind === 'delete' ? null : blobShas.get(c.path) }));
-      setStatus('Đang tạo Git tree, commit và cập nhật branch...');
-      const finishedCommit = await api('commit', {
-        ...input,
-        expectedHead: preview.remote.head,
-        message: commitMessage,
-        entries,
-      });
-      setResult(finishedCommit);
-      setStatus('Đã push thành công lên GitHub.');
-      setProgress(100);
-      setPreview(null);
-      setConfirmed(false);
+      commitPayload = { ...input, expectedHead: preview.remote.head, message: commitMessage, entries };
+      rememberPending(commitPayload);
+      setPendingCommit(commitPayload);
+      setPhase(PUSH_STAGES.COMMITTING);
+      setProgress(85);
+      setStatus('Đang tạo commit và cập nhật branch. Không tự retry thao tác commit...');
+      const outcome = await requestOnce('commit', commitPayload);
+      finishVerified(outcome);
     } catch (e) {
       setError(e.message);
       setErrorHint(e.hint || '');
       setProgress(0);
-      setStatus(e.stage === 'UPDATE_BRANCH'
-        ? 'GitHub chưa xác nhận cập nhật branch. Kiểm tra lịch sử commit trên GitHub trước khi thử lại.'
-        : `Push chưa hoàn tất${e.stage ? ` (bước ${e.stage})` : ''}. Không nhấn lại trước khi kiểm tra GitHub.`);
+      if (commitPayload) {
+        setPhase(PUSH_STAGES.UNCONFIRMED);
+        setStatus('Kết quả commit chưa chắc chắn. Nhấn “Xác minh push” để kiểm tra GitHub trước khi làm lại.');
+      } else {
+        setPhase(PUSH_STAGES.FAILED);
+        setStatus(`Push dừng trước khi tạo commit${e.stage ? ` (bước ${e.stage})` : ''}. Có thể thử lại sau khi kiểm tra lỗi.`);
+      }
     } finally { setBusy(false); }
   }
 
@@ -219,7 +311,7 @@ export default function Home() {
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar">
       <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span></strong><small>ZIP TO GITHUB · GITHUB OAUTH</small></div></div>
-      <div className="version"><span className="live-dot"/> v1.3.3</div>
+      <div className="version"><span className="live-dot"/> v1.3.4</div>
     </header>
     <main>
       <section className="hero">
@@ -266,10 +358,12 @@ export default function Home() {
               <div className="archive-meta">{preview.archive.files.length} file · {prettyBytes(preview.archive.unpackedSize)} đã giải nén{preview.archive.wrapper ? ` · Bỏ thư mục gốc: ${preview.archive.wrapper}/` : ''}{preview.archive.ignored ? ` · Bỏ qua ${preview.archive.ignored} file` : ''}</div>
               <div className="change-list" aria-label="Danh sách thay đổi">{preview.changes.length ? preview.changes.map((item) => <div className="change-row" key={item.path}><span className={`change-mark ${item.kind}`}>{item.kind === 'add' ? 'A' : item.kind === 'modify' ? 'M' : 'D'}</span><span title={item.path}>{item.path}</span></div>) : <div className="empty-change">Không có thay đổi để commit.</div>}</div>
               {stats.delete > 0 && <div className="warning-banner">Chế độ Sync sẽ xóa {stats.delete} file đang có trên GitHub. Kiểm tra danh sách trước khi tiếp tục.</div>}
-              {preview.changes.length > 0 && <><label className="confirm-row"><input type="checkbox" checked={confirmed} disabled={busy} onChange={(e) => setConfirmed(e.target.checked)}/><span>Tôi đã kiểm tra thay đổi và đồng ý push lên <b>{preview.input.branch}</b>.</span></label><button className="button primary full push-button" disabled={busy || !confirmed || !auth.authenticated} onClick={push}><Icon name="upload" size={18}/> {busy ? 'Đang push...' : `Commit & Push (${preview.changes.length} file)`}</button></>}
+              {preview.changes.length > 0 && <><label className="confirm-row"><input type="checkbox" checked={confirmed} disabled={busy} onChange={(e) => setConfirmed(e.target.checked)}/><span>Tôi đã kiểm tra thay đổi và đồng ý push lên <b>{preview.input.branch}</b>.</span></label><button className="button primary full push-button" disabled={busy || !confirmed || !auth.authenticated || !online || Boolean(pendingCommit)} onClick={push}><Icon name="upload" size={18}/> {busy ? 'Đang push...' : `Commit & Push (${preview.changes.length} file)`}</button></>}
             </>}
           </article>
           <article className="panel activity-panel"><div className="activity-title"><h2>Trạng thái xử lý</h2><span className={`activity-dot ${busy ? 'pulse' : ''}`}/></div><div className="progress-track"><div className="progress-fill" style={{ width: `${progress}%` }}/></div><p className="status-text" role="status">{status || 'Sẵn sàng nhận file ZIP.'}</p>
+            <div className="push-status-line"><span className={`network-chip ${online ? 'online' : 'offline'}`}>{online ? '● Online' : '● Offline'}</span><span className="stage-chip">{phase.replaceAll('_', ' ')}</span></div>
+            {pendingCommit && <div className="recovery-banner" role="status"><strong>Cần xác minh lần push trước</strong><p>{pendingCommit.owner}/{pendingCommit.repo} · {pendingCommit.branch} · {pendingCommit.message}</p><button type="button" className="button secondary full" disabled={busy || !online || !auth.authenticated} onClick={() => verifyPending()}><Icon name="refresh" size={16}/> {busy && phase === PUSH_STAGES.VERIFYING ? 'Đang xác minh...' : 'Xác minh push trên GitHub'}</button><small>Chỉ kiểm tra trạng thái, không tạo commit mới.</small></div>}
             {error && <div className="error-banner" role="alert">{error}{errorHint && <p className="error-hint">{errorHint}</p>}</div>}
             {result && <div className="success-banner"><div className="success-title"><Icon name="check" size={17}/> Push thành công!</div><p>Đã cập nhật {result.changed} file. Commit: <code>{result.sha.slice(0, 12)}</code></p><a href={result.url} target="_blank" rel="noopener noreferrer">Xem commit trên GitHub <Icon name="external" size={15}/></a></div>}
           </article>
@@ -277,7 +371,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v1.3.3</span><span>OAuth cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v1.3.4</span><span>OAuth cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   </>;
 }

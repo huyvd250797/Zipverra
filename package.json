@@ -1,6 +1,6 @@
 {
   "name": "zipverra",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "private": true,
   "type": "module",
   "description": "Zipverra: Push to GitHub from Mobile · GitHub OAuth workflow preflight · PWA launch splash · Vercel-ready",

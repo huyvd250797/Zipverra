@@ -45,22 +45,24 @@ test('commit refuses stale head before creating a tree', async () => {
       owner: 'test', repo: 'repo', branch: 'main', expectedHead: COMMIT, message: 'source_v1.2',
       entries: [{ path: 'README.md', mode: '100644', sha: TREE }],
     }), /Branch đã thay đổi/);
-    assert.equal(calls.length, 3);
+    assert.equal(calls.length, 4);
   } finally { globalThis.fetch = oldFetch; }
 });
 
-test('successful commit creates Git tree, Git commit, then fast-forwards branch', async () => {
+test('successful commit creates Git tree, Git commit, then verifies remote branch and blobs', async () => {
   const originalFetch = globalThis.fetch;
   const log = [];
+  let head = SHA;
   globalThis.fetch = async (url, options = {}) => {
     const body = options.body ? JSON.parse(options.body) : undefined;
     log.push({ url, method: options.method, body });
-    if (url.endsWith('/git/ref/heads/main')) return mockResponse(200, { object: { sha: SHA } });
+    if (url.endsWith('/git/ref/heads/main') && options.method === 'GET') return mockResponse(200, { object: { sha: head } });
     if (url.endsWith(`/git/commits/${SHA}`)) return mockResponse(200, { tree: { sha: TREE } });
-    if (url.includes(`/git/trees/${TREE}?recursive=1`)) return mockResponse(200, { tree: [], truncated: false });
+    if (url.endsWith(`/git/commits/${COMMIT}`)) return mockResponse(200, { message: 'Finzaro_v1.2.0', parents: [{ sha: SHA }], tree: { sha: TREE } });
+    if (url.includes(`/git/trees/${TREE}?recursive=1`)) return mockResponse(200, { tree: head === COMMIT ? [{ path: 'public/logo.png', sha: TREE, mode: '100644', type: 'blob' }] : [], truncated: false });
     if (url.endsWith('/git/trees') && options.method === 'POST') return mockResponse(201, { sha: TREE });
     if (url.endsWith('/git/commits') && options.method === 'POST') return mockResponse(201, { sha: COMMIT });
-    if (url.endsWith('/git/refs/heads/main') && options.method === 'PATCH') return mockResponse(200, { object: { sha: COMMIT } });
+    if (url.endsWith('/git/refs/heads/main') && options.method === 'PATCH') { head = COMMIT; return mockResponse(200, { object: { sha: COMMIT } }); }
     throw Error(`Unexpected GitHub endpoint: ${url}`);
   };
   try {
@@ -69,12 +71,11 @@ test('successful commit creates Git tree, Git commit, then fast-forwards branch'
       message: 'Finzaro_v1.2.0', entries: [{ path: 'public/logo.png', mode: '100644', sha: TREE }],
     });
     assert.equal(data.sha, COMMIT);
+    assert.equal(data.verified, true);
     assert.equal(data.changed, 1);
-    assert.equal(log.length, 6);
-    assert.equal(log[3].body.base_tree, TREE);
-    assert.equal(log[4].body.message, 'Finzaro_v1.2.0');
-    assert.deepEqual(log[4].body.parents, [SHA]);
-    assert.equal(log[5].body.force, false);
+    assert.equal(log.find((item) => item.method === 'POST' && item.url.endsWith('/git/trees')).body.base_tree, TREE);
+    assert.deepEqual(log.find((item) => item.method === 'POST' && item.url.endsWith('/git/commits')).body.parents, [SHA]);
+    assert.equal(log.find((item) => item.method === 'PATCH').body.force, false);
   } finally { globalThis.fetch = originalFetch; }
 });
 
