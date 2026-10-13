@@ -39,3 +39,56 @@ button,a,input,select,label{touch-action:pan-x pan-y}
 @media(prefers-reduced-motion:reduce){.app-splash{transition:none}.app-splash__loader{animation-duration:1.6s}}
 
 .error-hint { margin: 10px 0 0; font-size: .88rem; line-height: 1.6; opacity: .92; }
+
+
+/* Zipverra v1.3.3 — iOS standalone PWA safe-area and centered mobile preview. */
+/* viewport-fit=cover + black-translucent status bar makes safe-area padding essential. */
+html { background-color: #080c17; }
+body { min-height: 100dvh; }
+.shell {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.content-grid, .form-column, .side-column,
+.form-column > *, .side-column > * { min-width: 0; }
+.pill { max-width: 100%; min-width: 0; }
+.change-row > span:last-child { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 700px) {
+  /* Respect the clock, Dynamic Island and top edge in home-screen standalone mode. */
+  .shell {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
+    padding-right: max(15px, env(safe-area-inset-right, 0px));
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+    padding-left: max(15px, env(safe-area-inset-left, 0px));
+  }
+  .content-grid { grid-template-columns: minmax(0, 1fr); }
+  .form-column, .side-column { width: 100%; min-width: 0; }
+  .form-column > .panel, .side-column > .panel,
+  .side-column > .hint-card { width: 100%; margin-inline: 0; }
+  .preview-panel { min-height: 0; }
+  .preview-panel .stat-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  footer { padding-bottom: 0; }
+}
+@media (max-width: 550px) {
+  /* Center step 03 as a unit, without shifting other form steps. */
+  .step-heading--mobile-center {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 11px;
+    margin-bottom: 20px;
+  }
+  .step-heading--mobile-center > div { width: 100%; }
+  .step-heading--mobile-center p { max-width: 280px; margin-inline: auto; }
+  .preview-panel .empty-preview { padding-inline: 0; }
+  .confirm-row { min-height: 44px; align-items: center; }
+  .confirm-row input { width: 19px; height: 19px; }
+}
+@media (max-width: 360px) {
+  .shell { padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
+  .panel { padding: 15px; }
+  .topbar { gap: 8px; }
+  .brand { gap: 9px; }
+  .brand small { font-size: 7px; letter-spacing: .65px; }
+}

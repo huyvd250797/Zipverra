@@ -1,6 +1,10 @@
-# Zipverra v1.3.2 — GitHub Push Reliability Fix
+# Zipverra v1.3.3 — Mobile UI & Safe Area Fix
 
-## Bản sửa lỗi GitHub 404 khi Commit & Push
+## Nâng cấp giao diện PWA trên iPhone
+
+Bản này căn lại card **Kiểm tra & Push**, khắc phục nội dung bị thanh đồng hồ/đảo động che khuất bằng iOS safe-area, đồng thời giữ nguyên các cải tiến chẩn đoán GitHub 404 từ v1.3.2.
+
+## Các cải tiến GitHub Push kế thừa từ v1.3.2
 
 - **Preflight**: trước khi upload blob, kiểm tra GitHub repository có tồn tại và tài khoản có quyền `push` (nếu API trả về thông tin permissions), không archived/disabled.
 - **OAuth workflow**: đăng nhập mới yêu cầu `repo workflow` (để tạo/sửa `.github/workflows/*.yml` và `.yaml`). Scope bổ sung có quyền nhạy cảm: GitHub Actions workflow có thể chạy với quyền của repository; chỉ cấp khi tin tưởng app.
@@ -11,17 +15,17 @@
 
 **Bắt buộc sau deploy:** Đăng xuất tài khoản GitHub trong Zipverra và đăng nhập lại để token mới có scope `workflow`. Nếu GitHub không đưa ra màn hình xin quyền mới, vào https://github.com/settings/applications → Authorized OAuth Apps → chọn ứng dụng Zipverra và thu hồi quyền, sau đó đăng nhập lại; thao tác thu hồi ảnh hưởng tất cả phiên Zipverra dùng cùng OAuth app.
 
-**Chưa thể khẳng định nguyên nhân 404 trong ảnh:** v1.3.1 không hiển thị endpoint gây lỗi. Nếu v1.3.2 vẫn báo lỗi, chụp phần thông báo mới có tên bước để chẩn đoán đúng. Quyền trên organization và branch protections có thể tiếp tục chặn push.
+**Chưa thể khẳng định nguyên nhân 404 trong ảnh:** v1.3.1 không hiển thị endpoint gây lỗi. Nếu bản hiện tại vẫn báo lỗi, chụp phần thông báo mới có tên bước để chẩn đoán đúng. Quyền trên organization và branch protections có thể tiếp tục chặn push.
 
 ---
 
-# Zipverra v1.3.2 — GitHub Authentication · Vercel Ready
+# Zipverra v1.3.3 — GitHub Authentication · Vercel Ready
 
 Zipverra cho phép upload ZIP từ ChatGPT (hoặc Files trên iPhone), chọn repository / branch, xem danh sách thay đổi, tự đặt commit message theo **tên ZIP không có `.zip`** rồi push trực tiếp qua GitHub API. Next.js 16 App Router + React 19, không yêu cầu database hoặc server chạy liên tục.
 
 > **Đổi mới từ v1.2.0:** Thay việc nhập GitHub Personal Access Token bằng **Sign in with GitHub (OAuth App)**. Cần tạo một GitHub OAuth App và cấu hình bốn environment variables trên Vercel **trước khi đăng nhập được**. Không có chuyện chỉ push code lên Vercel mà nút đăng nhập tự hoạt động khi chưa cấu hình OAuth.
 
-## Điểm mới v1.3.2 — Mobile PWA Experience
+## Điểm mới v1.3.3 — Mobile PWA Experience
 
 - Hero tiếng Anh: **Push to GitHub. From Your Phone.**; tagline splash: **Push to GitHub from Mobile**.
 - Khóa pinch-to-zoom trong giao diện mobile/PWA bằng viewport và chặn iOS native gesture; vẫn cho phép cuộn bình thường. Input trên iPhone sử dụng cỡ chữ ít nhất 16px để tránh tự động zoom khi focus. Một số tùy chọn trợ năng hoặc cài đặt của trình duyệt có thể ghi đè quy tắc zoom.
@@ -29,10 +33,19 @@ Zipverra cho phép upload ZIP từ ChatGPT (hoặc Files trên iPhone), chọn r
 - Bổ sung icon PNG 192/512px và apple-touch-icon PNG 180px để thêm vào Home Screen. Không cache dữ liệu GitHub/OAuth bằng service worker để tránh lưu thông tin nhạy cảm.
 - Cài đặt iPhone: Mở **Safari → Share → Add to Home Screen**. Mở Zipverra từ icon vừa thêm để dùng chế độ standalone.
 
+
+## Mobile UI v1.3.3 — iPhone safe areas
+
+- iOS PWA `viewportFit: cover` + `black-translucent` status bar được giữ nguyên nhưng nội dung `.shell` bù `env(safe-area-inset-top)` để không nằm dưới đồng hồ/Dynamic Island.
+- Footer, cạnh trái/phải và thanh Home tuân theo `safe-area-inset-*`; bố cục dùng `100dvh` trên trình duyệt hỗ trợ.
+- Card **Kiểm tra & Push** căn giữa tiêu đề bước 03 trên màn hình 550px trở xuống, đồng thời cố định chiều rộng các panel và chia đều 3 cột Thêm/Sửa/Xóa.
+- Không chỉnh sửa API, OAuth hoặc luồng tạo Git commit từ v1.3.2.
+- Sau khi cập nhật source, **redeploy production**, sau đó đóng hoàn toàn PWA và mở lại từ Home Screen để tải bản mới.
+
 ## 1. Đưa source Zipverra lên GitHub và Vercel
 
-1. Giải nén `Zipverra_v1.3.2_GitHub_Push_404_Diagnostics_Fix_Vercel_Ready.zip`.
-2. Tạo repository GitHub, ví dụ `zipverra`. Upload **nội dung bên trong thư mục `Zipverra-v1.3.2/`** vào gốc repository; phải thấy `package.json`, `app/`, `lib/`, `public/` ngay ở root. Không upload chỉ file ZIP.
+1. Giải nén `Zipverra_v1.3.3_GitHub_Push_404_Diagnostics_Fix_Vercel_Ready.zip`.
+2. Tạo repository GitHub, ví dụ `zipverra`. Upload **nội dung bên trong thư mục `Zipverra-v1.3.3/`** vào gốc repository; phải thấy `package.json`, `app/`, `lib/`, `public/` ngay ở root. Không upload chỉ file ZIP.
 3. Vào https://vercel.com/new → Import Git Repository → chọn repository Zipverra → Framework **Next.js** → Root Directory `./` → Deploy.
 4. Sau lần deploy đầu, sao chép **đường dẫn production ổn định** từ Vercel, ví dụ `https://zipverra-example.vercel.app`. Chưa thể đăng nhập GitHub ở bước này.
 
@@ -114,12 +127,12 @@ npm test       # Unit tests: GitHub commit + operations + OAuth session / Origin
 npm run build  # Next.js production build
 ```
 
-Đóng gói này đã chạy 31/31 unit tests, kiểm tra cú pháp JS/JSX và xác minh metadata. **Chưa chạy được `npm run build` trong môi trường đóng gói vì registry.npmjs.org không truy cập được để cài dependencies.** Vercel sẽ tự cài dependencies và build sau khi import repo; cần kiểm tra Deployment Logs trước khi coi là production-ready đã xác minh.
+Đóng gói này đã chạy 33/33 unit tests, kiểm tra cú pháp JS/JSX và xác minh metadata. **Chưa chạy được `npm run build` trong môi trường đóng gói vì registry.npmjs.org không truy cập được để cài dependencies.** Vercel sẽ tự cài dependencies và build sau khi import repo; cần kiểm tra Deployment Logs trước khi coi là production-ready đã xác minh.
 
 ## Cấu trúc
 
 ```text
-Zipverra-v1.3.2/
+Zipverra-v1.3.3/
 ├── app/
 │   ├── api/auth/           # login, callback, session, logout
 │   ├── api/github/         # repos, snapshot, blob, commit

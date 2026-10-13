@@ -48,3 +48,25 @@ test('hero title is updated to English on mobile and desktop', () => {
   assert.match(page, /Push to GitHub\.<br\/>\s*<span>From Your Phone\.<\/span>/);
   assert.doesNotMatch(page, /Đẩy source lên GitHub/);
 });
+
+test('standalone iPhone layout offsets header from status bar and protects bottom home indicator', () => {
+  const style = source('app/globals.css');
+  const layout = source('app/layout.jsx');
+  assert.match(layout, /statusBarStyle:\s*'black-translucent'/);
+  assert.match(style, /\.shell\s*\{\s*padding-top:\s*env\(safe-area-inset-top/);
+  assert.match(style, /padding-top:\s*calc\(env\(safe-area-inset-top,\s*0px\)\s*\+\s*8px\)/);
+  assert.match(style, /padding-bottom:\s*max\(16px,\s*env\(safe-area-inset-bottom/);
+  assert.match(style, /safe-area-inset-left/);
+  assert.match(style, /safe-area-inset-right/);
+  assert.match(style, /min-height:\s*100dvh/);
+});
+
+test('mobile preview is full-width and centered at screen sizes up to 550px', () => {
+  const page = source('app/page.jsx');
+  const style = source('app/globals.css');
+  assert.match(page, /centerOnMobile\s*\/?>/);
+  assert.match(page, /step-heading--mobile-center/);
+  assert.match(style, /\.step-heading--mobile-center\s*\{\s*flex-direction:\s*column;/);
+  assert.match(style, /\.preview-panel\s+\.stat-grid\s*\{\s*grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(style, /\.form-column\s*>\s*\.panel,\s*\.side-column\s*>\s*\.panel/);
+});

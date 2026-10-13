@@ -34,8 +34,8 @@ function prettyBytes(count) {
   return count >= 1024 * 1024 ? `${(count / 1024 / 1024).toFixed(2)} MB` : `${Math.max(0, Math.round(count / 1024))} KB`;
 }
 
-function StepTitle({ n, title, desc }) {
-  return <div className="step-heading"><span className="step-number">{n}</span><div><h2>{title}</h2><p>{desc}</p></div></div>;
+function StepTitle({ n, title, desc, centerOnMobile = false }) {
+  return <div className={`step-heading${centerOnMobile ? ' step-heading--mobile-center' : ''}`}><span className="step-number">{n}</span><div><h2>{title}</h2><p>{desc}</p></div></div>;
 }
 
 function Icon({ name, size = 20 }) {
@@ -219,7 +219,7 @@ export default function Home() {
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar">
       <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span></strong><small>ZIP TO GITHUB · GITHUB OAUTH</small></div></div>
-      <div className="version"><span className="live-dot"/> v1.3.2</div>
+      <div className="version"><span className="live-dot"/> v1.3.3</div>
     </header>
     <main>
       <section className="hero">
@@ -259,7 +259,7 @@ export default function Home() {
 
         <div className="side-column">
           <article className="panel preview-panel">
-            <StepTitle n="03" title="Kiểm tra & Push" desc="Xem thay đổi trước khi GitHub tạo commit."/>
+            <StepTitle n="03" title="Kiểm tra & Push" desc="Xem thay đổi trước khi GitHub tạo commit." centerOnMobile/>
             {!preview ? <div className="empty-preview"><div className="circle-placeholder"><Icon name="branch" size={27}/></div><h3>Chưa có bản preview</h3><p>Chọn repository, upload file ZIP rồi nhấn <b>Phân tích ZIP</b> để xem danh sách file được cập nhật.</p></div> : <>
               <div className="summary-line"><span className="pill">{preview.input.owner}/{preview.input.repo}</span><span className="pill branch-pill"><Icon name="branch" size={14}/> {preview.input.branch}</span></div>
               <div className="stat-grid"><div><strong className="good">+{stats.add}</strong><span>Thêm</span></div><div><strong className="warn">~{stats.modify}</strong><span>Sửa</span></div><div><strong className="bad">−{stats.delete}</strong><span>Xóa</span></div></div>
@@ -277,7 +277,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v1.3.2</span><span>OAuth cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v1.3.3</span><span>OAuth cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   </>;
 }
