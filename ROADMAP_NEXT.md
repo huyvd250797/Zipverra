@@ -1,29 +1,25 @@
-# Zipverra Roadmap — After v1.12.0
+# Zipverra Pro — Roadmap after v2.0.0
 
-**Current baseline:** Zipverra v1.12.0 — Security & Smart Source Validation.
+**Current baseline: Zipverra Pro v2.0.0 — Mobile Git Workspace**, upgraded directly from the supplied v1.12.0 source.
 
-## v1.13.0 — Adaptive Performance & Reliable Large Upload
+## v2.1.0 — Adaptive ZIP Transfer & Recovery
+- Adaptive upload concurrency and batch sizing based on actual network/device signals.
+- File-size handling architecture beyond per-function request limits (evaluate object storage with opt-in setup).
+- Reduce mobile memory pressure with progressive parsing and safer cancellation, checksum diagnostics.
+- Explicit recovery workflow for expired scan attestations and ambiguous branch updates.
 
-- Adaptive batch/concurrency based on network performance and device memory.
-- More robust encrypted/expiring upload session metadata, progress resumption and diagnostics.
-- Explore direct-to-object-storage upload for individual files larger than Vercel request limits.
-- Stream file hashing and progressive ZIP extraction to reduce iPhone memory pressure.
-- Recovery/reconciliation tests across backgrounding, flaky network, auth refresh and retry.
+## v2.2.0 — Mobile PR Review 2.0
+- File-level PR diff, CI checks, reviewer status and merge readiness.
+- Quick Edit → optional feature branch + PR instead of direct commit.
+- Clear branch-protection, merge conflict and approval messages without bypassing GitHub rulesets.
 
-## v1.14.0 — Advanced Pull Request Review
+## v2.3.0 — Security Policies & Release Guardrails
+- Per-repository protected-path policy, explicit confirmations for sensitive changes.
+- Optional integration with GitHub's secret protection signals where permitted.
+- Local metadata export/import with schema validation and explicit user consent; no credential export.
 
-- Mobile file-level diff for Pull Requests, CI checks, reviewer status and merge readiness.
-- Create PR directly from Quick Edit without manual branch setup.
-- Review-required policies and guardrails for merge (no bypass of GitHub protections).
+## Later — Team Workspace (requires separate architecture/security review)
+- Shared multi-user activity and role-based permissions, durable synchronization and notifications.
+- Introduce a database and webhook processing only after scope, billing, access control and deployment constraints are specified.
 
-## v1.15.0 — Security 2.0
-
-- Optional GitHub secret-scanning / push-protection status integration where available.
-- Improved security rules and dedicated exception handling with audit trail (without saving secrets).
-- Repo-specific scanning policy and protected files with team approval.
-
-## v2.0.0 — Zipverra Mobile Git Workspace
-
-- Unified Repos → Upload/Workspace → Review → Activity workflow.
-- Branch/PR manager, Git history, safe rollback, reliable source validation.
-- No Vercel Deployment Tracking unless explicitly requested.
+**Out of scope unless requested:** Vercel Deployment Tracking, autonomous background pushes, or forced merge/deployment.

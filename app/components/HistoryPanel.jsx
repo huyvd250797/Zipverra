@@ -33,7 +33,7 @@ function Counts({ value }) {
   return <div className="history-stats"><span className="good">+{value.add} thêm</span><span className="warn">~{value.modify} sửa</span><span className="bad">−{value.delete} xóa</span></div>;
 }
 
-export default function HistoryPanel({ authenticated, owner, repo, branch, online, busy, setBusy, pendingPush, api, requestOnce }) {
+export default function HistoryPanel({ authenticated, owner, repo, branch, online, busy, setBusy, pendingPush, api, requestOnce, onRollback }) {
   const [items, setItems] = useState([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -105,6 +105,7 @@ export default function HistoryPanel({ authenticated, owner, repo, branch, onlin
       if (outcome.state !== 'applied') throw Error('Chưa xác minh được rollback. Hãy nhấn Xác minh rollback.');
       storeRecovery(null); setRecovery(null); setPreview(null); setChecked(false); setPhrase('');
       setNotice(`Rollback đã hoàn tất và xác minh: ${outcome.sha.slice(0, 12)}. ${outcome.changed} file đã thay đổi.`);
+      onRollback?.(outcome);
       setComparison(null); setItems([]); setPage(0);
     } catch (e) {
       setError(`${e.message} Không thực hiện lại rollback khi chưa xác minh HEAD.`);
@@ -118,6 +119,7 @@ export default function HistoryPanel({ authenticated, owner, repo, branch, onlin
       if (outcome.state === 'applied') {
         storeRecovery(null); setRecovery(null); setPreview(null); setComparison(null); setItems([]); setPage(0);
         setNotice(`Đã xác nhận rollback thành công. Commit: ${outcome.sha.slice(0, 12)}.`);
+        onRollback?.(outcome);
       } else if (outcome.state === 'not_applied') {
         storeRecovery(null); setRecovery(null); setPreview(null);
         setNotice('Đã xác nhận HEAD chưa thay đổi, rollback không được áp dụng. Có thể preview lại.');

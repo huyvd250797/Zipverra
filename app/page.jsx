@@ -17,6 +17,11 @@ import MobileViewportGuard from './components/MobileViewportGuard.jsx';
 import HistoryPanel from './components/HistoryPanel.jsx';
 import WorkspacePanel from './components/WorkspacePanel.jsx';
 import BranchPrPanel from './components/BranchPrPanel.jsx';
+import ProDashboard from './components/ProDashboard.jsx';
+import PushProfiles from './components/PushProfiles.jsx';
+import ActivityJournal from './components/ActivityJournal.jsx';
+import { PRO_PROFILES_KEY, PRO_ACTIVITY_KEY, PRO_DASHBOARD_KEY, accountStorageKey,
+  normalizeProfiles, upsertProfile, removeProfile, addActivity, normalizeActivity, proSnapshot, dashboardRepos } from '../lib/pro-workspace.js';
 
 async function requestOnce(endpoint, data) {
   let response;
@@ -118,6 +123,13 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState('repositories');
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [theme, setTheme] = useState('dark');
+  const [proProfiles, setProProfiles] = useState([]);
+  const [proActivity, setProActivity] = useState([]);
+  const proProfilesRef = useRef([]);
+  const proActivityRef = useRef([]);
+  const [proDashboard, setProDashboard] = useState(null);
+  const [dashboardLoading, setDashboardLoading] = useState(false);
+  const [dashboardError, setDashboardError] = useState('');
   const [repoSearch, setRepoSearch] = useState('');
   const [loadingRepos, setLoadingRepos] = useState(false);
   const [recents, setRecents] = useState([]);
@@ -202,6 +214,71 @@ export default function Home() {
     });
   }
 
+
+  useEffect(() => {
+    // Account-scoped local metadata, never a credential store. Do not show another account's cache.
+    proProfilesRef.current=[];proActivityRef.current=[];
+    setProProfiles([]); setProActivity([]); setProDashboard(null); setDashboardError('');
+    if (!auth.authenticated || !auth.user?.login) return;
+    try {
+      const profileKey=accountStorageKey(PRO_PROFILES_KEY,auth.user);
+      const activityKey=accountStorageKey(PRO_ACTIVITY_KEY,auth.user);
+      const dashboardKey=accountStorageKey(PRO_DASHBOARD_KEY,auth.user);
+      if (profileKey) {const value=normalizeProfiles(JSON.parse(localStorage.getItem(profileKey)||'[]'));proProfilesRef.current=value;setProProfiles(value);}
+      if (activityKey) {const value=normalizeActivity(JSON.parse(localStorage.getItem(activityKey)||'[]'));proActivityRef.current=value;setProActivity(value);}
+      if (dashboardKey) setProDashboard(proSnapshot(JSON.parse(localStorage.getItem(dashboardKey)||'null')));
+    } catch { /* invalid local cache must not break the PWA */ }
+  }, [auth.authenticated,auth.user?.login]);
+
+  function saveProfile(value) {
+    if (!auth.authenticated || !auth.user?.login) return;
+    const next=upsertProfile(proProfilesRef.current,value);
+    proProfilesRef.current=next;setProProfiles(next);
+    try{localStorage.setItem(accountStorageKey(PRO_PROFILES_KEY,auth.user),JSON.stringify(next));}catch{}
+  }
+  function deleteProfile(name) {
+    const next=removeProfile(proProfilesRef.current,name);
+    proProfilesRef.current=next;setProProfiles(next);
+    try{localStorage.setItem(accountStorageKey(PRO_PROFILES_KEY,auth.user),JSON.stringify(next));}catch{}
+  }
+  function applyProfile(profile) {
+    if (!auth.authenticated || `${owner}/${repo}`.toLowerCase()!==profile.repo.toLowerCase() || busy || pendingCommit || pendingPR) return;
+    setBranch(profile.branch);setMode(profile.mode);setReleaseStrategy(profile.strategy);
+    setFile(null); if(fileInput.current)fileInput.current.value=''; reset(); goToTab('home');
+  }
+  function selectAndApplyProfile(profile) {
+    if (!auth.authenticated || busy || pendingCommit || pendingPR ||
+        !repos.some(r=>r.full_name.toLowerCase()===profile.repo.toLowerCase())) return;
+    const [nextOwner,nextRepo]=profile.repo.split('/');
+    setOwner(nextOwner);setRepo(nextRepo);setBranch(profile.branch);
+    setMode(profile.mode);setReleaseStrategy(profile.strategy);
+    setWorkspaceOpen(false);setFile(null);if(fileInput.current)fileInput.current.value='';
+    reset();saveRecent(profile.repo);goToTab('home');
+  }
+  function logLocalAction(value) {
+    if (!auth.authenticated || !auth.user?.login) return;
+    const next=addActivity(proActivityRef.current,value);
+    proActivityRef.current=next;setProActivity(next);
+    try{localStorage.setItem(accountStorageKey(PRO_ACTIVITY_KEY,auth.user),JSON.stringify(next));}catch{}
+  }
+  function clearLocalActions() {
+    if (!window.confirm('Xóa toàn bộ nhật ký hoạt động được lưu trên thiết bị này? Lịch sử GitHub không bị ảnh hưởng.')) return;
+    proActivityRef.current=[];setProActivity([]);
+    try{localStorage.removeItem(accountStorageKey(PRO_ACTIVITY_KEY,auth.user));}catch{}
+  }
+  async function refreshDashboard() {
+    if (!auth.authenticated || !online || dashboardLoading || busy) return;
+    const repositories=dashboardRepos(repos,favorites,recents,owner&&repo?`${owner}/${repo}`:'');
+    if (!repositories.length) {setDashboardError('Chọn hoặc ghim repository để xem Dashboard.');return;}
+    setDashboardLoading(true);setDashboardError('');
+    try {
+      const next=proSnapshot(await api('dashboard',{repositories}));
+      if (!next)throw Error('Dữ liệu GitHub Dashboard không hợp lệ.');
+      setProDashboard(next);
+      try{localStorage.setItem(accountStorageKey(PRO_DASHBOARD_KEY,auth.user),JSON.stringify(next));}catch{}
+    } catch(e) {setDashboardError(`Không cập nhật được Dashboard: ${e.message}`);}
+    finally{setDashboardLoading(false);}
+  }
 
   useEffect(() => {
     setOnline(navigator.onLine);
@@ -373,6 +450,7 @@ export default function Home() {
     setProgress(100);
     setPhase(PUSH_STAGES.SUCCEEDED);
     setActiveTab('activity');
+    logLocalAction({kind:'push',state:'success',repo:`${owner}/${repo}`,sha:outcome.sha,message:'Commit verified on GitHub'});
     setPendingCommit(null);
     clearPending();
     clearUploadCheckpoint();
@@ -392,12 +470,14 @@ export default function Home() {
     clearPending(); setPendingCommit(null); clearUploadCheckpoint();
     setPreview(null); setConfirmed(false); setSyncConfirmed(false);
     setResult({ ...outcome, branchOnly: true, sourceBranch: prData.sourceBranch });
+    logLocalAction({kind:'push',state:'success',repo:`${prData.owner}/${prData.repo}`,sha:outcome.sha,message:'Release branch verified'});
     setProgress(100); setPhase(PUSH_STAGES.SUCCEEDED); setActiveTab('activity');
     setPendingPR(prData); savePendingPR(prData);
     setStatus('Branch đã push và xác minh trên GitHub. Đang mở Pull Request...');
     try {
       const pr = await requestOnce('pull-request/create', prData);
       setResult({ ...outcome, pr, sourceBranch: prData.sourceBranch });
+      logLocalAction({kind:'pr',state:'success',repo:`${prData.owner}/${prData.repo}`,sha:outcome.sha,message:`Opened Pull Request #${pr.number}`});
       setPendingPR(null); clearPendingPR();
       setStatus(`Pull Request #${pr.number} đã được tạo/xác minh. Chờ review và merge trên GitHub.`);
       setError(''); setErrorHint('');
@@ -416,6 +496,7 @@ export default function Home() {
       const pr = await requestOnce('pull-request/create', pendingPR);
       setResult(current => ({ ...(current || {}), sha: pendingPR.expectedSourceHead,
         sourceBranch: pendingPR.sourceBranch, pr, branchOnly:false }));
+      logLocalAction({kind:'pr',state:'success',repo:`${pendingPR.owner}/${pendingPR.repo}`,sha:pendingPR.expectedSourceHead,message:`Verified Pull Request #${pr.number}`});
       setPendingPR(null); clearPendingPR(); setPhase(PUSH_STAGES.SUCCEEDED);
       setStatus(`Pull Request #${pr.number} đã được tạo/xác minh.`);
     } catch(e) {
@@ -561,9 +642,11 @@ export default function Home() {
         }
         setPhase(PUSH_STAGES.UNCONFIRMED);
         setStatus('Kết quả commit chưa chắc chắn. Nhấn “Xác minh push” để kiểm tra GitHub trước khi làm lại.');
+        logLocalAction({kind:'push',state:'pending',repo:`${commitPayload.owner}/${commitPayload.repo}`,message:'Chưa xác minh kết quả commit'});
       } else {
         setPhase(PUSH_STAGES.FAILED);
         setStatus(`Push dừng trước khi tạo commit${e.stage ? ` (bước ${e.stage})` : ''}. Có thể thử lại sau khi kiểm tra lỗi.`);
+        logLocalAction({kind:'push',state:'failed',repo:`${owner}/${repo}`,message:'Dừng trước khi tạo commit'});
       }
     } finally { setBusy(false); }
   }
@@ -574,14 +657,14 @@ export default function Home() {
     <div className="shell">
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar">
-      <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span></strong><small>ZIP TO GITHUB · GITHUB APP</small></div></div>
-      <div className="version"><span className="live-dot"/> v1.12.0</div>
+      <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span></strong><small>PRO WORKSPACE · GITHUB APP</small></div></div>
+      <div className="version"><span className="live-dot"/> v2.0.0</div>
     </header>
-    <div className="mobile-context"><div><span className="mobile-eyebrow">ZIPVERRA / {({ home: 'HOME', repositories: 'REPOSITORIES', activity: 'ACTIVITY', history: 'HISTORY', settings: 'SETTINGS' })[activeTab]}</span><h2>{({ home: 'Upload ZIP', repositories: 'GitHub repositories', activity: 'Push activity', history: 'Version history', settings: 'Preferences' })[activeTab]}</h2></div><span className={`mobile-connection ${online ? 'connected' : 'disconnected'}`} aria-label={online ? 'Online' : 'Offline'}>{online ? 'Online' : 'Offline'}</span></div>
+    <div className="mobile-context"><div><span className="mobile-eyebrow">ZIPVERRA / {({ home: 'HOME', repositories: 'REPOSITORIES', activity: 'ACTIVITY', history: 'HISTORY', settings: 'SETTINGS' })[activeTab]}</span><h2>{({ home: 'Upload ZIP', repositories: 'GitHub repositories', activity: 'Push activity', history: 'Version history', settings: 'Pro Settings' })[activeTab]}</h2></div><span className={`mobile-connection ${online ? 'connected' : 'disconnected'}`} aria-label={online ? 'Online' : 'Offline'}>{online ? 'Online' : 'Offline'}</span></div>
     {activeTab !== 'activity' && (error || busy) && <button type="button" className={`mobile-global-status ${error ? 'has-error' : ''}`} onClick={() => goToTab('activity')}><span>{error ? `Cần kiểm tra: ${error}` : `${status || 'Đang xử lý...'} · ${progress}%`}</span><Icon name="arrow" size={17}/></button>}
     <main data-active-view={activeTab}>
       <section className="hero">
-        <div className="eyebrow"><Icon name="shield" size={15}/> MOBILE GIT · BRANCH & PULL REQUESTS</div>
+        <div className="eyebrow"><Icon name="shield" size={15}/> ZIPVERRA PRO · MOBILE GIT WORKSPACE</div>
         <h1>Push to GitHub.<br/><span>From Your Phone.</span></h1>
         
         <div className="highlights"><span><Icon name="check" size={15}/> Vercel-native</span><span><Icon name="check" size={15}/> Hỗ trợ binary</span><span><Icon name="check" size={15}/> So sánh trước khi push</span></div>
@@ -598,6 +681,7 @@ export default function Home() {
         <div className="form-column">
           <article className="panel repository-panel" data-mobile-view="repositories" style={workspaceOpen ? {display:'none'} : undefined}>
             <StepTitle n="01" title="Chọn repository" desc="Chọn nơi nhận source trước khi tải ZIP."/>
+
             {auth.loading ? <div className="repo-auth-minimal">Đang kết nối GitHub...</div> : !auth.authenticated ? <div className="auth-card">
               <p className="auth-muted">Kết nối GitHub để chọn repository được cấp quyền.</p>
               <a className="button primary full login-button" href="/api/auth/login"><Icon name="github" size={19}/> Continue with GitHub <Icon name="arrow" size={16}/></a>
@@ -609,11 +693,17 @@ export default function Home() {
             <div className="field"><label htmlFor="repo-select">Chọn repository</label><select id="repo-select" disabled={busy || !auth.authenticated || !repos.length} value={displayedRepos.some((x) => x.full_name === `${owner}/${repo}`) ? `${owner}/${repo}` : ''} onChange={(e) => chooseRepo(e.target.value)}><option value="">{repos.length ? (displayedRepos.length ? 'Chọn repository được cấp quyền' : 'Không có repo phù hợp') : 'Chưa có repo được GitHub App cấp quyền'}</option>{displayedRepos.map((x) => <option key={x.full_name} value={x.full_name}>{x.full_name}{x.private ? ' 🔒' : ''}</option>)}</select>{chosenRepo && <button type="button" className="favorite-toggle" onClick={() => toggleFavorite(`${owner}/${repo}`)}>{favorites.includes(`${owner}/${repo}`) ? '★ Đã ghim repository' : '☆ Ghim repository này'}</button>}</div>
             <details className="repo-advanced"><summary>Tùy chọn nâng cao · Nhập repo thủ công</summary><div className="two-col"><div className="field"><label htmlFor="owner">Owner</label><input id="owner" value={owner} disabled={busy || !auth.authenticated} placeholder="huyvd250797" onChange={(e) => change(setOwner, e.target.value)}/></div><div className="field"><label htmlFor="repo">Repository</label><input id="repo" value={repo} disabled={busy || !auth.authenticated} placeholder="Finzaro" onChange={(e) => change(setRepo, e.target.value)}/></div></div><p className="hint">Chỉ có thể push lên repository đã được GitHub App cấp quyền.</p></details>
             <div className="field"><label htmlFor="branch">Branch đích <span className="tag">Mặc định: main</span></label><div className="input-icon"><Icon name="branch" size={17}/><input id="branch" value={branch} disabled={busy || !auth.authenticated} placeholder="main" onChange={(e) => change(setBranch, e.target.value)}/></div></div>
+            <details className="pro-dash-details"><summary>Zipverra Pro · Multi-repository dashboard</summary>
+              <ProDashboard authenticated={auth.authenticated} online={online} loading={dashboardLoading}
+                snapshot={proDashboard} repos={repos} profiles={proProfiles} recents={recents} favorites={favorites}
+                selectedRepo={chosenRepo} onRefresh={refreshDashboard} onChoose={chooseRepo} onGoUpload={()=>goToTab('home')}/>
+              {dashboardError && <p className="pro-error" role="alert">{dashboardError}</p>}
+            </details>
             {chosenRepo && <button type="button" className="button secondary full workspace-launch" disabled={busy || !auth.authenticated} onClick={()=>{setWorkspaceOpen(true);goToTab('repositories');}}><Icon name="file" size={18}/> Repository Explorer · Quick Edit <Icon name="arrow" size={16}/></button>}
-            {chosenRepo && <BranchPrPanel key={`${owner}/${repo}`} owner={owner} repo={repo} branch={branch} online={online} busy={busy} api={api} onSelectBranch={(next)=>change(setBranch,next)}/>}
+            {chosenRepo && <BranchPrPanel key={`${owner}/${repo}`} owner={owner} repo={repo} branch={branch} online={online} busy={busy} api={api} onSelectBranch={(next)=>change(setBranch,next)} onMerge={(outcome,number)=>logLocalAction({kind:'merge',state:'success',repo:`${owner}/${repo}`,sha:outcome?.sha,message:`Merged PR #${number}`})}/>}
             <button type="button" className="button secondary full mobile-repo-next" onClick={() => goToTab('home')} disabled={!auth.authenticated || !owner || !repo || busy}>Tiếp tục · Upload ZIP <Icon name="arrow" size={17}/></button>
           </article>
-          {workspaceOpen && <WorkspacePanel key={`${owner}/${repo}@${branch}`} authenticated={auth.authenticated} owner={owner} repo={repo} branch={branch} online={online} busy={busy} onBack={()=>{setWorkspaceOpen(false);goToTab('repositories');}} api={api} onCommit={()=>{reset();}} />}
+          {workspaceOpen && <WorkspacePanel key={`${owner}/${repo}@${branch}`} authenticated={auth.authenticated} owner={owner} repo={repo} branch={branch} online={online} busy={busy} onBack={()=>{setWorkspaceOpen(false);goToTab('repositories');}} api={api} onCommit={(outcome)=>{reset();logLocalAction({kind:'quick-edit',state:'success',repo:`${owner}/${repo}`,sha:outcome?.sha,message:'Quick Edit saved'});}} />}
 
           <article className="panel upload-panel" data-mobile-view="home">
             <StepTitle n="02" title="Upload ZIP" desc="Giải nén trong Web Worker, không chặn thao tác điện thoại."/>
@@ -674,7 +764,8 @@ export default function Home() {
             {error && <div className="error-banner" role="alert">{error}{errorHint && <p className="error-hint">{errorHint}</p>}</div>}
             {result && <div className="success-banner"><div className="success-title"><Icon name="check" size={17}/>{result.pr ? ` Pull Request #${result.pr.number} đã mở` : result.branchOnly ? ' Branch đã push thành công' : ' Push thành công!'}</div><p>Đã cập nhật {result.changed ?? 'các'} file. Commit: <code>{result.sha?.slice(0,12)}</code></p>{result.sourceBranch && <p>Branch: <b>{result.sourceBranch}</b></p>}{result.url && <a href={result.url} target="_blank" rel="noopener noreferrer">Xem commit <Icon name="external" size={15}/></a>}{result.pr?.url && <> · <a className="branch-pr-link" href={result.pr.url} target="_blank" rel="noopener noreferrer">Mở Pull Request #{result.pr.number} ↗</a><p>PR chưa được merge vào {result.pr.baseBranch}. Hãy kiểm tra diff, CI rồi Merge trong Repos hoặc GitHub.</p></>}</div>}
           </article>
-          <HistoryPanel authenticated={auth.authenticated} owner={owner} repo={repo} branch={branch} online={online} busy={busy} setBusy={setBusy} pendingPush={pendingCommit} api={api} requestOnce={requestOnce}/>
+          <HistoryPanel authenticated={auth.authenticated} owner={owner} repo={repo} branch={branch} online={online} busy={busy} setBusy={setBusy} pendingPush={pendingCommit} api={api} requestOnce={requestOnce} onRollback={(outcome)=>logLocalAction({kind:'rollback',state:'success',repo:`${owner}/${repo}`,sha:outcome.sha,message:'Rollback verified'})}/>
+          <article className="panel pro-journal-panel" data-mobile-view="activity"><ActivityJournal items={proActivity} onClear={clearLocalActions}/></article>
           <article className="panel settings-panel" data-mobile-view="settings">
             <div className="settings-heading"><Icon name="settings" size={21}/><div><h2>Settings</h2><p>Cài đặt giao diện và kết nối GitHub App.</p></div></div>
             <div className="field"><label>Giao diện</label><div className="theme-options" role="group" aria-label="Chế độ hiển thị"><button type="button" className={theme === 'dark' ? 'selected' : ''} aria-pressed={theme === 'dark'} onClick={() => setTheme('dark')}><Icon name="moon" size={18}/> Dark</button><button type="button" className={theme === 'light' ? 'selected' : ''} aria-pressed={theme === 'light'} onClick={() => setTheme('light')}><Icon name="sun" size={18}/> Light</button></div></div>
@@ -686,16 +777,19 @@ export default function Home() {
                 <button type="button" className="button ghost settings-logout" onClick={logout} disabled={busy}>Đăng xuất GitHub</button>
               </> : <a className="button primary full" href="/api/auth/login"><Icon name="github" size={18}/> Continue with GitHub</a>}
             </div>
-            <div className="settings-info"><span>Phiên bản</span><strong>v1.12.0</strong></div>
+            <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
+              profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
+              onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
+            <div className="settings-info"><span>Phiên bản</span><strong>v2.0.0</strong></div>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
             <div className="settings-info"><span>Commit message</span><strong>Tên file ZIP</strong></div>
-            <p className="hint">Chỉ lưu metadata phục hồi upload, không lưu GitHub token trên JavaScript phía trình duyệt.</p>
+            <p className="hint">Push Profiles, Dashboard cache và Local Activity lưu riêng theo tài khoản GitHub trên thiết bị. Không đồng bộ giữa thiết bị và không chạy task ngầm khi đóng PWA.</p>
           </article>
           <article className="hint-card" data-mobile-view="settings"><Icon name="shield" size={22}/><div><strong>Quyền GitHub tối thiểu</strong><p>GitHub App dùng token người dùng có thời hạn, giới hạn bởi quyền người dùng và các repository được cài đặt. Cần <b>Contents: Read & write</b>; khi tạo PR cần thêm <b>Pull requests: Read & write</b>; và <b>Workflows: Read & write</b> khi sửa CI. Token/refresh token ở cookie HttpOnly được mã hóa; branch protection vẫn có thể yêu cầu Pull Request.</p></div></article>
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v1.12.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v2.0.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <nav className="mobile-bottom-nav" aria-label="Điều hướng Zipverra">{[{id:'repositories',label:'Repos',icon:'branch'},{id:'home',label:'Upload',icon:'upload'},{id:'activity',label:'Activity',icon:'activity'},{id:'history',label:'History',icon:'history'},{id:'settings',label:'Settings',icon:'settings'}].map((tab) => <button type="button" key={tab.id} className={`mobile-nav-item ${activeTab === tab.id ? 'active' : ''}`} aria-current={activeTab === tab.id ? 'page' : undefined} onClick={() => goToTab(tab.id)}><Icon name={tab.icon} size={21}/><span>{tab.label}</span>{tab.id === 'activity' && (pendingCommit || pendingPR) && <i className="nav-alert" aria-label="Có push cần xác minh"/>}</button>)}</nav>
   </>;

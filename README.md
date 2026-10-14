@@ -1,4 +1,61 @@
-# Zipverra v1.12.0 — Security & Smart Source Validation
+# Zipverra Pro v2.0.0 — Mobile Git Workspace
+
+**Next.js 16 · React 19 · GitHub App · Mobile-first PWA · Vercel-targeted**  
+**Tagline:** Push to GitHub. From Your Phone.
+
+> Release baseline: v1.12.0 — Security & Smart Source Validation. This v2.0.0 does **not** include previously proposed, unreleased 1.13/1.14 work. **No Vercel Deployment Tracking** is included.
+
+## What's new in v2.0.0
+
+Zipverra Pro extends the existing five tabs, **Repos · Upload · Activity · History · Settings**, without adding a sixth tab or changing the default ZIP-to-GitHub flow.
+
+1. **Pro Repository Dashboard (Repos, expandable section below repo selector):** shows total authorized writable repositories, pinned repos, saved profiles, and the latest commit SHA/message for up to five authorized favorite/recent repositories after pressing **Refresh status**. It queries the **GitHub App user session on the server** and rejects all uninstalled/unauthorized repo names. Offline, the most recent non-secret metadata cached on the device can still be viewed, but cannot be refreshed.
+2. **Push Profiles (Settings):** save each repository's preferred branch, Merge/Sync mode and Direct Push/PR strategy. Profiles are **not applied automatically**; choose a repository, open Settings, and select **Apply**. This clears any old ZIP/review to prevent pushing with a stale preview.
+3. **Local Activity (Activity):** records confirmed ZIP pushes, opened PRs, merges, verified rollbacks, and Quick Edit saves, plus push failures/ambiguous results. It supports filtering and clearing records. This is **device-local metadata**, not a GitHub audit log and not push notifications while the PWA is closed.
+4. **Multi-repo workspace:** dashboard and profiles reduce switching overhead. GitHub App permissions remain the source of truth; source content and auth tokens are not stored in profile/activity data.
+5. **UI polish:** responsive dark/light surfaces, compact badges and cards that respect mobile safe areas; splash and zoom settings remain.
+
+### Primary workflow (unchanged)
+
+**Repos → Upload ZIP → Review/Security Scan → Confirm Direct Push or Pull Request → Activity (SHA verified)**.
+
+- **Direct Push** remains default. Pull Request remains optional and never auto-merges.
+- Repository Explorer/Quick Edit, History/Safe Rollback, GitHub App Authentication and Secret Scan from v1.12.0 remain included.
+- Zipverra Pro is a **product name**, not a paid subscription system. No billing/account tier feature is implemented.
+
+### GitHub App / Vercel setup
+
+The following Production environment variables are still required: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`. **No additional Vercel environment variables, database or external tokens are required.**
+
+- GitHub App **Contents: Read and write**, **Metadata: Read-only**; **Pull requests: Read and write** to use PR workflows; **Workflows: Read and write** if ZIP modifies GitHub Actions.
+- Upload the **contents of `Zipverra-v2.0.0/`** into the repository root; do not upload the ZIP as a source file. Import the GitHub repository on Vercel, or let the existing Vercel project deploy the new commit.
+- Run `npm install`, `npm test` and `npm run build` in CI. Production build and live GitHub operations must be verified before critical use.
+- On iPhone use Safari → Share → Add to Home Screen. Continue to respect iOS safe areas and accessibility zoom controls.
+
+### Data, security and constraints
+
+- **Dashboard:** at most five GitHub-authorized repositories per refresh. Only latest commit metadata is read; **no Vercel API**. A read failure is shown independently for that repository.
+- **Push Profiles:** up to 30 entries, device-scoped per GitHub login. Only repo/branch/mode/strategy and update timestamp are persisted. Applying a profile does not create a GitHub commit.
+- **Local Activity:** up to 50 metadata-only entries, also separated per GitHub login. Clearing the list does not delete GitHub history.
+- Existing ZIP upload limits, Web Worker behavior and checkpoint/security attestation rules from v1.12.0 still apply.
+- Offline mode supports **viewing a previously cached dashboard**, not pushing files or automatically retrying commits in the background.
+- GitHub credentials stay in encrypted HttpOnly sessions. Local storage must never include GitHub/Vercel tokens or source code.
+- Secret detection is heuristic; no guarantees for undiscovered secrets or unscanned binary files.
+
+### Smoke tests after Vercel deployment
+
+1. Confirm footer and splash show **v2.0.0** / Pro branding and account login works.
+2. Repos → Refresh status; confirm SHA/message against GitHub and no unauthorized repo is returned.
+3. Save a Push Profile, select a different repo, return and **Apply**. Verify chosen branch/strategy and that old ZIP preview is cleared.
+4. Push a test ZIP, verify SHA, check Activity local record; create a PR (not auto-merged) and check PR record.
+5. Quick Edit one text file, verify SHA on GitHub, and optionally test Safe Rollback on a disposable repository.
+6. Switch GitHub accounts / log out: ensure Pro metadata from the previous account is not displayed.
+7. On iPhone, test 320–430 px viewport, notches, bottom navigation, offline cached dashboard and light/dark modes.
+
+---
+
+## Previous features & architecture (retained from v1.12.0)
+
 
 **Next.js 16 · React 19 · Vercel-targeted · Installable mobile PWA**  
 **Slogan:** Push to GitHub. From Your Phone.

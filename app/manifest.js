@@ -1,7 +1,7 @@
 export default function manifest() {
   return {
-    name: 'Zipverra — ZIP to GitHub',
-    short_name: 'Zipverra',
+    name: 'Zipverra Pro — GitHub Workspace',
+    short_name: 'Zipverra Pro',
     description: 'Push to GitHub from Mobile. Select a repository, analyze ZIP source, and safely push to GitHub from your phone.',
     start_url: '/',
     display: 'standalone',

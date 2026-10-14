@@ -1,4 +1,27 @@
-# QA — Zipverra v1.12.0
+# Zipverra Pro v2.0.0 — Release QA
+
+## Automated validation
+- `npm test`: **154/154** passed on packaging host (143 regression + 11 Pro tests).
+- TypeScript parser (syntax only) checked all JS, JSX and MJS modules; relative imports verified.
+- `npm run build`: **not verified** in packaging environment because npm registry DNS returned `EAI_AGAIN`; Vercel/CI build success remains required.
+- Live GitHub App / PR / rollback E2E: **not exercised** on a real user repository; test with a disposable repo.
+
+## Pro checks
+- [ ] Dashboard rejects repository not installed in the GitHub App, even if a user guesses its name.
+- [ ] Dashboard displays commit from correct default branch; failures do not block other repositories.
+- [ ] Dashboard caches only bounded metadata; never caches secrets or source files.
+- [ ] User A and User B use different storage namespaces; logout clears in-memory Pro state.
+- [ ] Profiles reject invalid branches/modes, and Apply requires an explicit user gesture.
+- [ ] Profile Apply clears ZIP file, review and prior confirmation.
+- [ ] Local Activity logs verified operations and distinguish failed/pending from success.
+- [ ] Clear local activity does not modify GitHub history.
+- [ ] Offline cached metadata is labeled as stale; no offline commit or background promises.
+- [ ] Five-tab mobile navigation remains safe-area aware, accessible in light/dark themes.
+- [ ] Existing ZIP Push, PR creation/merge, Quick Edit, History/Rollback and Security Scan regression flows work.
+
+---
+
+# QA — Zipverra Pro v2.0.0
 
 Add these checks to the existing v1.9.0 regression suite:
 

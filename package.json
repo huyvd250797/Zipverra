@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "1.12.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "Zipverra v1.12.0: Protected ZIP Push, Quick Edit scanning, Branch & Pull Request workflow, GitHub App authentication, History, Quick Edit",
+  "description": "Zipverra Pro v2.0.0: multi-repository dashboard, per-repo push profiles, local activity, protected GitHub ZIP push, branch and PR, history and rollback",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -33,7 +33,7 @@ export default function SplashScreen({ loading }) {
         <div className="app-splash__loader" aria-label="Loading" />
         <p className="app-splash__status">Preparing your workspace...</p>
       </div>
-      <div className="app-splash__footer">ZIP TO GITHUB</div>
+      <div className="app-splash__footer">ZIPVERRA PRO · GITHUB WORKSPACE</div>
     </div>
   );
 }

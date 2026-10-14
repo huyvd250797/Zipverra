@@ -10,7 +10,7 @@ const source = (path) => readFileSync(join(projectRoot, path), 'utf8');
 
 test('PWA manifest supports standalone iOS/Android installation with raster icons', () => {
   const config = manifest();
-  assert.equal(config.name, 'Zipverra — ZIP to GitHub');
+  assert.equal(config.name, 'Zipverra Pro — GitHub Workspace');
   assert.equal(config.display, 'standalone');
   assert.equal(config.start_url, '/');
   assert.ok(config.icons.some(({ sizes }) => sizes === '192x192'));

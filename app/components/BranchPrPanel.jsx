@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function BranchPrPanel({ owner, repo, branch, online, busy, api, onSelectBranch }) {
+export default function BranchPrPanel({ owner, repo, branch, online, busy, api, onSelectBranch, onMerge }) {
   const [opened, setOpened] = useState(false);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(null);
@@ -25,6 +25,7 @@ export default function BranchPrPanel({ owner, repo, branch, online, busy, api, 
       const result = await api('pull-request/merge', { owner, repo,
         number:mergeCandidate.number, expectedSourceHead:mergeCandidate.head, confirmation:mergeConfirm });
       setNotice(`Đã merge PR #${mergeCandidate.number}. Commit ${result.sha?.slice(0,12) || 'đã xác nhận trên GitHub'}.`);
+      onMerge?.(result,mergeCandidate.number);
       setMergeCandidate(null); setMergeConfirm('');
       setData(await api('pull-request/overview', { owner, repo }));
     } catch(e) {

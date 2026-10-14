@@ -1,5 +1,16 @@
 # Zipverra Changelog
 
+## v2.0.0 — Zipverra Pro: Mobile Git Workspace (2026-10-14)
+
+- Pro Dashboard in Repos: quick multi-repo HEAD status with server-side GitHub App permission checks (up to five repos).
+- Push Profiles per repository in Settings: branch, mode, release strategy; explicit Apply and stale-preview invalidation.
+- Local Activity feed with verified ZIP pushes, PRs, merges, Safe Rollback and Quick Edit actions; filter and clear.
+- Account-scoped metadata caches. No source code, tokens, Vercel tracking or new infrastructure.
+- Kept original 5-tab PWA experience, GitHub App, Security Scan, ZIP Worker and History/PR features.
+- Added tests for authorization, cache validation and profile safety; existing regression suite preserved.
+- v1.12.0 is the source baseline. v1.13/v1.14 features are planned, not implicitly included.
+
+
 ## v1.12.0 — Security & Smart Source Validation (2026-10-14)
 
 - ZIP Push và Pull Request có Security Review Critical / Warning / Information theo file được chọn; chặn Critical và giữ file bị loại trừ.
