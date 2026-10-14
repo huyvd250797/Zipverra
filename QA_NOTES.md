@@ -1,3 +1,13 @@
+# Zipverra Pro v3.1.0 — Mobile Sheet & Workflow QA
+
+Verify modal scroll isolation on real iPhone Safari and installed PWA before treating this release as production-validated. Repo, Branch and Help must not scroll the background while open; closing must restore the exact previous scroll position. GitHub App session/permissions and branch switching must be checked against an isolated repository.
+
+Local automated tests: **260/260 passing**. Chromium inline-HTML fixture passed 320/375/390/430/768/1280 px; real iPhone Safari still requires QA. No production build was verified locally.
+
+See [REPOSITORY_WORKFLOW_V310.md](./REPOSITORY_WORKFLOW_V310.md).
+
+---
+
 # Zipverra Pro v3.0.3 — QA Notes
 
 Primary regression: Activity on iPhone **must start at the top** immediately after Push, with live timeline/status above Recovery Center and Recent Actions. Run on Safari and installed home-screen PWA, normal/reduced motion, long Review and long Recent Actions. Verify no forced commit retries.

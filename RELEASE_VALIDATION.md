@@ -1,3 +1,26 @@
+# Zipverra Pro v3.1.0 — Release Validation
+
+**Baseline:** User-supplied full v3.0.5 source.
+
+- Local regression: **260/260 tests passed**.
+- Source syntax: **118 JS/JSX/MJS modules**, **211 relative imports**, **10 CSS files** checked.
+- Existing GitHub mutation routes are unchanged. Added only one read-only branch listing endpoint.
+- Native iPhone PWA and real GitHub end-to-end validation **not yet completed**.
+
+## Manual release gates
+
+1. Confirm production Next.js/Vercel build succeeds and v3.1.0 is displayed in header/Settings/footer.
+2. From middle of long Repos page, open Repo picker: page behind must not scroll; sheet contents must scroll.
+3. Close via ×, Escape and backdrop; check exact previous page position and no stuck scroll lock.
+4. Repeat with Branch picker and Help (?) in all five tabs; test very long lists and iPhone keyboard.
+5. Verify authorized branch listing without requiring PR write permission; unauthorized repo must fail.
+6. Test source ZIP Download (`main`, commit title), normal Direct Push, PR, Workspace Quick Edit, History and Rollback on a disposable repository.
+7. Check Dark/Light/System theme, Reduced Motion and 320/375/390/430 px viewport sizes.
+
+See [REPOSITORY_WORKFLOW_V310.md](./REPOSITORY_WORKFLOW_V310.md).
+
+---
+
 # Zipverra Pro v3.0.5 — Header Icon Alignment Release Validation
 
 **Baseline:** user-supplied v3.0.4 source ZIP.

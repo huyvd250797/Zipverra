@@ -1,34 +1,25 @@
-# Zipverra Pro — Roadmap after v3.0.5 — Header Icon Alignment Hotfix
+# Zipverra Pro — Roadmap after v3.1.0
 
-**Current baseline:** v3.0.5 — Header Icon Alignment Hotfix (built directly from the supplied v3.0.4 full source; production iPhone E2E remains to be verified).
+**Current baseline:** v3.1.0 — Repository Workflow Clarity.
 
-The v3.0.4 UX polish keeps one Help control per mobile tab and trims redundant static descriptions. The v3.0.3 Save to Files implementation, commit-based ZIP naming, GitHub App authorization, Push, PR, History and Rollback remain intact.
+## Next: v3.2.0 — Measured Performance Architecture
 
-## Next recommended versions
+- Isolate state and rendering in heavy Activity, Review, Workspace and History screens.
+- Profile and reduce unnecessary re-renders during ZIP processing and file upload.
+- Lazy-load advanced panels and audit actual initial JavaScript bundle size.
+- Measure cold/warm startup, page responsiveness, list render time and memory on iPhone.
+- Apply safe caching only to non-sensitive, account-isolated metadata. Never cache tokens/private GitHub responses in the service worker.
+- Preserve all direct Push, PR, Quick Edit, History, Rollback and Security Scan safeguards.
 
-### v3.1.0 — Repository Workflow Clarity
-Focus:
-- Better empty/loading/error states for repository list, branch list and Quick Edit.
-- Stronger contextual guidance before Upload / Review / Push.
-- Smarter repo/branch memory with clearer “current destination” summaries.
-- Cleaner desktop/tablet adaptive layouts while preserving mobile-first flow.
+## Following: v3.3.0 — Large Source Delivery Reliability+
 
-### v3.2.0 — Measured Performance Architecture
-Focus:
-- Reduce unnecessary re-renders in large workspace screens.
-- Deeper component splitting and memoization around Activity / History / Workspace.
-- Performance telemetry for startup, repo refresh and ZIP analysis.
-- More predictable loading budget on older mobile devices.
+- Strengthen resume diagnostics, upload checkpoints and source validation for large repositories.
+- Improve memory bounds and error handling on unstable cellular networks.
+- Assess a dedicated large-binary transport beyond Vercel Function payload constraints rather than claiming unlimited upload support.
 
-### v3.3.0 — Large Source Delivery Reliability+
-Focus:
-- Better resumable upload recovery for larger source packages.
-- Stronger preflight estimation before blob upload begins.
-- More transparent progress, ETA and retry guidance for unstable networks.
-- Optional batching refinements while keeping mutation safety strict.
+## Later: v3.4.0 — Mobile Quality & Accessibility Audit
 
-## Product direction kept unchanged
-- No force-push.
-- No automatic retry of ambiguous Git mutations.
-- No background iOS upload claims beyond platform limits.
-- No broad OAuth repo scope fallback; GitHub App remains the primary authorization model.
+- End-to-end iPhone PWA testing, Safari modal/bottom-sheet behavior, VoiceOver, keyboard, safe areas and Reduced Motion.
+- Verify deployed Next.js build, update lifecycle and GitHub App E2E on disposable repositories.
+
+Avoid force-push, automatic retries of ambiguous Git mutations and iOS background upload claims.

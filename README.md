@@ -1,3 +1,28 @@
+# Zipverra Pro v3.1.0 — Repository Workflow Clarity
+
+**Source baseline:** Full Zipverra Pro v3.0.5 supplied by the user.
+
+This release consolidates repository selection into one searchable sheet, introduces a branch chooser backed by GitHub App authorization, and fixes scrolling isolation when modal/bottom sheets open on iPhone.
+
+### Highlights
+
+- **Repository:** one compact selector → searchable list of authorized repositories, with favorites and recent repos prioritized.
+- **Branch:** pick an existing branch from the GitHub API (or enter one manually), independently of Pull Request permissions.
+- **Modals/Bottom sheets:** background stays locked; scroll only the sheet, restore original page position when closed. Applies to contextual Help as well.
+- **Source ZIP download:** unchanged, continues to download `main`, with commit-title ZIP naming and the iPhone Save to Files flow.
+- **Safe Git workflows:** Direct Push, PR, Quick Edit, History, Security Scan and Safe Rollback retained without new mutation behavior.
+- **PWA version:** v3.1.0.
+
+### Deploy
+
+Extract the full source ZIP and push the **contents of `Zipverra-v3.1.0/`** into the repository root (`main`). Keep existing GitHub App variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
+
+Run `npm install`, `npm test`, `npm run build` in a connected CI/Vercel environment. Local unit tests pass, but production build / live GitHub E2E / physical iPhone tests are **not independently verified** here. See [REPOSITORY_WORKFLOW_V310.md](./REPOSITORY_WORKFLOW_V310.md) for details and a focused scroll-lock QA checklist.
+
+---
+
+## Historical release notes
+
 # Zipverra Pro v3.0.5 — Compact Header Icon Hotfix
 
 This full-source release upgrades v3.0.4 with a minimal UI adjustment on iPhone: GitHub connected check is positioned before the version in the main header (without a circular frame), Refresh is an unframed icon in Repositories, and the shared `?` help retains a smaller circular outline. Icons have consistent visual glyph sizing; interactive controls preserve accessible touch targets.

@@ -1,4 +1,4 @@
-/* Zipverra Pro v3.0.5 — matching icon sizes; only Help has a compact circular outline. */
+/* Zipverra Pro v3.1.0 — matching icon sizes; only Help has a compact circular outline. */
 .compact-help-trigger {position:relative;isolation:isolate;display:grid;place-items:center;flex:none;width:40px;height:40px;min-width:40px;min-height:40px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--pro-text);font-family:inherit;font-size:17px;font-weight:800;line-height:1;cursor:pointer;touch-action:manipulation;}
 .compact-help-trigger::before {content:'';position:absolute;inset:4px;z-index:-1;border:1px solid var(--pro-border-strong);border-radius:50%;background:var(--pro-surface-2);pointer-events:none;}
 .compact-help-trigger:hover {color:var(--pro-accent);}
@@ -68,7 +68,7 @@
   .polish-shell .pro-view-indicators {gap:8px;}
 }
 
-/* v3.0.5: visually unframed Refresh + connected check; consistent 17px icon strokes. */
+/* v3.1.0: visually unframed Refresh + connected check; consistent 17px icon strokes. */
 .polish-shell .header-connected-mark {display:grid;place-items:center;flex:none;width:20px;height:40px;padding:0;border:0;background:transparent;color:var(--pro-accent);}
 .polish-shell .header-connected-mark svg {width:17px;height:17px;stroke-width:2.5;}
 .polish-shell .header-actions {gap:9px;}

@@ -24,6 +24,7 @@ import { shouldWarnWorkspaceExit } from '../lib/workspace-ux.js';
 import { WorkflowStrip, CurrentRepository, StatusIndicator, UXViewIntro, StatusEmpty } from './components/ProfessionalUI.jsx';
 import { WorkspaceLaunchpad, RepositoryEmpty, ReviewReadiness, ActivityEmpty, PushOutcome } from './components/PolishedWorkspace.jsx';
 import SourceZipDownload from './components/SourceZipDownload.jsx';
+import { RepositoryPickerSheet, BranchPickerSheet } from './components/RepositoryWorkflowSheets.jsx';
 import { reviewReadiness, themeChoice, resolveTheme } from '../lib/ux-polish.js';
 import MobileViewportGuard from './components/MobileViewportGuard.jsx';
 const HistoryPanel = dynamic(() => import('./components/HistoryPanel.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải HistoryPanel…"/> });
@@ -142,6 +143,8 @@ export default function Home() {
   }, []);
   const dismissNotice = useCallback((id) => setNotice(current => current?.id === id ? null : current), []);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const [repoSheetOpen, setRepoSheetOpen] = useState(false);
+  const [branchSheetOpen, setBranchSheetOpen] = useState(false);
   const workspaceDirtyRef = useRef(false);
   const [workspaceDirty, setWorkspaceDirty] = useState(false);
   const onWorkspaceDirtyChange = useCallback(value => { workspaceDirtyRef.current = Boolean(value); setWorkspaceDirty(Boolean(value)); }, []);
@@ -162,7 +165,6 @@ export default function Home() {
   const [dashboardLoading, setDashboardLoading] = useState(false);
   const [dashboardOpen, setDashboardOpen] = useState(false);
   const [dashboardError, setDashboardError] = useState('');
-  const [repoSearch, setRepoSearch] = useState('');
   const [loadingRepos, setLoadingRepos] = useState(false);
   const [recents, setRecents] = useState([]);
   const [favorites, setFavorites] = useState([]);
@@ -239,6 +241,7 @@ export default function Home() {
       pendingSameTabScroll.current?.();
       pendingSameTabScroll.current = scheduleTabViewport(window, document, tab, activityRef.current);
     }
+    setRepoSheetOpen(false); setBranchSheetOpen(false);
     setActiveTab(tab);
   }
   function saveUploadCheckpoint(value) {
@@ -452,8 +455,7 @@ export default function Home() {
   const baseTimeline = getPushTimeline(phase, { preview: Boolean(preview), result: Boolean(result), pending: Boolean(pendingCommit) });
   const hasPrFlow = releaseStrategy === 'pr' || Boolean(pendingPR) || Boolean(result?.pr) || Boolean(pendingCommit?.prRequest);
   const timeline = hasPrFlow ? [...baseTimeline, { id:'pr', state:result?.pr ? 'complete' : pendingPR ? (busy ? 'active':'uncertain') : 'waiting' }] : baseTimeline;
-  const displayedRepos = useMemo(() => sortedRepositories(repos, favorites, recents).filter((item) => item.full_name.toLowerCase().includes(repoSearch.trim().toLowerCase()) || item.full_name === `${owner}/${repo}`), [repos, favorites, recents, repoSearch, owner, repo]);
-  const authorizedRecents = useMemo(() => recents.filter((name) => repos.some((item) => item.full_name === name)), [recents, repos]);
+  const displayedRepos = useMemo(() => sortedRepositories(repos, favorites, recents), [repos, favorites, recents]);
   const chosenRepo = Boolean(owner.trim() && repo.trim() && repos.some((item) => item.full_name.toLowerCase() === `${owner}/${repo}`.toLowerCase()));
   const visibleRecoveryPush = auth.authenticated && repos.some(r => r.full_name?.toLowerCase() === `${pendingCommit?.owner}/${pendingCommit?.repo}`.toLowerCase());
   const visibleRecoveryPR = auth.authenticated && repos.some(r => r.full_name?.toLowerCase() === `${pendingPR?.owner}/${pendingPR?.repo}`.toLowerCase());
@@ -510,7 +512,11 @@ export default function Home() {
     finally { setBusy(false); setLoadingRepos(false); }
   }
   function chooseRepo(value) {
-    if (!value || busy || pendingCommit || pendingPR || !canLeaveWorkspace('', true)) return;
+    if (!value || busy || pendingCommit || pendingPR) return;
+    // Re-selecting the same repo must not erase an uncommitted ZIP Review.
+    if (value.toLowerCase() === `${owner}/${repo}`.toLowerCase()) { goToTab('home'); return; }
+    if (file && phase !== PUSH_STAGES.SUCCEEDED && !window.confirm('Đổi repository sẽ bỏ ZIP và Review chưa Push. Tiếp tục?')) return;
+    if (!canLeaveWorkspace('', true)) return;
     workspaceDirtyRef.current = false;setWorkspaceOpen(false);
     const index = value.indexOf('/');
     setOwner(value.slice(0, index));
@@ -522,6 +528,11 @@ export default function Home() {
     saveRecent(value);
     notify('repo-selected');
     goToTab('home');
+  }
+  function chooseBranch(nextBranch) {
+    if (!nextBranch || nextBranch === branch || busy || pendingCommit || pendingPR) return;
+    if (file && phase !== PUSH_STAGES.SUCCEEDED && !window.confirm('Đổi branch sẽ bỏ Review ZIP chưa Push. Tiếp tục?')) return;
+    change(setBranch, nextBranch);
   }
   function chooseFile(next) {
     if (busy || pendingCommit || pendingPR || !chosenRepo) return;
@@ -819,7 +830,7 @@ export default function Home() {
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar" role="banner">
       <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span><em> Pro</em></strong><small>MOBILE GIT WORKSPACE</small></div></div>
-      <div className="header-actions">{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.0.5</span></div>
+      <div className="header-actions">{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.1.0</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} repoTools={activeTab === 'repositories' && auth.authenticated ? <button type="button" className={`repo-refresh-icon${loadingRepos ? ' is-loading' : ''}`} onClick={loadRepos} disabled={busy || loadingRepos} aria-label="Làm mới danh sách repository" title="Làm mới danh sách repository"><Icon name="refresh" size={17}/></button> : null}/>
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
@@ -833,7 +844,7 @@ export default function Home() {
         onActivity={() => goToTab('activity')}/>}
 
       {activeTab === 'home' && <WorkflowStrip currentStep={flowStep} onRepo={() => goToTab('repositories')} onUpload={() => goToTab('home')} onReview={goToReview} onActivity={() => goToTab('activity')}/> }
-      {activeTab === 'home' && <CurrentRepository owner={owner} repo={repo} branch={branch} busy={busy} onChoose={() => goToTab('repositories')}/> }
+      {activeTab === 'home' && <CurrentRepository owner={owner} repo={repo} branch={branch} busy={busy || Boolean(pendingCommit || pendingPR)} onChoose={() => goToTab('repositories')} onBranch={() => setBranchSheetOpen(true)}/> }
       {(pendingCommit || pendingPR) && activeTab !== 'activity' && <button type="button" className="mobile-recovery-shortcut" onClick={() => goToTab('activity')}>Có thao tác GitHub cần xác minh · Mở Activity <Icon name="arrow" size={15}/></button>}
       <section className="content-grid" data-active-view={activeTab}>
         <div className="form-column">
@@ -845,14 +856,26 @@ export default function Home() {
               <a className="button primary full login-button" href="/api/auth/login"><Icon name="github" size={19}/> Continue with GitHub <Icon name="arrow" size={16}/></a>
             </div> : null}
             
-            <div className="field"><label htmlFor="repo-search">Tìm repository</label><div className="input-icon"><Icon name="search" size={17}/><input id="repo-search" type="search" value={repoSearch} disabled={busy || !auth.authenticated} placeholder="Lọc theo tên repository" onChange={(e) => setRepoSearch(e.target.value)}/></div></div>
             {loadingRepos && <LoadingSkeleton kind="repos" label="Đang tải danh sách repository…"/>}
             {!loadingRepos && repos.length === 0 && <RepositoryEmpty authenticated={auth.authenticated} loading={auth.loading} onRefresh={loadRepos}/>}
-            {authorizedRecents.length > 0 && <div className="recents-block"><span className="mini-label">GẦN ĐÂY · lưu trên thiết bị</span><div className="recent-list">{authorizedRecents.slice(0, 3).map((name) => <button type="button" key={name} className="recent-chip" disabled={busy || !auth.authenticated} onClick={() => chooseRepo(name)}>{name}</button>)}</div></div>}
-            {favorites.length > 0 && <div className="favorites-block"><span className="mini-label">PINNED REPOSITORIES</span><div className="favorite-list">{displayedRepos.filter(r => favorites.includes(r.full_name)).map(r => <div key={r.full_name} className="favorite-row"><button type="button" disabled={busy} onClick={() => chooseRepo(r.full_name)}>{r.full_name}</button><button type="button" className="favorite-star" onClick={() => toggleFavorite(r.full_name)} aria-label={`Bỏ ghim ${r.full_name}`}>★</button></div>)}</div></div>}
-            <div className="field"><label htmlFor="repo-select">Chọn repository</label><select id="repo-select" disabled={busy || !auth.authenticated || !repos.length} value={displayedRepos.some((x) => x.full_name === `${owner}/${repo}`) ? `${owner}/${repo}` : ''} onChange={(e) => chooseRepo(e.target.value)}><option value="">{repos.length ? (displayedRepos.length ? 'Chọn repository được cấp quyền' : 'Không có repo phù hợp') : 'Chưa có repo được GitHub App cấp quyền'}</option>{displayedRepos.map((x) => <option key={x.full_name} value={x.full_name}>{x.full_name}{x.private ? ' 🔒' : ''}</option>)}</select>{chosenRepo && <button type="button" className="favorite-toggle" onClick={() => toggleFavorite(`${owner}/${repo}`)}>{favorites.includes(`${owner}/${repo}`) ? '★ Đã ghim repository' : '☆ Ghim repository này'}</button>}</div>
+            <div className="zip-workflow-picker" aria-label="Chọn nơi cập nhật source">
+              <button type="button" className="zip-picker-trigger" onClick={() => setRepoSheetOpen(true)}
+                disabled={!auth.authenticated || !repos.length || busy || Boolean(pendingCommit || pendingPR)} aria-label="Chọn repository từ danh sách được cấp quyền">
+                <span><small>Repository</small><strong>{chosenRepo ? `${owner}/${repo}` : 'Chọn repository'}</strong></span>
+                <span aria-hidden="true">⌄</span>
+              </button>
+              {chosenRepo && <button type="button" className="zip-picker-trigger" onClick={() => setBranchSheetOpen(true)}
+                disabled={busy || Boolean(pendingCommit || pendingPR)} aria-label={`Chọn branch đang dùng ${branch}`}>
+                <span><small>Branch đích</small><strong>{branch || 'main'}</strong></span>
+                <span aria-hidden="true">⌄</span>
+              </button>}
+              {chosenRepo && <div className="zip-picker-actions" role="group" aria-label="Thao tác repository">
+                <button type="button" onClick={() => goToTab('home')} disabled={busy}>↑ Upload ZIP</button>
+                <button type="button" onClick={() => goToTab('history')} disabled={busy}>◷ History</button>
+              </div>}
+            </div>
             <details className="repo-advanced"><summary>Tùy chọn nâng cao · Nhập repo thủ công</summary><div className="two-col"><div className="field"><label htmlFor="owner">Owner</label><input id="owner" value={owner} disabled={busy || !auth.authenticated} placeholder="huyvd250797" onChange={(e) => change(setOwner, e.target.value)}/></div><div className="field"><label htmlFor="repo">Repository</label><input id="repo" value={repo} disabled={busy || !auth.authenticated} placeholder="Finzaro" onChange={(e) => change(setRepo, e.target.value)}/></div></div><p className="hint">Chỉ có thể push lên repository đã được GitHub App cấp quyền.</p></details>
-            <div className="field"><label htmlFor="branch">Branch đích <span className="tag">Mặc định: main</span></label><div className="input-icon"><Icon name="branch" size={17}/><input id="branch" value={branch} disabled={busy || !auth.authenticated} placeholder="main" onChange={(e) => change(setBranch, e.target.value)}/></div></div>
+
             <SourceZipDownload owner={owner} repo={repo} selected={chosenRepo} online={online && pwa.reachable} busy={busy}/>
             <details className="pro-dash-details" onToggle={(event) => setDashboardOpen(event.currentTarget.open)}><summary>Zipverra Pro · Multi-repository dashboard</summary>
               {activeTab === 'repositories' && dashboardOpen && <ProDashboard authenticated={auth.authenticated} online={online} loading={dashboardLoading}
@@ -861,7 +884,7 @@ export default function Home() {
               {dashboardError && <p className="pro-error" role="alert">{dashboardError}</p>}
             </details>
             {chosenRepo && <button type="button" className="button secondary full workspace-launch" disabled={busy || !auth.authenticated} onClick={()=>{setWorkspaceOpen(true);goToTab('repositories');}}><Icon name="file" size={18}/> Repository Explorer · Quick Edit <Icon name="arrow" size={16}/></button>}
-            {activeTab === 'repositories' && chosenRepo && <BranchPrPanel key={`${owner}/${repo}`} owner={owner} repo={repo} branch={branch} online={online} busy={busy} api={api} onSelectBranch={(next)=>change(setBranch,next)} onMerge={(outcome,number)=>logLocalAction({kind:'merge',state:'success',repo:`${owner}/${repo}`,sha:outcome?.sha,message:`Merged PR #${number}`})}/>}
+            {activeTab === 'repositories' && chosenRepo && <BranchPrPanel key={`${owner}/${repo}`} owner={owner} repo={repo} branch={branch} online={online} busy={busy} api={api} onSelectBranch={chooseBranch} onMerge={(outcome,number)=>logLocalAction({kind:'merge',state:'success',repo:`${owner}/${repo}`,sha:outcome?.sha,message:`Merged PR #${number}`})}/>}
             <button type="button" className="button secondary full mobile-repo-next" onClick={() => goToTab('home')} disabled={!auth.authenticated || !owner || !repo || busy}>Tiếp tục · Upload ZIP <Icon name="arrow" size={17}/></button>
           </article>
           {workspaceOpen && <WorkspacePanel key={`${owner}/${repo}@${branch}`} authenticated={auth.authenticated} owner={owner} repo={repo} branch={branch} online={online} busy={busy} onBack={()=>{workspaceDirtyRef.current=false;setWorkspaceOpen(false);goToTab('repositories');}} onDirtyChange={onWorkspaceDirtyChange} api={api} onCommit={(outcome)=>{reset();logLocalAction({kind:'quick-edit',state:'success',repo:`${owner}/${repo}`,sha:outcome?.sha,message:'Quick Edit saved'});}} />}
@@ -949,7 +972,7 @@ export default function Home() {
             <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
               profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
               onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.0.5</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.1.0</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -960,8 +983,14 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.0.5</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.1.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
+  <RepositoryPickerSheet open={repoSheetOpen} onClose={() => setRepoSheetOpen(false)}
+    repos={repos} selected={chosenRepo ? `${owner}/${repo}` : ''} favorites={favorites} recents={recents}
+    disabled={busy || Boolean(pendingCommit || pendingPR)} onChoose={chooseRepo}/>
+  <BranchPickerSheet open={branchSheetOpen} onClose={() => setBranchSheetOpen(false)}
+    owner={owner} repo={repo} current={branch} online={online && pwa.reachable}
+    disabled={busy || Boolean(pendingCommit || pendingPR)} api={api} onChoose={chooseBranch}/>
   <nav className="mobile-bottom-nav" aria-label="Điều hướng Zipverra">{[{id:'repositories',label:'Repos',icon:'branch'},{id:'home',label:'Upload',icon:'upload'},{id:'activity',label:'Activity',icon:'activity'},{id:'history',label:'History',icon:'history'},{id:'settings',label:'Settings',icon:'settings'}].map((tab) => <button type="button" key={tab.id} className={`mobile-nav-item ${activeTab === tab.id ? 'active' : ''}`} aria-current={activeTab === tab.id ? 'page' : undefined} aria-label={`Mở ${tab.label}${tab.id === 'activity' && (pendingCommit || pendingPR) ? ' — có thao tác cần xác minh' : ''}`} onClick={() => goToTab(tab.id)}><span className="mobile-nav-icon"><Icon name={tab.icon} size={21}/></span><span>{tab.label}</span>{tab.id === 'activity' && (pendingCommit || pendingPR) && <i className="nav-alert" aria-label="Có push cần xác minh"/>}</button>)}</nav>
   </>;
 }

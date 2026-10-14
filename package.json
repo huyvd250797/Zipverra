@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.0.5",
+  "version": "3.1.0",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.0.5: aligned mobile icons, compact contextual help, safe GitHub App workflows",
+  "description": "Zipverra Pro v3.1.0: repository workflow clarity, iPhone modal scroll isolation and safe GitHub App workflows",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

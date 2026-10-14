@@ -7,6 +7,7 @@ import './styles/advanced-ux-polish.css';
 import './styles/production-hardening.css';
 import './styles/source-zip-download.css';
 import './styles/compact-ui.css';
+import './styles/repository-workflow.css';
 
 export const metadata = {
   title: 'Zipverra Pro — GitHub Workspace',

@@ -20,9 +20,10 @@ test('exactly one contextual help catalogue entry per mobile tab', () => {
 test('help is read-only content, with no fetch, token, mutation, or storage', () => {
   const content = read('app/components/ContextualHelp.jsx');
   const data = read('lib/contextual-help.js');
-  assert.match(content, /<dialog ref=\{dialogRef\}/);
-  assert.match(content, /dialog\.showModal\(\)/);
-  assert.match(content, /dialogRef\.current\?\.close\(\)/);
+  const modal=read('app/components/ModalSheet.jsx');
+  assert.match(content, /<ModalSheet open=\{open\}/);
+  assert.match(modal, /dialog\.showModal\(\)/);
+  assert.match(modal, /lockModalScroll\(/);
   assert.match(content, /className="compact-help-trigger"/);
   assert.match(content, /aria-label=\{`Hướng dẫn \$\{help\.title\}`\}/);
   assert.doesNotMatch(content + data, /\bfetch\(|localStorage|sessionStorage|requestOnce\(|\/api\/github\//);
@@ -39,16 +40,18 @@ test('one shared help trigger is mounted in the screen header and not repeated a
 
 test('help sheet can be closed, is labelled, keyboard focusable and prevents screen overflow', () => {
   const content = read('app/components/ContextualHelp.jsx');
-  const styles = read('app/styles/compact-ui.css');
+  const styles = read('app/styles/repository-workflow.css');
+  const modal = read('app/components/ModalSheet.jsx');
   const layout = read('app/layout.jsx');
-  assert.match(content, /aria-labelledby="compact-help-title"/);
-  assert.match(content, /aria-label="Đóng hướng dẫn"/);
-  assert.match(content, /event\.target === event\.currentTarget/);
+  assert.match(content, /<ModalSheet open=\{open\}/);
+  assert.match(modal, /aria-label=\{title\}/);
+  assert.match(modal, /aria-label=\{`Đóng \$\{title\}`\}/);
+  assert.match(modal, /event\.target === event\.currentTarget/);
   assert.match(styles, /::backdrop/);
   assert.match(styles, /:focus-visible/);
   assert.match(styles, /max-height:min\(82dvh/);
   assert.match(styles, /prefers-reduced-motion:reduce/);
-  assert.match(layout, /compact-ui\.css/);
+  assert.match(layout, /repository-workflow\.css/);
 });
 
 test('security critical, sync deletion warning and explicit confirmation remain visible', () => {

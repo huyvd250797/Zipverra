@@ -1,5 +1,14 @@
 # Changelog
 
+## v3.1.0 — Repository Workflow Clarity (2026-10-14)
+
+- Consolidated repository picking into one searchable bottom sheet using only GitHub App-authorized repositories; prioritizes favorites and recent repos.
+- Added a branch picker sheet, usable from Repos and Upload, plus a read-only `/api/github/branches` route independent of Pull Requests permission.
+- Added shared, reference-counted iPhone modal scroll lock. Help, Repo and Branch sheets freeze the underlying page and keep scrolling inside their own content.
+- Restores the page's exact scroll offset and inline styles when closing a modal, including Escape, backdrop and unmount.
+- Preserved existing GitHub mutation endpoints, Security Scan, PR, Quick Edit, Download Source ZIP, History and Rollback flows.
+- Updated app/package/PWA metadata to v3.1.0 and added targeted tests.
+
 ## v3.0.5 — Header Icon Alignment Hotfix (2026-10-14)
 
 - Moved bare GitHub connected check into the global app header before the version label.
