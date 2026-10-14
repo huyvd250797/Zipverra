@@ -43,10 +43,10 @@ test('splash displays on first HTML paint and has a network failsafe', () => {
   assert.match(splash, /Push to GitHub from Mobile/);
 });
 
-test('hero title is updated to English on mobile and desktop', () => {
+test('compact launchpad retains the primary ZIP push action without a large marketing hero', () => {
   const page = source('app/page.jsx');
   const launchpad = source('app/components/PolishedWorkspace.jsx');
-  assert.match(launchpad, /Push to GitHub\.<br\/>\s*<span>From Your Phone\.<\/span>/);
+  assert.match(launchpad, /<h1>Push ZIP<\/h1>/);
   assert.match(page, /<WorkspaceLaunchpad/);
   assert.doesNotMatch(launchpad, /Đẩy source lên GitHub/);
 });

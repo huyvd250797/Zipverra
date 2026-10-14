@@ -1,0 +1,67 @@
+/* Zipverra Pro v3.0.4 — one contextual help control per active mobile screen. */
+.compact-help-trigger {display:grid;place-items:center;flex:none;width:42px;height:42px;min-width:42px;min-height:42px;padding:0;border:1px solid var(--pro-border-strong);border-radius:50%;background:var(--pro-surface-2);color:var(--pro-text);font-family:inherit;font-size:17px;font-weight:800;line-height:1;cursor:pointer;touch-action:manipulation;}
+.compact-help-trigger:hover {background:var(--pro-accent-surface);color:var(--pro-accent);}
+.compact-help-trigger:focus-visible,.compact-help-close:focus-visible {outline:3px solid var(--pro-focus);outline-offset:3px;}
+.compact-help-dialog {box-sizing:border-box;position:fixed;margin:auto;inset:0;max-width:min(470px,calc(100vw - 30px));width:100%;max-height:min(82dvh,680px);padding:0;border:1px solid var(--pro-border-strong);border-radius:22px;background:var(--pro-surface);color:var(--pro-text);box-shadow:0 24px 80px rgba(0,0,0,.48);overscroll-behavior:contain;overflow:auto;}
+.compact-help-dialog::backdrop {background:rgba(3,11,21,.72);backdrop-filter:blur(5px);}
+.compact-help-content {padding:20px 18px 22px;}
+.compact-help-head {display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px;}
+.compact-help-head h2 {font-size:18px;line-height:1.3;letter-spacing:-.3px;margin:0;}
+.compact-help-close {min-height:44px;padding:0 12px;border:1px solid var(--pro-border-strong);border-radius:11px;background:var(--pro-surface-2);color:var(--pro-text);font-size:12px;font-weight:700;cursor:pointer;}
+.compact-help-list {display:grid;gap:0;}
+.compact-help-list section {padding:12px 0;border-bottom:1px solid var(--pro-border);}
+.compact-help-list section:last-child {border-bottom:0;}
+.compact-help-list h3 {font-size:13px;margin:0 0 5px;font-weight:750;color:var(--pro-text);}
+.compact-help-list p {font-size:12px;line-height:1.65;margin:0;color:var(--pro-muted);overflow-wrap:anywhere;}
+/* Remove duplicated promotional text and repetitive tips. Never hide errors, security findings or confirmations. */
+.polish-shell .repository-panel>.step-heading p,.polish-shell .upload-panel>.step-heading p,.polish-shell .preview-panel>.step-heading p,.polish-shell .settings-heading p {display:none;}
+.polish-shell .repository-panel>.step-heading,.polish-shell .upload-panel>.step-heading,.polish-shell .preview-panel>.step-heading {margin-bottom:12px;}
+.polish-shell .polish-launchpad {padding:13px 15px;gap:9px;}
+.polish-shell .polish-launchpad h1 {font-size:17px;line-height:1.25;letter-spacing:-.4px;margin:0;}
+.polish-shell .polish-launchpad-copy {margin:0;padding:0;}
+.polish-shell .polish-launchpad-actions {gap:7px;}
+.polish-shell .polish-main-action {padding:9px 11px;min-height:60px;}
+.polish-shell .polish-main-action strong {font-size:13px;}
+.polish-shell .polish-main-action small {font-size:10px;}
+.polish-shell .polish-shortcuts button {min-height:40px;}
+.polish-shell .source-zip-download {margin:9px 0 12px;padding:10px 12px;}
+.polish-shell .source-zip-download-label {gap:1px;}
+.polish-shell .pro-stepper {gap:5px;margin-bottom:12px;}
+.polish-shell .pro-stepper-summary {display:flex;gap:7px;align-items:baseline;flex-wrap:wrap;min-height:0;padding:6px 10px;background:transparent;border:0;box-shadow:none;}
+.polish-shell .pro-stepper-kicker {font-size:10px;letter-spacing:0;font-weight:750;}
+.polish-shell .pro-stepper-summary strong {font-size:12px;}
+.polish-shell .polish-readiness--success .polish-readiness-header p {display:none;}
+@media(max-width:760px) {
+  .polish-shell .pro-view-intro.mobile-context {padding:8px 0 10px;margin-bottom:10px;min-height:56px;gap:8px;}
+  .polish-shell .pro-view-intro h2 {font-size:20px;letter-spacing:-.65px;margin:0;line-height:1.15;}
+  .polish-shell .pro-view-indicators {gap:5px;}
+  .polish-shell .pro-view-tools {gap:5px;}
+  .polish-shell .repo-connection-icon,.polish-shell .repo-refresh-icon {width:30px;height:30px;}
+  .polish-shell .pro-view-intro .mobile-connection {box-sizing:border-box;font-size:0!important;line-height:0;width:10px;height:10px;min-width:10px;min-height:10px;padding:0;border:0;border-radius:50%;background:var(--pro-accent);}
+  .polish-shell .pro-view-intro .mobile-connection.disconnected {background:#e58b88;}
+  .polish-shell .compact-help-trigger {width:40px;min-width:40px;height:40px;min-height:40px;}
+  .polish-shell .pro-pending-marker {width:19px;height:19px;font-size:10px;}
+  .polish-shell .polish-launchpad {padding:12px;gap:9px;margin:0 0 12px;}
+  .polish-shell .polish-launchpad h1 {font-size:16px;}
+  .polish-shell .polish-main-icon {width:35px;height:35px;font-size:20px;}
+  .polish-shell .polish-shortcuts button {font-size:10.5px;}
+  .polish-shell .pro-stepper-summary {padding:5px 2px;}
+  .polish-shell .source-zip-download-symbol {width:31px;height:31px;}
+  .polish-shell .limits {margin:8px 0 13px;}
+}
+@media(max-width:350px) {
+  .polish-shell .pro-view-intro h2 {font-size:18px;}
+  .polish-shell .pro-view-tools {gap:3px;}
+  .polish-shell .repo-connection-icon,.polish-shell .repo-refresh-icon {width:28px;height:28px;}
+  .polish-shell .compact-help-trigger {width:38px;min-width:38px;height:38px;min-height:38px;}
+  .compact-help-dialog {max-width:calc(100vw - 18px);}
+}
+@media(prefers-reduced-motion:reduce) {
+  .compact-help-trigger,.compact-help-dialog {transition:none!important;animation:none!important;}
+}
+@media(min-width:761px) {
+  /* Keep the same single help control available on tablets and desktop. */
+  .polish-shell .pro-view-intro.mobile-context {display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 18px;padding:12px 0;border-bottom:1px solid var(--pro-border);}
+  .polish-shell .pro-view-intro h2 {font-size:22px;line-height:1.2;margin:0;}
+  .polish-shell .pro-view-indicators {gap:8px;}
+}

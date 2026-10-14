@@ -6,6 +6,7 @@ import './styles/pwa-reliability.css';
 import './styles/advanced-ux-polish.css';
 import './styles/production-hardening.css';
 import './styles/source-zip-download.css';
+import './styles/compact-ui.css';
 
 export const metadata = {
   title: 'Zipverra Pro — GitHub Workspace',

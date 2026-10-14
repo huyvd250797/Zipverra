@@ -136,7 +136,7 @@ export default function SourceZipDownload({ owner, repo, selected, online, busy,
       <span className="source-zip-download-symbol" aria-hidden="true">↓</span>
       <span className="source-zip-download-label">
         <strong>Download Source ZIP</strong>
-        <small>Branch <b>main</b> · Lưu ZIP trong Files, không rời Zipverra</small>
+        <small>Branch <b>main</b></small>
       </span>
     </div>
     {isReady ? <button type="button" className="source-zip-download-action" onClick={download.shareSupported ? saveToFiles : downloadInBrowser}
@@ -153,13 +153,13 @@ export default function SourceZipDownload({ owner, repo, selected, online, busy,
     {isReady && <div className="source-zip-download-ready" role="status" aria-live="polite">
       <strong>✓ ZIP đã sẵn sàng · {shortSize(download.size)}</strong>
       <span className="source-zip-filename" title={download.filename}>{download.filename}</span>
-      <p>{download.message || (download.shareSupported ? 'Nhấn “Lưu vào Tệp”, sau đó chọn “Lưu vào Tệp” trong bảng chia sẻ iPhone.' : 'Nhấn “Tải ZIP” để lưu qua Downloads. Safari có thể mở bản xem trước nếu thiết bị không hỗ trợ chia sẻ file.')}</p>
+      {download.message && <p>{download.message}</p>}
       {download.shareSupported && <button type="button" className="source-zip-download-text-action" onClick={downloadInBrowser}>Tải qua trình duyệt (dự phòng)</button>}
     </div>}
     {download.state === 'error' && <div className="source-zip-download-error" role="alert">
       <span>{download.message}</span>
       {download.code === 'DOWNLOAD_TOO_LARGE' && <a href={url} target="_blank" rel="noopener noreferrer" className="source-zip-download-text-action">Tải trực tiếp ZIP lớn (mở ngoài ứng dụng)</a>}
     </div>}
-    {!compact && !isReady && !isPreparing && <p className="source-zip-download-note">ZIP lấy từ commit mới nhất trên <b>main</b> và mang tên commit đó. iPhone sẽ mở bảng chia sẻ để lưu vào Files. ZIP quá lớn có thể cần tải qua Safari.</p>}
+
   </section>;
 }

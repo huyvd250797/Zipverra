@@ -1,5 +1,14 @@
 # Changelog
 
+## v3.0.4 — Compact UI & Contextual Help (2026-10-14)
+
+- Consolidated noncritical guidance into one contextual `?` dialog per mobile screen.
+- Removed duplicated launchpad copy and explanatory text from the Repos, Upload, stepper, ZIP Download and Settings surfaces.
+- Kept Critical Security Scan, Sync deletion, pending verification and Pull Request non-merged information visible without opening Help.
+- Added targeted regression tests for help coverage, accessible dialogue, zero GitHub mutations and retained safety gates.
+- Updated app / PWA public cache version, release documentation and roadmap. No new environment variables or backend changes.
+- Production Next.js build and real iPhone E2E should be verified after deployment.
+
 ## v3.0.3 — iPhone Save to Files Download Fix (2026-10-14)
 
 - Eliminated normal in-app navigation into iOS ZIP Quick Look: files are now prepared via same-origin `fetch` and stored only as a bounded in-memory Blob.

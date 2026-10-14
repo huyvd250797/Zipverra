@@ -1,3 +1,25 @@
+# Zipverra Pro v3.0.4 — Compact UI & Contextual Help
+
+> Maintenance UX release based on the user-supplied **v3.0.3** full source. This update simplifies screen copy on mobile without changing any GitHub mutation endpoint, session model or ZIP download transport.
+
+## Changes in v3.0.4
+
+- **One help control per mobile tab:** a single `?` next to the top-right connection status opens a labelled native dialog with guidance specific to Repos, Upload, Activity, History or Settings.
+- **Less on-screen text:** removed duplicated marketing hero text, repetitive step descriptions, oversized ZIP download explanations, and recurring static hints.
+- **Preserved required warnings:** Sync deletion risk, Critical security findings, disabled Push reasons, unverified GitHub activity and PR not-merged state remain directly visible. Help is not a substitute for mandatory review or explicit approval.
+- **Smaller cards:** compact Repos launchpad, concise stepper summary and shorter source ZIP action.
+- **Accessible:** native dialog supports Escape to close, backdrop close, focus management by browser, visible keyboard focus, reduced motion and long-content scrolling.
+- **PWA:** version and public-only cache namespace updated to 3.0.4; the existing Save to Files behavior is unchanged.
+
+## Deploy v3.0.4
+
+1. Extract `Zipverra-v3.0.4` and push **the files inside it** into the GitHub repository root on `main`.
+2. Keep Vercel environment variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
+3. Confirm Vercel `next build`, then test all five tab help dialogs and the Review/Push protections on an iPhone.
+4. The Download ZIP flow is unchanged: choose the repo, prepare its `main` ZIP, then Save to Files.
+
+## Previous release notes
+
 # Zipverra Pro v3.0.3 — iPhone Save to Files Fix
 
 > Maintenance hotfix based on the provided **Zipverra Pro v3.0.2** source archive. This release addresses the iOS native ZIP preview / Quick Look handoff by keeping the ZIP preparation inside the app and offering an explicit native **Save to Files** share action. It does not change GitHub Push/PR/Rollback APIs.

@@ -7,15 +7,11 @@ import { selectedRepoLabel } from '../../lib/ux-polish.js';
 export const WorkspaceLaunchpad = memo(function WorkspaceLaunchpad({ owner, repo, branch, selected, disabled, onUpload, onWorkspace, onActivity }) {
   const destination = selectedRepoLabel(owner, repo);
   return <section className="polish-launchpad" aria-label="Truy cập nhanh Zipverra">
-    <div className="polish-launchpad-copy">
-      <span className="polish-kicker">ZIPVERRA PRO / WORKSPACE</span>
-      <h1>Push to GitHub.<br/><span>From Your Phone.</span></h1>
-      <p>{selected ? 'Repo đã sẵn sàng. Chọn ZIP để review và cập nhật an toàn.' : 'Chọn repository để bắt đầu. Không cần Terminal.'}</p>
-    </div>
+    <div className="polish-launchpad-copy"><h1>Push ZIP</h1></div>
     <div className="polish-launchpad-actions">
       <button type="button" className="polish-main-action" onClick={onUpload} disabled={!selected || disabled}>
         <span className="polish-main-icon" aria-hidden="true">↥</span>
-        <span><strong>Push new version</strong><small>{selected ? `${destination} · ${branch || 'main'}` : 'Chọn repo trước khi Upload'}</small></span>
+        <span><strong>Push ZIP</strong><small>{selected ? `${destination} · ${branch || 'main'}` : 'Chọn repository'}</small></span>
         <span className="polish-action-arrow" aria-hidden="true">→</span>
       </button>
       <div className="polish-shortcuts" role="group" aria-label="Công cụ nhanh">
@@ -57,7 +53,7 @@ export const ActivityEmpty = memo(function ActivityEmpty({ canUpload, onUpload }
   return <section className="polish-empty polish-activity-empty" aria-label="Chưa có tiến trình Push">
     <span className="polish-empty-icon" aria-hidden="true">↥</span>
     <strong>Chưa có thao tác Push mới</strong>
-    <p>Chọn ZIP để bắt đầu. Khi Push được thực hiện, Activity sẽ hiển thị tiến độ và trạng thái GitHub thực tế.</p>
+
     <button type="button" className="button secondary" disabled={!canUpload} onClick={onUpload}>Bắt đầu Upload ZIP →</button>
   </section>;
 });
@@ -70,7 +66,7 @@ export const PushOutcome = memo(function PushOutcome({ result, onCopy }) {
     <div className="polish-outcome-copy">
       <span className="polish-kicker">GITHUB VERIFIED</span>
       <h3>{result.pr ? `Đã mở Pull Request #${result.pr.number}` : result.branchOnly ? 'Branch đã được Push' : 'Push thành công'}</h3>
-      <p>{result.pr ? 'PR đã mở, chưa tự động Merge vào branch đích.' : result.branchOnly ? 'Commit đã được xác minh trên branch riêng.' : 'GitHub đã nhận và xác minh commit.'}</p>
+      {(result.pr || result.branchOnly) && <p>{result.pr ? 'PR đã mở, chưa tự động Merge vào branch đích.' : 'Commit đã được xác minh trên branch riêng.'}</p>}
       {validSha && <div className="polish-outcome-sha"><code>{result.sha.slice(0,12)}</code><button type="button" onClick={() => onCopy(result.sha)} aria-label="Sao chép commit SHA">Copy SHA</button></div>}
       <div className="polish-outcome-actions">
         {result.url && <a href={result.url} target="_blank" rel="noopener noreferrer">Xem commit ↗</a>}

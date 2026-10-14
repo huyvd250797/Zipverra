@@ -1,3 +1,27 @@
+# Zipverra Pro v3.0.4 — Release Validation
+
+**Baseline:** user-provided v3.0.3 source archive.
+
+**Local verification on v3.0.4:** 249/249 Node tests passed; 110 JS/JSX/MJS modules parsed; 196 relative imports resolved; 9 CSS stylesheets parsed. All 30 GitHub API route files matched the uploaded v3.0.3 source byte-for-byte. Chromium layout fixture was checked without horizontal overflow at widths 320, 375, 390, 430, 768 and 1280px; native dialog opened and closed with Escape in the fixture.
+
+**Production build not verified:** `npm run build` cannot run here because Next.js dependencies are not installed (`next: not found`). Install dependencies and confirm the build on Vercel/CI. A fixture does not establish live iPhone PWA behavior.
+
+## New UX checklist
+
+- Each tab (Repos, Upload, Activity, History, Settings) must show exactly **one** contextual help `?` button near its header, with the matching tab-specific explanation.
+- The help dialog must be dismissible via Close, Escape and backdrop; keyboard focus must remain visible.
+- Repos launchpad, stepper and ZIP download must be compact on 320/375/390/430 px iPhone screens.
+- CRITICAL / Sync deletion / uncertain commit / PR non-merged messages must remain visible without opening the dialog.
+- No GitHub mutations or permissions changes were introduced in the UX components.
+
+## Production release gates
+
+- Run `npm install`, `npm test`, and `npm run build` in connected CI/Vercel; inspect build logs.
+- Verify GitHub App login, repo list, ZIP Push, PR, Download ZIP / Save to Files, Activity auto-scroll, History and Rollback on an isolated repo.
+- Verify installed PWA update version 3.0.4, Dark/Light/System themes, reduced-motion and VoiceOver.
+
+## Previous release-validation notes
+
 # Zipverra Pro v3.0.3 — Release Validation
 
 **Source baseline:** the user-supplied `Zipverra-main.zip`, containing Zipverra Pro v3.0.1.

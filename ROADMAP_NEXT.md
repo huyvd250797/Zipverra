@@ -1,8 +1,8 @@
-# Zipverra Pro — Roadmap after v3.0.3 Save to Files Fix
+# Zipverra Pro — Roadmap after v3.0.4 Compact UI & Contextual Help
 
-**Current baseline:** v3.0.3 — iPhone Save to Files Fix (maintenance hotfix; iPhone E2E still needs verification after deployment).
+**Current baseline:** v3.0.4 — Compact UI & Contextual Help (built from v3.0.3; production iPhone E2E remains to be verified).
 
-The v3.0.3 hotfix fixes native iOS ZIP preview takeover by preparing files in the app and using the user-initiated Save to Files share sheet. Commit-title filenames, GitHub App authorization, mobile Push workflow, Pull Requests, History, and Safe Rollback remain intact.
+The v3.0.4 UX polish keeps one Help control per mobile tab and trims redundant static descriptions. The v3.0.3 Save to Files implementation, commit-based ZIP naming, GitHub App authorization, Push, PR, History and Rollback remain intact.
 
 ## Next recommended versions
 

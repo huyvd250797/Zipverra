@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.0.3",
+  "version": "3.0.4",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.0.3: GitHub App-authorized main-branch source ZIP download with verified same-origin streaming, iPhone in-app ZIP preparation, native Save to Files share sheet, and commit-title file naming",
+  "description": "Zipverra Pro v3.0.4: compact mobile UX with one contextual help dialog per screen, retained GitHub App security, ZIP download and safe push workflows",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
