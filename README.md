@@ -1,22 +1,57 @@
-# Zipverra v1.11.0 — Branch & Pull Request Manager
+# Zipverra v1.12.0 — Security & Smart Source Validation
 
 **Next.js 16 · React 19 · Vercel-targeted · Installable mobile PWA**  
 **Slogan:** Push to GitHub. From Your Phone.
 
 Zipverra nhận ZIP do ChatGPT xuất, đọc và đối chiếu file với một repository GitHub, dùng **tên ZIP bỏ `.zip` làm commit message**, cho chọn branch (mặc định `main`), xem preview Merge/Sync, commit rồi xác minh thay đổi trên GitHub. App chạy trên Vercel; không cần chạy Node server lâu dài hoặc Python để giải nén.
 
-## Mới trong v1.11.0 — Branch & Pull Request Manager
+
+## Security & Smart Source Validation v1.12.0
+
+### Phạm vi và cơ chế
+
+- **ZIP Push / Pull Request:** File ZIP được giải nén bằng Web Worker và kiểm tra nội dung các file source. Màn hình Review lọc các phát hiện theo **những file đang được chọn**. File bỏ chọn sẽ không được upload/commit; trong Sync, file bỏ chọn không biến thành lệnh xóa.
+- **Critical:** Phát hiện định dạng credential có độ tin cậy cao (GitHub token, AWS access key, Stripe live secret, OpenAI project key, GitLab token, Google API key, Slack token, PEM private key) hoặc tên file credential nguy hiểm. Chặn Push và PR. **Server kiểm tra lại trước khi upload lên GitHub**, kể cả khi người dùng bỏ qua giao diện bằng API call.
+- **Warning:** Gán trực tiếp mật khẩu/API secret có dấu hiệu đáng ngờ, thay đổi package/lockfile/workflow/Vercel config, xóa cấu hình; cần người dùng xem xét và đánh dấu xác nhận trước Push.
+- **Information:** File binary không được scan nội dung. Ứng dụng chỉ phát hiện rủi ro bằng các quy tắc cố định, **không bảo đảm source hoàn toàn an toàn**.
+- **Security report:** Chỉ hiển thị path, số dòng, mã loại rủi ro và cách xử lý; không hiển thị giá trị credential hay đoạn code chứa secret.
+- **Backend GitHub blob:** `/api/github/blob` giải mã, kiểm tra và chỉ upload file nếu không có Critical. Server trả về chứng nhận HMAC ràng buộc với user ID, repo, path và Git blob SHA; thời hạn **1 giờ**.
+- **Backend commit:** `/api/github/commit` bắt buộc có chứng nhận còn hạn cho **mọi file thêm/sửa**. Client không được tự tạo SHA hoặc bỏ qua scan. File xóa không cần chứng nhận nội dung.
+- **Upload resume:** Checkpoint chỉ dùng lại blob kèm chứng nhận quét **còn hạn và phù hợp manifest**. Các checkpoint SHA-only của phiên bản cũ sẽ phải upload lại. Không lưu credential thô trong checkpoint.
+- **Quick Edit:** `/workspace/preview` và `/workspace/save` đều quét server-side; Critical bị chặn. Warning hiển thị trong Review. Preview vẫn có chữ ký 5 phút và kiểm tra HEAD/SHA như bản cũ.
+- **ZIP safety:** Giữ kiểm tra ZIP traversal, symlink, file trùng, số entry, kích thước khai báo và kích thước giải nén từ v1.11.0; không tăng giới hạn để tránh ZIP bomb.
+
+### Giới hạn và an toàn triển khai
+
+- Detection dựa trên pattern và heuristic, có thể bỏ sót secret không thuộc mẫu, chuỗi bị mã hóa, binary hay dữ liệu rất khó nhận diện. Một số cảnh báo Warning có thể là ví dụ hoặc placeholder. **Không thay thế security scanner chuyên dụng, code review hay GitHub Secret Scanning.**
+- Các file **đã tồn tại và không thay đổi** không được quét lại. Rollback tới commit lịch sử và merge PR tạo từ bên ngoài Zipverra **không được bảo đảm** đã qua lớp quét mới. Repo production nên bật thêm GitHub secret scanning/push protection nếu khả dụng.
+- Việc tạo Git blob đã bị từ chối Critical không có nghĩa credentials chưa từng bị lộ ở nơi khác. Nếu secret thật từng bị chia sẻ, hãy revoke/rotate tại nhà cung cấp.
+- Nếu upload mất quá 1 giờ hoặc người dùng đăng nhập sang tài khoản khác, chứng nhận quét có thể hết hạn: mở lại ZIP, phân tích và push lại; không tắt scanner.
+- Không cần biến môi trường mới; vẫn cần `SESSION_SECRET` đủ mạnh đã cấu hình ở v1.11.0.
+- Test thực tế với ZIP có secret giả trước khi sử dụng production; **không bao giờ đưa secret thật vào file test**.
+
+### Checklist kiểm tra trên Vercel
+
+1. `npm install && npm test && npm run build` (CI GitHub Actions được giữ nguyên).
+2. Kiểm thử ZIP bình thường: Direct Push và PR đều thành công sau khi xác minh SHA.
+3. ZIP chứa token giả đúng pattern: Review báo Critical và nút Push bị khóa; gọi trực tiếp API blob cũng trả `SECURITY_CRITICAL_BLOCKED` trước khi gửi GitHub.
+4. Bỏ chọn file Critical rồi kiểm tra: chỉ file còn được chọn được push. Kiểm tra chế độ Sync giữ nguyên file bỏ chọn.
+5. Test Quick Edit với token giả: preview hoặc save bị chặn. Test warning trong source không bị chặn nhưng được hiển thị.
+6. Kiểm tra History, Safe Rollback, PWA safe area, branch protection và yêu cầu PR vẫn hoạt động.
+
+---
+
+## Các chức năng v1.11.0 tiếp tục được giữ nguyên
 
 - **Direct Push vẫn mặc định**. Trong Upload, chọn Pull Request nếu muốn tạo branch riêng và mở PR trước khi merge vào `main`.
 - Repos có bảng **Branch & Pull Requests** thu gọn, xem branch/PR và merge có xác nhận `MERGE`.
 - **Activity** hiển thị riêng `branch pushed`, `PR opened`, `PR pending` và hỗ trợ khôi phục PR khi mạng gián đoạn.
 - **Bắt buộc cấp thêm Pull requests: Read and write** trên GitHub App và phê duyệt lại quyền installation để dùng tính năng PR.
-- Đây là bản nâng cấp trực tiếp từ **v1.9.0 lên v1.11.0**, chưa bao gồm nội dung Security & Smart Source Validation từng dự kiến cho v1.10.0.
-- Các bước chi tiết và kiểm thử ở mục **Zipverra v1.11.0 — Branch & Pull Request Manager** gần cuối tài liệu.
+- v1.12.0 không thay đổi cơ chế xác thực hoặc quyền GitHub App của các chức năng này.
 
 ---
 
-### Thông tin lịch sử v1.9.0 (đã được v1.11.0 mở rộng)
+### Thông tin lịch sử v1.9.0 (đã được v1.12.0 mở rộng)
 
 ## 1. Điểm mới v1.9.0 — Repository Explorer & Quick Edit
 

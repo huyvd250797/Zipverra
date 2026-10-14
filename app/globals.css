@@ -453,3 +453,21 @@ html[data-theme="light"] .branch-pending{background:#e4f4fc;border-color:#8bc5d8
 .push-timeline.with-pr{grid-template-columns:repeat(5,minmax(0,1fr))}
 .push-timeline.with-pr .timeline-step strong{font-size:10px;overflow-wrap:anywhere}
 @media(max-width:360px){.push-timeline.with-pr{gap:2px}.push-timeline.with-pr .timeline-step strong{font-size:9px}.push-timeline.with-pr .timeline-step small{font-size:8px}}
+
+/* Zipverra v1.12.0 — concise, redacted security findings, mobile-first */
+.security-review{border:1px solid #3c6473;background:#112837;border-radius:13px;margin:14px 0;padding:14px;min-width:0;color:#daebf7}
+.security-review--blocked{border-color:#bb5366;background:#321f30}
+.security-review-title{display:flex;align-items:center;gap:11px}.security-review-title>div{display:grid;gap:4px;min-width:0}.security-review-title strong{font-size:13px}.security-review-title small{font-size:10px;color:#a7becd;line-height:1.5}
+.security-review-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:12px 0}.security-review-stats span{font-size:10px;text-align:center;border-radius:8px;padding:9px 3px;background:#0b1b2b;border:1px solid #345066;font-weight:800}
+.security-review-stats .risk-critical{color:#ffb2bc}.security-review-stats .risk-warning{color:#f4d39f}.security-review-stats .risk-info{color:#a6cddd}
+.security-findings{display:grid;gap:8px;max-height:350px;overflow-y:auto}.security-finding{display:grid;gap:5px;padding:10px;background:#0b1e2d;border:1px solid #365266;border-radius:9px;overflow-wrap:anywhere}.security-finding strong{font-size:11px}.security-finding strong small{color:#ffaab5;font-size:10px}.security-finding-path{font-size:10px;color:#86ddca;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;word-break:break-all}.security-finding>small{font-size:10px;color:#b3c7d4;line-height:1.6}
+.security-block-note{color:#ffc6d0;background:#542a3a;border:1px solid #b95869;border-radius:10px;padding:11px;font-size:12px;line-height:1.6;margin-top:12px}
+.workspace-security{border:1px solid #b98855;background:#3b3025;color:#f8e0ba;border-radius:10px;padding:10px 12px;margin:10px 0;font-size:11px;line-height:1.6}.workspace-security>p{margin:6px 0!important;color:#f5dfbf!important}
+html[data-theme="light"] .security-review{background:#eef8fb;color:#234459;border-color:#9dbcc9}html[data-theme="light"] .security-review--blocked{background:#fff0f1;border-color:#d28c9b}
+html[data-theme="light"] .security-review-title small,html[data-theme="light"] .security-finding>small{color:#526d7a}
+html[data-theme="light"] .security-review-stats span,html[data-theme="light"] .security-finding{background:#fff;border-color:#c8dce4;color:#244559}
+html[data-theme="light"] .security-review-stats .risk-critical,html[data-theme="light"] .security-finding strong small{color:#ad294c}
+html[data-theme="light"] .security-review-stats .risk-warning{color:#885b16}html[data-theme="light"] .security-review-stats .risk-info{color:#477483}
+html[data-theme="light"] .security-finding-path{color:#0b6c61}html[data-theme="light"] .security-block-note{background:#ffe2e7;color:#8f1f3b}
+html[data-theme="light"] .workspace-security{background:#fff4dc;color:#81500e;border-color:#d5b37d}html[data-theme="light"] .workspace-security>p{color:#81500e!important}
+@media(max-width:360px){.security-review{padding:11px}.security-review-stats span{font-size:9px;padding:8px 2px}}

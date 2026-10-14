@@ -7,6 +7,7 @@ import { manifestFingerprint, validatedCheckpoint, makeCheckpoint, uploadBlobsIn
 import { calculateChanges, countChanges } from '../lib/operations.js';
 import { zipCommitMessage } from '../lib/paths.js';
 import { makeReleaseBranch } from '../lib/branch-names.js';
+import { scanSelectedChanges, reportSelectedSecurity } from '../lib/source-security.js';
 import { LIMITS } from '../lib/constants.js';
 import { PUSH_STAGES, JOURNAL_KEY, withSafeRetry, validJournal } from '../lib/reliability.js';
 import { MOBILE_TABS, RECENTS_KEY, THEME_KEY, filterChanges, updateRecentRepositories, getPushTimeline } from '../lib/mobile-ui.js';
@@ -274,6 +275,7 @@ export default function Home() {
   const selectedChanges = useMemo(() => preview ? selectChanges(preview.changes, excludedPaths) : [], [preview, excludedPaths]);
   const stats = preview ? countChanges(selectedChanges) : null;
   const totalStats = preview ? countChanges(preview.changes) : null;
+  const securityReport = useMemo(() => preview ? reportSelectedSecurity(preview.archive.security, selectedChanges) : null, [preview,selectedChanges]);
   const shownChanges = preview ? filterReview(preview.changes, changeFilter, reviewSearch) : [];
   const selectedBytes = selectedChanges.filter(c => c.kind !== 'delete').reduce((sum, c) => sum + (c.bytes || 0), 0);
   const baseTimeline = getPushTimeline(phase, { preview: Boolean(preview), result: Boolean(result), pending: Boolean(pendingCommit) });
@@ -351,6 +353,8 @@ export default function Home() {
       const remote = await api('snapshot', input);
       const changes = calculateChanges(archive.files, remote.files, mode);
       const insights = analyzeSource({ ...archive, changes });
+      // Web Worker already scans file contents. Fallback runs the same bounded scanner.
+      if (!archive.security) archive.security=scanSelectedChanges(archive.files,archive.files.map(f=>({path:f.path,kind:'add'})));
       const releaseBranch = releaseStrategy === 'pr'
         ? makeReleaseBranch(file.name, crypto.randomUUID().replaceAll('-', '').slice(0, 8)) : null;
       setPreview({ archive, remote, changes, insights, input: { owner: input.owner, repo: input.repo, branch: input.branch }, mode, filename: file.name, releaseStrategy, releaseBranch });
@@ -480,7 +484,7 @@ export default function Home() {
   }
 
   async function push() {
-    if (!preview || !selectedChanges.length || preview.insights?.hasBlockingWarning || !confirmed || (mode === 'sync' && stats?.delete > 0 && !syncConfirmed) || busy || pendingCommit || pendingPR) return;
+    if (!preview || !selectedChanges.length || securityReport?.blocked || !confirmed || (mode === 'sync' && stats?.delete > 0 && !syncConfirmed) || busy || pendingCommit || pendingPR) return;
     setBusy(true); setResult(null); setError(''); setErrorHint(''); setProgress(0); setTransfer(null);
     setPhase(PUSH_STAGES.UPLOADING);
     let commitPayload = null;
@@ -513,19 +517,19 @@ export default function Home() {
       if (!sessionResponse.ok || !sessionState.authenticated) throw new Error('Phiên GitHub App đã hết hạn. Hãy đăng nhập lại trước khi push.');
       const fingerprint = await manifestFingerprint({ ...commitInput, head: expectedCommitHead, mode,
         changes: selectedChanges, files: preview.archive.files });
-      const existing = validatedCheckpoint(loadUploadCheckpoint(), fingerprint, selectedChanges);
+      const existing = validatedCheckpoint(loadUploadCheckpoint(), fingerprint, selectedChanges, Date.now(), true);
       const checkpoint = Object.assign(Object.create(null), existing);
       const transferStarted = Date.now();
-      const { blobShas, reused } = await uploadBlobsInBatches({
+      const { blobShas, attestations, reused } = await uploadBlobsInBatches({
         changes: selectedChanges,
         files: preview.archive.files,
         existing,
         concurrency: 2,
         batchSize: 12,
         upload: async (source) => {
-          const res = await api('blob', { owner: input.owner, repo: input.repo, content: encodeBase64(source.data) },
+          const res = await api('blob', { owner: input.owner, repo: input.repo, path: source.path, content: encodeBase64(source.data) },
             (attempt) => setStatus(`GitHub chậm với ${source.path}. Retry an toàn (${attempt}/2)...`));
-          return res.sha;
+          return {sha:res.sha,proof:res.proof};
         },
         onCheckpoint: (completed) => {
           Object.assign(checkpoint, completed);
@@ -538,7 +542,7 @@ export default function Home() {
         },
       });
       if (reused) setStatus(`Đã tái sử dụng ${reused} Git blob từ lần upload trước; bắt đầu commit...`);
-      const entries = selectedChanges.map((c) => ({ path: c.path, mode: c.mode, sha: c.kind === 'delete' ? null : blobShas.get(c.path) }));
+      const entries = selectedChanges.map((c) => ({ path: c.path, mode: c.mode, sha: c.kind === 'delete' ? null : blobShas.get(c.path), ...(c.kind !== 'delete' ? {proof: attestations.get(c.path)} : {}) }));
       commitPayload = { ...commitInput, expectedHead: expectedCommitHead, message: commitMessage, entries, ...(prRequest ? { prRequest } : {}) };
       rememberPending(commitPayload);
       setPendingCommit(commitPayload);
@@ -571,7 +575,7 @@ export default function Home() {
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar">
       <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span></strong><small>ZIP TO GITHUB · GITHUB APP</small></div></div>
-      <div className="version"><span className="live-dot"/> v1.11.0</div>
+      <div className="version"><span className="live-dot"/> v1.12.0</div>
     </header>
     <div className="mobile-context"><div><span className="mobile-eyebrow">ZIPVERRA / {({ home: 'HOME', repositories: 'REPOSITORIES', activity: 'ACTIVITY', history: 'HISTORY', settings: 'SETTINGS' })[activeTab]}</span><h2>{({ home: 'Upload ZIP', repositories: 'GitHub repositories', activity: 'Push activity', history: 'Version history', settings: 'Preferences' })[activeTab]}</h2></div><span className={`mobile-connection ${online ? 'connected' : 'disconnected'}`} aria-label={online ? 'Online' : 'Offline'}>{online ? 'Online' : 'Offline'}</span></div>
     {activeTab !== 'activity' && (error || busy) && <button type="button" className={`mobile-global-status ${error ? 'has-error' : ''}`} onClick={() => goToTab('activity')}><span>{error ? `Cần kiểm tra: ${error}` : `${status || 'Đang xử lý...'} · ${progress}%`}</span><Icon name="arrow" size={17}/></button>}
@@ -642,7 +646,13 @@ export default function Home() {
                 ? <>Pull Request: <b>{preview.releaseBranch}</b> → <b>{preview.input.branch}</b>. ZIP sẽ được commit vào branch riêng, không đụng trực tiếp branch đích.</>
                 : <>Direct Push: cập nhật trực tiếp <b>{preview.input.branch}</b>.</>}</div>
               <div className="stat-grid"><div><strong className="good">+{stats.add}</strong><span>Thêm</span></div><div><strong className="warn">~{stats.modify}</strong><span>Sửa</span></div><div><strong className="bad">−{stats.delete}</strong><span>Xóa</span></div></div>
-              <div className="smart-insights"><div className="insight-header"><span className="insight-mark">✦</span><div><strong>Smart ZIP Analyzer</strong><small>{preview.insights.framework.type} · {preview.insights.binaryCount} file nhị phân</small></div></div>{preview.insights.warnings.length ? <div className="insight-warnings">{preview.insights.warnings.map(w => <div className={`insight-notice insight-${w.severity}`} key={w.code}><strong>{w.title}</strong><span>{w.description}</span></div>)}</div> : <p className="insight-clean">Không phát hiện cảnh báo cấu trúc phổ biến. Vẫn cần review source trước khi push.</p>}</div>
+              <div className="smart-insights"><div className="insight-header"><span className="insight-mark">✦</span><div><strong>Smart ZIP Analyzer</strong><small>{preview.insights.framework.type} · {preview.insights.binaryCount} file nhị phân</small></div></div>{preview.insights.warnings.filter(w=>w.code!=='SECRET_FILE').length ? <div className="insight-warnings">{preview.insights.warnings.filter(w=>w.code!=='SECRET_FILE').map(w => <div className={`insight-notice insight-${w.severity}`} key={w.code}><strong>{w.title}</strong><span>{w.description}</span></div>)}</div> : <p className="insight-clean">Không phát hiện cảnh báo cấu trúc phổ biến. Vẫn cần review source trước khi push.</p>}</div>
+              <div className={`security-review ${securityReport?.blocked?'security-review--blocked':''}`} role="status" aria-label="Security review">
+                <div className="security-review-title"><Icon name="shield" size={20}/><div><strong>Security & Smart Source Validation</strong><small>{securityReport?.scanned||0} thay đổi được kiểm tra · Không hiển thị nội dung secrets</small></div></div>
+                <div className="security-review-stats"><span className="risk-critical">Critical: {securityReport?.critical||0}</span><span className="risk-warning">Warning: {securityReport?.warning||0}</span><span className="risk-info">Info: {securityReport?.info||0}</span></div>
+                {securityReport?.findings?.length ? <div className="security-findings">{securityReport.findings.slice(0,20).map((finding,i)=><div key={`${finding.path}-${finding.code}-${i}`} className={`security-finding risk-${finding.severity}`}><strong>{finding.title} <small>· {finding.severity.toUpperCase()}</small></strong><span className="security-finding-path">{finding.path}{finding.line>0?`:${finding.line}`:''}</span><small>{finding.action}</small></div>)}{securityReport.findings.length>20&&<small>Hiển thị 20/{securityReport.findings.length} cảnh báo. Kiểm tra source để xử lý toàn bộ.</small>}</div> : <p className="insight-clean">Không phát hiện credential theo các quy tắc hiện có. Đây không phải bảo đảm source hoàn toàn an toàn.</p>}
+                {securityReport?.blocked&&<div className="security-block-note" role="alert">Đã khóa Push/PR: loại bỏ hoặc bỏ chọn file Critical, sau đó xác nhận lại bản review. Server sẽ kiểm tra lại trước khi ghi lên GitHub.</div>}
+              </div>
               <div className="review-select-summary"><div><strong>{selectedChanges.length}/{preview.changes.length} thay đổi được chọn</strong><small>File bỏ chọn sẽ giữ nguyên trên GitHub, kể cả trong Sync.</small></div><span>{prettyBytes(selectedBytes)}</span></div>
               <div className="archive-meta">{preview.archive.files.length} file · {prettyBytes(preview.archive.unpackedSize)} đã giải nén{preview.archive.wrapper ? ` · Bỏ thư mục gốc: ${preview.archive.wrapper}/` : ''}{preview.archive.ignored ? ` · Bỏ qua ${preview.archive.ignored} file` : ''}</div>
               <div className="diff-filters" role="group" aria-label="Lọc file thay đổi">{[{id:'all',label:'Tất cả',n:preview.changes.length},{id:'add',label:'Thêm',n:totalStats.add},{id:'modify',label:'Sửa',n:totalStats.modify},{id:'delete',label:'Xóa',n:totalStats.delete}].map((option) => <button type="button" key={option.id} className={`diff-filter ${changeFilter === option.id ? 'selected' : ''}`} aria-pressed={changeFilter === option.id} onClick={() => setChangeFilter(option.id)}>{option.label} <span>{option.n}</span></button>)}</div>
@@ -651,7 +661,7 @@ export default function Home() {
               {shownChanges.length > visibleLimit && <button type="button" className="button secondary full review-more" onClick={() => setVisibleLimit(v => v + 100)}>Hiển thị thêm {Math.min(100,shownChanges.length-visibleLimit)} file · {shownChanges.length-visibleLimit} còn lại</button>}
               {diffViewer && <div className="inline-diff" aria-live="polite"><div className="inline-diff-heading"><strong>Diff · {diffViewer.path}</strong><button type="button" onClick={() => {diffRequestRef.current++;setDiffViewer(null);}} aria-label="Đóng diff">✕</button></div>{diffViewer.loading ? <p>Đang tải file từ commit đang review…</p> : diffViewer.message ? <p>{diffViewer.message}</p> : <div className="inline-diff-lines">{diffViewer.lines.map((line,index)=><div key={index} className={`diff-line diff-${line.kind}`}><span>{line.kind==='add'?'+':line.kind==='delete'?'−':' '}</span><code>{line.text || ' '}</code></div>)}</div>}</div>}
               {stats.delete > 0 && <div className="warning-banner"><strong>Cảnh báo Sync</strong><p>Chế độ Sync sẽ xóa {stats.delete} file đang có trên GitHub. Các file này có thể bao gồm cấu hình deploy.</p><label className="confirm-row sync-confirm"><input type="checkbox" checked={syncConfirmed} disabled={busy} onChange={(e) => setSyncConfirmed(e.target.checked)}/><span>Tôi đồng ý xóa {stats.delete} file trong repository.</span></label></div>}
-              {selectedChanges.length > 0 && !preview.insights.hasBlockingWarning && <><label className="confirm-row"><input type="checkbox" checked={confirmed} disabled={busy} onChange={(e) => setConfirmed(e.target.checked)}/><span>Tôi đã kiểm tra thay đổi và đồng ý {releaseStrategy==='pr' ? 'push lên branch riêng rồi tạo Pull Request' : 'push trực tiếp'} với đích <b>{preview.input.branch}</b>.</span></label><button className="button primary full push-button" disabled={busy || !selectedChanges.length || !confirmed || (mode === 'sync' && stats.delete > 0 && !syncConfirmed) || !auth.authenticated || !online || Boolean(pendingCommit) || Boolean(pendingPR)} onClick={push}><Icon name="upload" size={18}/> {busy ? 'Đang xử lý...' : releaseStrategy==='pr' ? `Push & Create PR (${selectedChanges.length} file)` : `Commit & Push (${selectedChanges.length} file)`}</button></>}
+              {selectedChanges.length > 0 && !securityReport?.blocked && <><label className="confirm-row"><input type="checkbox" checked={confirmed} disabled={busy} onChange={(e) => setConfirmed(e.target.checked)}/><span>Tôi đã kiểm tra thay đổi và đồng ý {releaseStrategy==='pr' ? 'push lên branch riêng rồi tạo Pull Request' : 'push trực tiếp'} với đích <b>{preview.input.branch}</b>.</span></label><button className="button primary full push-button" disabled={busy || !selectedChanges.length || !!securityReport?.blocked || !confirmed || (mode === 'sync' && stats.delete > 0 && !syncConfirmed) || !auth.authenticated || !online || Boolean(pendingCommit) || Boolean(pendingPR)} onClick={push}><Icon name="upload" size={18}/> {busy ? 'Đang xử lý...' : releaseStrategy==='pr' ? `Push & Create PR (${selectedChanges.length} file)` : `Commit & Push (${selectedChanges.length} file)`}</button></>}
             </>}
           </article>
           <article ref={activityRef} className="panel activity-panel" data-mobile-view="activity"><div className="activity-title"><h2>Activity · Tiến trình Push</h2><span className={`activity-dot ${busy ? 'pulse' : ''}`}/></div>
@@ -676,7 +686,7 @@ export default function Home() {
                 <button type="button" className="button ghost settings-logout" onClick={logout} disabled={busy}>Đăng xuất GitHub</button>
               </> : <a className="button primary full" href="/api/auth/login"><Icon name="github" size={18}/> Continue with GitHub</a>}
             </div>
-            <div className="settings-info"><span>Phiên bản</span><strong>v1.11.0</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v1.12.0</strong></div>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
             <div className="settings-info"><span>Commit message</span><strong>Tên file ZIP</strong></div>
             <p className="hint">Chỉ lưu metadata phục hồi upload, không lưu GitHub token trên JavaScript phía trình duyệt.</p>
@@ -685,7 +695,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v1.11.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v1.12.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <nav className="mobile-bottom-nav" aria-label="Điều hướng Zipverra">{[{id:'repositories',label:'Repos',icon:'branch'},{id:'home',label:'Upload',icon:'upload'},{id:'activity',label:'Activity',icon:'activity'},{id:'history',label:'History',icon:'history'},{id:'settings',label:'Settings',icon:'settings'}].map((tab) => <button type="button" key={tab.id} className={`mobile-nav-item ${activeTab === tab.id ? 'active' : ''}`} aria-current={activeTab === tab.id ? 'page' : undefined} onClick={() => goToTab(tab.id)}><Icon name={tab.icon} size={21}/><span>{tab.label}</span>{tab.id === 'activity' && (pendingCommit || pendingPR) && <i className="nav-alert" aria-label="Có push cần xác minh"/>}</button>)}</nav>
   </>;

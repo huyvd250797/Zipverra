@@ -1,5 +1,16 @@
 # Zipverra Changelog
 
+## v1.12.0 — Security & Smart Source Validation (2026-10-14)
+
+- ZIP Push và Pull Request có Security Review Critical / Warning / Information theo file được chọn; chặn Critical và giữ file bị loại trừ.
+- Scanner chia sẻ logic Web Worker và server; secret high-confidence không được upload lên GitHub.
+- API upload Git blob tạo HMAC attestation 1 giờ theo GitHub user/repo/path/SHA, commit kiểm tra chứng nhận trước ghi Git tree.
+- Upload resume chỉ sử dụng lại checkpoint có chứng nhận quét còn hạn; bản cũ SHA-only phải upload lại.
+- Quick Edit có quét ở Preview và Save, không phụ thuộc vào JavaScript giao diện.
+- Giữ nguyên GitHub App Authentication, PR Manager, Git History, Safe Rollback, PWA mobile.
+- Known limitations: rule-based scan, binary không được quét sâu, source đã tồn tại/rollback/PR ngoài Zipverra không được scan tự động.
+
+
 ## v1.11.0 — Branch & Pull Request Manager (2026-10-14)
 
 - Based **directly on v1.9.0**; does not include planned v1.10.0 deep security scanner.

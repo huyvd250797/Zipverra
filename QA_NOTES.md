@@ -1,4 +1,4 @@
-# QA — Zipverra v1.11.0
+# QA — Zipverra v1.12.0
 
 Add these checks to the existing v1.9.0 regression suite:
 
@@ -95,3 +95,17 @@ Rollback v1.6.0 khôi phục **toàn bộ tree của commit cũ** chứ không c
 12. History và Safe Rollback cũ không hồi quy; không force-push; branch protection/Workflows permissions được giữ.
 
 Không có multipart upload cho file đơn > 2,5 MB trong bản này. Giới hạn tăng của ZIP là dung lượng **tổng** do phân chia theo file.
+
+
+## v1.12.0 security validation checklist
+
+- [ ] GitHub App user token vẫn lưu server-side/session cookie; không có secrets trong log hay response.
+- [ ] ZIP có token giả => Critical và không gọi GitHub API upload blob.
+- [ ] API commit trực tiếp không có chứng nhận file => chặn trước GitHub mutation.
+- [ ] Proof giả/tamper/different session/path/repo/SHA/expired => chặn.
+- [ ] Upload resume bị hết hạn proof => phải upload lại.
+- [ ] Warning config/assignment được hiển thị, không tiết lộ đoạn chứa password.
+- [ ] Quick Edit preview/save đều chặn secret Critical.
+- [ ] File bị loại khỏi Review không thành lệnh xóa, kể cả Sync.
+- [ ] ZIP path traversal, symlink, ZIP bomb, duplicate path, binary và false-positive tests.
+- [ ] `npm run build` production và E2E với repo test sau deploy (chưa xác minh ở môi trường tạo source).

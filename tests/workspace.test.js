@@ -146,3 +146,26 @@ test('workspace UI keeps original 5 tabs and preserves ZIP Push workflow',async(
  assert.match(panel,/Review Changes/);
  assert.match(panel,/Commit & Save File/);
 });
+
+
+test('v1.12 security blocks secret in Quick Edit BEFORE GitHub Contents PUT',async()=>{
+ const secretText='export const token = "ghp_'+'Q'.repeat(36)+'";';
+ const f=fixture();
+ await scoped(f.fetcher,async()=>{
+  await assert.rejects(()=>previewWorkspaceEdit('secret-token-value',{...data,content:secretText},who,SECRET),
+    e=>e.code==='SECURITY_CRITICAL_BLOCKED' && e.stage==='SECURITY_SCAN');
+ });
+ assert.equal(f.puts(),0);
+});
+
+test('v1.12 Quick Edit returns redacted warnings and no credential value',async()=>{
+ const warningText='export const password = "some-password-material-123456";';
+ const f=fixture();
+ await scoped(f.fetcher,async()=>{
+  const preview=await previewWorkspaceEdit('secret-token-value',{...data,content:warningText},who,SECRET,1000000);
+  assert.equal(preview.security.warning,1);
+  assert.equal(preview.security.findings[0].code,'POSSIBLE_CREDENTIAL');
+  assert.ok(!JSON.stringify(preview.security).includes('some-password-material-123456'));
+ });
+ assert.equal(f.puts(),0);
+});
