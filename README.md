@@ -1,9 +1,22 @@
-# Zipverra v1.9.0 — Repository Explorer & Quick Edit
+# Zipverra v1.11.0 — Branch & Pull Request Manager
 
 **Next.js 16 · React 19 · Vercel-targeted · Installable mobile PWA**  
 **Slogan:** Push to GitHub. From Your Phone.
 
 Zipverra nhận ZIP do ChatGPT xuất, đọc và đối chiếu file với một repository GitHub, dùng **tên ZIP bỏ `.zip` làm commit message**, cho chọn branch (mặc định `main`), xem preview Merge/Sync, commit rồi xác minh thay đổi trên GitHub. App chạy trên Vercel; không cần chạy Node server lâu dài hoặc Python để giải nén.
+
+## Mới trong v1.11.0 — Branch & Pull Request Manager
+
+- **Direct Push vẫn mặc định**. Trong Upload, chọn Pull Request nếu muốn tạo branch riêng và mở PR trước khi merge vào `main`.
+- Repos có bảng **Branch & Pull Requests** thu gọn, xem branch/PR và merge có xác nhận `MERGE`.
+- **Activity** hiển thị riêng `branch pushed`, `PR opened`, `PR pending` và hỗ trợ khôi phục PR khi mạng gián đoạn.
+- **Bắt buộc cấp thêm Pull requests: Read and write** trên GitHub App và phê duyệt lại quyền installation để dùng tính năng PR.
+- Đây là bản nâng cấp trực tiếp từ **v1.9.0 lên v1.11.0**, chưa bao gồm nội dung Security & Smart Source Validation từng dự kiến cho v1.10.0.
+- Các bước chi tiết và kiểm thử ở mục **Zipverra v1.11.0 — Branch & Pull Request Manager** gần cuối tài liệu.
+
+---
+
+### Thông tin lịch sử v1.9.0 (đã được v1.11.0 mở rộng)
 
 ## 1. Điểm mới v1.9.0 — Repository Explorer & Quick Edit
 
@@ -28,7 +41,7 @@ Zipverra nhận ZIP do ChatGPT xuất, đọc và đối chiếu file với mộ
 - Lưu file rỗng yêu cầu xác nhận riêng. Khi rời file có nội dung chưa commit, app hỏi xác nhận trước khi bỏ bản nháp. **Draft không được lưu vào localStorage**.
 - Code Viewer chỉ hiện tối đa 900 dòng đầu để giới hạn DOM; editor cho phép sửa toàn bộ file trong giới hạn 64 KiB. Diff tối đa 320 dòng mỗi phía; khi vượt ngưỡng, giao diện cảnh báo thay vì hiện diff không đầy đủ như một diff hoàn chỉnh.
 - Chỉ trả token/credential trong cookie `HttpOnly` mã hóa; không đưa GitHub token tới JavaScript client. Nếu Save timeout và kết quả chưa rõ, app chỉ đọc lại GitHub để xác minh nội dung mới trước khi cho phép tiếp tục.
-- Phiên bản này **chưa hỗ trợ tạo branch/Pull Request**. Khi branch protection chặn commit, app hiển thị lỗi. Chức năng branch/PR dự kiến v1.11.0.
+- **Trong v1.9.0**, Quick Edit chưa hỗ trợ tạo branch/PR. **v1.11.0 đã bổ sung Pull Request cho ZIP Push** và cho phép chọn branch có sẵn trước khi Quick Edit; PR riêng cho Quick Edit vẫn là tính năng dự kiến.
 
 ### Backend/API Workspace
 
@@ -235,3 +248,45 @@ Tất cả API sử dụng GitHub App user token trong cookie HttpOnly, xác nh�
 - `npm run build` phải được kiểm tra qua Vercel hoặc GitHub Actions. Môi trường đóng gói có thể không truy cập được npm registry; không coi source là đã production-verified khi chưa chạy build/E2E thật.
 
 **Next:** Zipverra v1.8.0 — Vercel Deployment Tracking.
+
+
+## Zipverra v1.11.0 — Branch & Pull Request Manager
+
+> **Source baseline:** v1.9.0. This direct version jump does **not** claim to include the planned v1.10.0 Security & Smart Source Validation features.
+
+### Two ways to publish source ZIP
+
+1. **Direct Push (default):** Repos → choose repo & branch (`main`) → Upload → ZIP → Review → Confirm & Push → Activity. Existing behavior is preserved.
+2. **Pull Request (optional):** Same workflow, but in **Upload → Cách cập nhật source**, select **Pull Request** before Analyze. Zipverra calculates a unique `zipverra/<zip-name>-<8-hex>` branch and displays it in Review. After confirmation:
+   - Verify the base HEAD has not changed since Review.
+   - Ensure GitHub App has `Contents: write` and `Pull requests: write` permissions.
+   - Create branch at the reviewed base commit, **without force**.
+   - Upload only the selected changes and commit to the new branch.
+   - Verify the branch commit SHA on GitHub; create PR into the chosen target branch.
+   - Show PR link in **Activity**. **This does NOT merge the PR automatically.**
+
+### Branch & PR Manager
+
+Repos → Select repository → expand **Branch & Pull Requests**. Select existing branches, load open PRs and open them on GitHub. If merging inside Zipverra, read the PR, verify CI/review first, select Merge and type **MERGE**. Server checks expected PR HEAD SHA, current GitHub mergeable state, installation permissions, and GitHub enforces branch protection, required reviews and CI. Merge is never forced.
+
+### IMPORTANT: new GitHub App repository permission
+
+For PR features, open GitHub App Settings → **Permissions & events** → **Repository permissions** → **Pull requests: Read and write**, then save and **approve the new permission in Install/Manage GitHub App** for each installation. Keep Contents: Read and write; Workflows: Read and write for ZIP changes touching `.github/workflows/*.yml`/`.yaml`. Refresh repositories after reapproval. Direct Push does not require the new Pull requests permission.
+
+**No new Vercel environment variables.** Existing `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET` are retained. This version does **not** integrate Vercel Deployment Tracking or any Vercel API token.
+
+### Recovery and conflict handling
+
+- Existing branch names are never overwritten during PR creation.
+- A changed target branch HEAD before creating the release branch rejects the workflow with HTTP 409. Re-analyze to get a new branch name.
+- If commit was pushed but PR creation failed or timed out, **Activity → Kiểm tra / Tạo PR** recovers using the verified SHA and looks for an existing PR first. It does not re-upload ZIP or create another commit.
+- If push commit is ambiguous, **Activity → Xác minh push** must run before attempting another commit or PR.
+- An existing closed/merged PR is not silently reused as an open one. Use GitHub to review its state.
+- Branch protection cannot be bypassed. If Direct Push is rejected, first verify the previous attempt, then switch to Pull Request and review ZIP again.
+- After review, merging a PR changes the target branch and could trigger a deployment configured elsewhere. Zipverra itself does not track Vercel deployments.
+
+### Constraints / release QA
+
+- Quick Edit remains single-file direct commit as in v1.9.0; the PR workflow applies to **ZIP Push**. Branch manager allows selecting a different branch for Quick Edit.
+- No v1.10.0 deep secrets scanning has been implemented. Continue checking ZIP for secrets before publishing.
+- GitHub Git API and Vercel production build are not validated by unit tests alone. Run `npm install`, `npm test`, `npm run build` and a live disposable-repo PR/merge smoke test before relying on production.

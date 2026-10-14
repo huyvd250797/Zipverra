@@ -1,5 +1,18 @@
 # Zipverra Changelog
 
+## v1.11.0 — Branch & Pull Request Manager (2026-10-14)
+
+- Based **directly on v1.9.0**; does not include planned v1.10.0 deep security scanner.
+- Optional PR mode in ZIP Upload; Direct Push stays default.
+- Create collision-resistant `zipverra/…` branches from exact reviewed HEAD; never force-update an existing branch.
+- PR creation is idempotent through GitHub lookup, checked against verified commit SHA.
+- Repos → expandable Branch & Pull Requests manager; list branches/open PRs, optional merge with typed confirmation and GitHub protection checks.
+- Activity shows branch-pushed / PR-open status separately and holds a resumable PR creation journal after network failures.
+- GitHub App repository `Pull requests: write` permission required for PR actions (manual reapproval), Contents/Workflows permissions unchanged.
+- 5-tab mobile PWA, Quick Edit, ZIP analyzer, Smart Diff, History, Safe Rollback preserved; no Vercel Tracking.
+- Unit tests: 131/131 passed; JS/JSX static parser and relative imports checked. Live GitHub PR E2E and Next production build require external verification.
+
+
 ## v1.9.0 — Repository Explorer & Quick Edit (2026-10-14)
 
 - Repo-first workflow giữ nguyên; mở Workspace từ **Repos**, không thêm tab điều hướng.

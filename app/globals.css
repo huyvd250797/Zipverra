@@ -409,3 +409,47 @@ html[data-theme="light"] .workspace-review>strong,html[data-theme="light"] .work
 .workspace-code-line{display:inline}.workspace-syntax-keyword{color:#9eb7ff;font-weight:680}.workspace-syntax-string{color:#a8e7a1}.workspace-syntax-number{color:#ffcca3}.workspace-syntax-comment{color:#8196ab;font-style:italic}.workspace-syntax-function{color:#8bddf6}
 html[data-theme="light"] .workspace-syntax-keyword{color:#5842b8}html[data-theme="light"] .workspace-syntax-string{color:#218044}html[data-theme="light"] .workspace-syntax-number{color:#b65c14}html[data-theme="light"] .workspace-syntax-comment{color:#68818e}html[data-theme="light"] .workspace-syntax-function{color:#126d99}
 @media(max-width:360px){.workspace-search-row{flex-wrap:wrap}.workspace-search-row .button{flex:1}}
+
+/* Zipverra v1.11.0 — optional branch and PR manager, no sixth navigation tab */
+.branch-pr-manager{border:1px solid #305169;border-radius:13px;margin:16px 0;background:#122336;overflow:hidden;min-width:0}
+.branch-pr-toggle{background:transparent;border:0;color:#d8eaf5;width:100%;display:flex;justify-content:space-between;gap:14px;align-items:center;text-align:left;padding:15px;font-weight:800;min-height:51px;cursor:pointer}
+.branch-pr-toggle small{display:block;font-size:10px;font-weight:600;color:#8ba6ba;margin-top:4px}
+.branch-pr-content{padding:0 13px 16px;min-width:0}
+.branch-pr-note,.branch-pr-merge p{font-size:11px;line-height:1.65;color:#a0bad0;overflow-wrap:anywhere}
+.branch-pr-content h3{font-size:13px;color:#d9f4ea;margin:18px 0 9px}.branch-pr-content h3 small{color:#91adc4;font-size:11px}
+.branch-pr-list{max-height:250px;overflow:auto;overscroll-behavior:contain;display:grid;gap:7px}
+.branch-pr-item,.branch-pr-pr{background:#0e1e30;border:1px solid #2b435b;border-radius:10px;padding:10px;min-width:0}
+.branch-pr-item{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.branch-pr-item>div{min-width:0;overflow-wrap:anywhere}.branch-pr-item strong,.branch-pr-pr strong{display:block;font-size:11px;line-height:1.5;color:#d9e8f8;overflow-wrap:anywhere}
+.branch-pr-item small,.branch-pr-pr small{display:block;color:#8faac1;font-size:10px;line-height:1.6;overflow-wrap:anywhere}
+.branch-pr-mini{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-height:38px;padding:8px;border-radius:8px;border:1px solid #3e6777;background:#18394b;color:#9aeacb;font-size:11px;font-weight:750;text-decoration:none;white-space:nowrap;cursor:pointer}
+.branch-pr-mini:disabled{opacity:.5;cursor:default}.branch-pr-actions{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin-top:10px}
+.branch-pr-error,.branch-pr-success{margin:9px 0;padding:10px;border-radius:9px;font-size:11px;line-height:1.55;overflow-wrap:anywhere}
+.branch-pr-error{background:#492833;color:#ffbfcb;border:1px solid #9e5164}.branch-pr-success{background:#153e34;color:#9befca;border:1px solid #36846a}
+.branch-pr-merge{border:1px solid #b18345;background:#382c22;border-radius:11px;padding:13px;margin-top:15px}
+.branch-pr-merge label{display:block;font-size:11px;margin:12px 0 7px;color:#ffe4b4}.branch-pr-merge input{width:100%;min-width:0;padding:12px;border-radius:9px;border:1px solid #977045;background:#161f2d;color:#f5f5ef;font-size:16px}
+.release-strategy{border:1px solid #31566b;border-radius:12px;background:#102a38;padding:13px;margin:13px 0;min-width:0}
+.release-strategy>strong{display:block;font-size:12px;color:#dcf8ea;margin-bottom:10px}
+.release-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.release-choice{display:flex;align-items:center;gap:7px;padding:11px 9px;min-width:0;border:1px solid #3b5770;border-radius:10px;font-size:11px;font-weight:800;color:#c3d7e7;cursor:pointer;background:#19293d}
+.release-choice.active{border-color:#57d0ac;background:#194339;color:#a6ffdd}
+.release-choice input{accent-color:#58ddae;flex-shrink:0}
+.release-summary{padding:11px 12px;background:#143646;border-radius:10px;border:1px solid #315c65;color:#a4dece;font-size:11px;line-height:1.7;margin:11px 0;overflow-wrap:anywhere}
+.release-summary b{color:#d8fff1}.release-note{font-size:11px;color:#8fb4bd;line-height:1.6;margin:7px 0 0}
+.branch-pending{background:#173046;border:1px solid #4982a0;border-radius:12px;padding:14px;margin:13px 0;overflow-wrap:anywhere}
+.branch-pending strong{display:block;color:#d6f1ff;font-size:13px}.branch-pending p{font-size:11px;color:#adc7d5;line-height:1.7}
+.branch-pending .button{width:100%;margin-top:9px}
+.branch-pr-link{color:#84f0d2;text-decoration:underline;text-underline-offset:2px;overflow-wrap:anywhere}
+html[data-theme="light"] .branch-pr-manager,html[data-theme="light"] .release-strategy{background:#e8f5f6;border-color:#a6cbd0;color:#245263}
+html[data-theme="light"] .branch-pr-toggle,html[data-theme="light"] .branch-pr-content h3,html[data-theme="light"] .release-strategy>strong{color:#174b51}
+html[data-theme="light"] .branch-pr-note,html[data-theme="light"] .branch-pr-merge p,html[data-theme="light"] .branch-pr-toggle small{color:#58717d}
+html[data-theme="light"] .branch-pr-item,html[data-theme="light"] .branch-pr-pr,html[data-theme="light"] .release-choice{background:#f4fafb;border-color:#bfd5df;color:#284b5e}
+html[data-theme="light"] .branch-pr-item strong,html[data-theme="light"] .branch-pr-pr strong{color:#20485d}
+html[data-theme="light"] .release-choice.active,html[data-theme="light"] .release-summary{background:#d8f6e8;border-color:#8bcbb2;color:#246b54}
+html[data-theme="light"] .release-summary b{color:#13513e}html[data-theme="light"] .branch-pr-merge{background:#fff3dc;color:#714e20}
+html[data-theme="light"] .branch-pending{background:#e4f4fc;border-color:#8bc5d8;color:#284c61}html[data-theme="light"] .branch-pending strong{color:#215877}html[data-theme="light"] .branch-pending p{color:#496f84}
+@media(max-width:370px){.release-choices{grid-template-columns:1fr}.branch-pr-item{align-items:flex-start;flex-direction:column}.branch-pr-mini{min-width:100px}}
+
+.push-timeline.with-pr{grid-template-columns:repeat(5,minmax(0,1fr))}
+.push-timeline.with-pr .timeline-step strong{font-size:10px;overflow-wrap:anywhere}
+@media(max-width:360px){.push-timeline.with-pr{gap:2px}.push-timeline.with-pr .timeline-step strong{font-size:9px}.push-timeline.with-pr .timeline-step small{font-size:8px}}

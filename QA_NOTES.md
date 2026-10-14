@@ -1,3 +1,19 @@
+# QA — Zipverra v1.11.0
+
+Add these checks to the existing v1.9.0 regression suite:
+
+- [ ] Direct Push (default) on writable branch unchanged.
+- [ ] PR workflow requires manual GitHub App Pull requests Write grant and installation reapproval.
+- [ ] Unique source branch created from reviewed base HEAD, no force-push.
+- [ ] Refusal on changed base or pre-existing branch; no accidental push into main.
+- [ ] PR opened with expected HEAD SHA and base; no automatic merge.
+- [ ] Ambiguous PR network result reconciled by lookup; Activity recovery survives PWA reload.
+- [ ] Merge requires typed MERGE, exact PR source SHA, mergeable clean and GitHub policy enforcement.
+- [ ] PR manager remains collapsed by default in Repos; no extra bottom navigation tab.
+- [ ] Activity clearly shows branch pushed vs PR opened vs merged.
+- [ ] Mobile safe-area, dark/light contrast, accessible touch controls.
+- [ ] npm run build and real GitHub App smoke tests before production usage.
+
 # QA Notes — Zipverra v1.9.0
 
 - Added Repository Explorer & Quick Edit without modifying the 5-tab mobile ZIP Push flow.

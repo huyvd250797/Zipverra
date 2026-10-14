@@ -1,28 +1,23 @@
-# Zipverra v1.9.0 — Release Validation
+# Zipverra v1.11.0 — Release Validation
 
-Release: 2026-10-14 · Based on v1.8.0 Smart Push & Workflow 3.0
+Release date: 2026-10-14 · Source baseline: v1.9.0
 
-## Verified locally
+## Automated checks
 
-- `npm test`: **113/113 passed**, including 17 new workspace tests. All previous GitHub App, ZIP Push, History/Rollback, PWA and Worker tests retained.
-- JavaScript and JSX syntax/parser checks, workspace endpoints/routes and relative imports checked.
-- Workspace mobile/desktop layout fixture checked using Chromium at 320, 375, 390, 430, 768 and 1280 px, no horizontal overflow. This is layout-fixture QA, not a real-device end-to-end test.
-- README, QA notes, changelog and release ZIP integrity validated before handoff.
+- `npm test`: **131/131 passed** (original v1.9.0 regression tests plus 18 dedicated Branch/PR tests).
+- TypeScript transpile/parser syntax check for JSX/JS/MJS, verify relative import paths.
+- `npm run build`: **not independently confirmed** if npm registry unavailable; must confirm in Vercel Build Logs.
+- Live GitHub App / GitHub API, branch-protection, required reviews, merge and PWA E2E: **not run with production credentials**.
 
-## Not verified locally
+## Acceptance scenarios
 
-- npm registry DNS `EAI_AGAIN` prevented installing project dependencies and running `next build`.
-- GitHub App live authorization, GitHub Contents API real mutation, Vercel production build and iPhone PWA E2E need validation after deploy. Do not assume production-ready without these checks.
-
-## Acceptance tests after deployment
-
-1. Check GitHub App login and existing ZIP Push/History/Rollback still work.
-2. Open Repos → pick a disposable GitHub repository → Repository Explorer.
-3. Browse folders, search filenames, open small UTF-8 file, view syntax/color and file history.
-4. Edit a test `.md` file → Review Changes → confirm → Commit & Save File → compare resulting commit SHA/content on GitHub.
-5. Change branch HEAD/file SHA between Preview and Save. Expect HTTP 409 and no edit/commit.
-6. Reuse an expired/tampered preview proof; expect reject.
-7. Try binary, secret path and >64 KiB file; expect blocked.
-8. On protected main, expect GitHub rule rejection; use GitHub PR flow until v1.11 branch support arrives.
-9. Simulate failed Save response/network loss; verify GitHub before any manual retry.
-10. Confirm no secrets in repo, HTML, browser localStorage or API error messages.
+1. GitHub App: grant Pull requests Read/Write, approve installation changes; confirm Direct Push still works without PR permission.
+2. Preview PR source ZIP, create branch from exact reviewed main HEAD and verify only that branch is modified.
+3. Move `main` HEAD after ZIP Review, expect 409 and no release branch created.
+4. PR branch already exists, expect 409 and no force or overwrite.
+5. Simulate GitHub timeout immediately after successful PR POST; recovery should find original PR without creating a duplicate.
+6. Disconnect network after branch push but before PR response, reload PWA, then Activity → Kiểm tra / Tạo PR.
+7. Reject merge when SHA stale, PR draft/closed, checks not clean, or confirmation not `MERGE`.
+8. When merge succeeds, verify target branch HEAD on GitHub; do not claim PR creation automatically merges.
+9. Run ZIP Push/History/Rollback/Quick Edit regression tests on a disposable repo.
+10. Confirm no Vercel API Token and no v1.8.0 Deployment Tracking paths or dependencies.

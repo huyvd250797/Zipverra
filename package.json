@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "1.9.0",
+  "version": "1.11.0",
   "private": true,
   "type": "module",
-  "description": "Zipverra v1.9.0: Repository Explorer & Quick Edit with preview-signed text edits and safe GitHub commits",
+  "description": "Zipverra v1.11.0: Direct ZIP Push or safe Branch & Pull Request workflow, GitHub App authentication, History, Quick Edit",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
