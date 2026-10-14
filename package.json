@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.0.1: GitHub App-authorized main-branch source ZIP download with direct GitHub archive delivery",
+  "description": "Zipverra Pro v3.0.2: GitHub App-authorized main-branch source ZIP download with verified same-origin streaming, iPhone attachment download and commit-title file naming",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

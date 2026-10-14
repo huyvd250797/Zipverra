@@ -1,3 +1,33 @@
+# Zipverra Pro v3.0.2 — Source ZIP Download iPhone Fix
+
+> Hotfix from the user-supplied **Zipverra Pro v3.0.1** GitHub source ZIP. The broken codeload browser redirect is replaced with a secure same-origin ZIP attachment stream. **No Vercel Deployment Tracking.**
+
+## New in v3.0.2
+
+- Source ZIP downloads no longer open a blank `codeload.github.com` page in Safari/PWA.
+- The server streams the GitHub ZIP archive to the browser using `Content-Type: application/zip` and `Content-Disposition: attachment`.
+- Archive filename comes from the **first line of the verified HEAD commit message on branch `main`**, sanitized for iPhone/Windows filenames. Fallback is `repo-shortSHA.zip`.
+- The GitHub archive request is pinned to the same commit SHA used to derive the filename.
+- The temporary GitHub codeload URL and the GitHub App credential are never sent to the client.
+- Download is read-only, works for authorized private repositories, and validates actual ZIP magic bytes before streaming.
+- Stream size budget: up to **512 MiB compressed**; large archives depend on Vercel function duration, network throughput and iOS browser behavior.
+
+### iPhone usage
+
+1. Open the updated Zipverra PWA. If the PWA is still showing `v3.0.1`, use Settings → Check for updates and activate the new version when safe.
+2. Select the repository under Repos (the app may navigate to Upload automatically).
+3. Tap **Tải ZIP** on the Download Source ZIP card. The file downloads from the Zipverra domain rather than opening codeload in a new tab.
+4. Open Safari Downloads or iPhone **Files → Downloads** to find the `.zip` file named after the latest commit message on `main`.
+
+### Deployment
+
+1. Extract **`Zipverra-v3.0.2/`** and push the **contents**, not the ZIP itself, to the root of the current GitHub repository on `main`.
+2. Keep the same Vercel GitHub App env variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
+3. Confirm Vercel build and manually test a private repository, iPhone Safari/PWA download and the actual filename. The current environment cannot perform authenticated real-device E2E.
+4. See [SOURCE_ZIP_DOWNLOAD_V302.md](./SOURCE_ZIP_DOWNLOAD_V302.md) and [RELEASE_VALIDATION.md](./RELEASE_VALIDATION.md).
+
+---
+
 # Zipverra Pro v3.0.1 — Source ZIP Download
 
 > Upgraded directly from **Zipverra Pro v3.0.0 Stable Release**. This maintenance release adds an authenticated, browser-native **download of the selected repository's `main` branch as ZIP**. The ZIP Push flow, Pull Requests, History, Quick Edit, Security Scan, and Safe Rollback are unchanged.

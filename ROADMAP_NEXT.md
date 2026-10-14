@@ -1,8 +1,8 @@
-# Zipverra Pro — Roadmap after v3.0.1 Source ZIP Download
+# Zipverra Pro — Roadmap after v3.0.2 Source ZIP Download iPhone Fix
 
-**Current baseline:** v3.0.1 — Source ZIP Download (stable maintenance release).
+**Current baseline:** v3.0.2 — Source ZIP Download iPhone Fix (maintenance hotfix; iPhone E2E still needs verification after deployment).
 
-The v3.0.1 update adds an authorized main-branch ZIP download while preserving GitHub App authorization, mobile Push workflow, Pull Requests, History, and Safe Rollback.
+The v3.0.2 hotfix fixes iPhone main-branch ZIP download and commit-title filenames while preserving GitHub App authorization, mobile Push workflow, Pull Requests, History, and Safe Rollback.
 
 ## Next recommended versions
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.2 — Source ZIP Download iPhone Fix (2026-10-14)
+
+- Fixed iOS PWA download redirect that could open a blank `codeload.github.com` screen without a saved ZIP.
+- Replaced client-visible `302` redirect with authenticated same-origin streaming of the ZIP attachment.
+- ZIP filename now uses the title of the actual last commit on `main`; invalid filename characters are sanitized.
+- Pinned archive to the exact HEAD commit SHA used for naming to avoid concurrent-commit mismatch.
+- Added ZIP signature validation and 512 MiB streamed-size guard.
+- Preserved all GitHub write APIs and existing Push, PR, Security Scan, History and Rollback safeguards.
+- Expanded regression tests for private archive streaming, upload-independent download, custom filename, invalid HTML and authorization failure.
+- Production Vercel build and iPhone E2E remain pending deployment validation.
+
+
 ## v3.0.1 — Source ZIP Download (2026-10-14)
 
 - Added a native one-tap **Download Source ZIP** action in Repositories and Upload for the selected GitHub repository.

@@ -1,9 +1,9 @@
 'use client';
 
 /**
- * Native browser download: keep the iOS user gesture attached to a real link.
- * Our same-origin endpoint checks the GitHub App session and redirects to
- * GitHub's short-lived ZIP archive URL. Never fetch the archive into JS memory.
+ * Native same-origin download with Content-Disposition attachment.
+ * The server streams GitHub bytes directly and chooses the filename from the
+ * main HEAD commit subject. No codeload tab or ZIP in the browser JS heap.
  */
 export default function SourceZipDownload({ owner, repo, selected, online, busy, compact = false }) {
   if (!selected || !owner || !repo) return null;
@@ -19,11 +19,11 @@ export default function SourceZipDownload({ owner, repo, selected, online, busy,
       </span>
     </div>
     {available ? <a className="source-zip-download-action" href={url}
-      target="_blank" rel="noopener noreferrer" aria-label={`Tải ZIP branch main của ${owner}/${repo}`}>
-      Tải ZIP <span aria-hidden="true">↗</span>
+      download aria-label={`Tải ZIP branch main của ${owner}/${repo}`}>
+      Tải ZIP <span aria-hidden="true">↓</span>
     </a> : <span className="source-zip-download-action is-disabled" role="status" aria-disabled="true">
       {busy ? 'Đang xử lý' : 'Đang offline'}
     </span>}
-    {!compact && <p className="source-zip-download-note">Luôn tải source mới nhất của <b>main</b> (không bao gồm lịch sử Git). Trên iPhone, ZIP được tải qua trình duyệt và có thể lưu trong Files.</p>}
+    {!compact && <p className="source-zip-download-note">Luôn tải source mới nhất của <b>main</b> (không bao gồm lịch sử Git). Tên ZIP lấy từ commit mới nhất trên main. Trên iPhone, mở Downloads trong Safari hoặc ứng dụng Files để xem file đã tải.</p>}
   </section>;
 }

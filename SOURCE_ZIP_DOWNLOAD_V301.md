@@ -1,4 +1,6 @@
-# Zipverra Pro v3.0.1 — Source ZIP Download
+# Zipverra Pro v3.0.1 — Source ZIP Download (historical)
+
+> **Superseded by v3.0.2.** The client-visible codeload redirect described below caused blank Safari/PWA download screens in some environments. Read `SOURCE_ZIP_DOWNLOAD_V302.md` for the corrected same-origin ZIP streaming implementation.
 
 ## Goal
 

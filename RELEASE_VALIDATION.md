@@ -1,39 +1,37 @@
-# Zipverra Pro v3.0.1 — Release Validation
+# Zipverra Pro v3.0.2 — Release Validation
 
-**Source baseline:** user-supplied Zipverra Pro v3.0.0 full source.
+**Source baseline:** the user-supplied `Zipverra-main.zip`, containing Zipverra Pro v3.0.1.
 
-## Local verification for v3.0.1
+## Local verification for v3.0.2
 
-- `node --test tests/*.test.js`: **233/233 passed**, including 11 tests covering source ZIP download authorization, archive redirects and error handling.
-- Static checks: 106 JS/JSX/MJS modules parsed, 190 relative imports resolved, 8 CSS files parsed.
-- The 23 pre-existing GitHub API route files were compared byte-for-byte to v3.0.0; **all unchanged**, with one new read-only download route added.
-- Chromium static mobile layout test: **not verified**, browser timed out in this packaging environment.
-- New Activity tab positioning tests verify post-render scheduling, iPhone zero-scroll, second Safari animation frame, desktop Activity anchor and cleanup.
-- New API tests verify normal JSON, declared/streamed oversized JSON, malformed JSON and controlled HTTP 413/400.
-- New checks cover next.config security headers and the error/404 views.
-- **Production build: NOT VERIFIED.** `npm install --no-audit --no-fund` encountered DNS `EAI_AGAIN` against npm registry.
-- **Authenticated GitHub E2E / real iPhone PWA: NOT VERIFIED.** Test on disposable repo and real device before any production-safe claim.
+- `node --test tests/*.test.js`: **235/235 passed**, including **13 Source ZIP Download tests** for a simulated private GitHub App session, signed archive retrieval, streaming download, commit-derived filename and safe errors.
+- Static checks: **106 JS/JSX/MJS modules parsed**, **176 relative imports resolved**, **8 CSS files parsed**.
+- **24 existing GitHub API routes** compared with the user-provided archive: only `app/api/github/source-zip/route.js` changed; Push, PR, Quick Edit, History and Rollback routes remain unchanged.
+- ZIP download is now a **same-origin streaming Response with attachment headers**. Temporary GitHub codeload links are resolved server-side; browser receives neither signed codeload URL nor GitHub App token.
+- Archive content and ZIP filename refer to the same immutable main HEAD commit SHA, avoiding ambiguity from branch updates.
+- **Production build NOT VERIFIED:** `npm install` failed with `EAI_AGAIN` against npm registry in this environment.
+- **Authenticated live GitHub E2E / iPhone PWA NOT VERIFIED:** test on a disposable repo and a real device after deployment.
 
-## Download ZIP acceptance checklist
+## Source ZIP download acceptance checklist
 
-1. Repos: download appears after selecting a repo; Upload: download remains visible after the auto-switch.
-2. Clicking Download requests `/api/github/source-zip?owner=...&repo=...` as a browser navigation, without a token in the query.
-3. Selected Push branch can differ; archive still uses `main` exclusively.
-4. Verify a private repo using the current GitHub App session, then a repo without permission (403), a repo with no `main` (404), and a logged-out session (401).
-5. Open the link on a real iPhone PWA and save ZIP using browser Downloads / Files.
-6. Confirm no archive bytes pass through a Vercel Function and `no-store` response headers are present.
+1. Select an authorized repository; tap **Tải ZIP** in Repos or Upload.
+2. On real Safari/iPhone PWA, ensure no blank `codeload.github.com` page is opened and the download is served from Zipverra’s domain.
+3. ZIP filename should match the sanitized latest `main` commit **subject** with `.zip` extension; content should represent the same commit SHA.
+4. Open ZIP from Safari Downloads / iOS Files and verify source contents.
+5. Test private repositories with Contents access, revoked installation (403), missing main (404), logged out (401), and GitHub failure responses.
+6. Inspect response headers: `Content-Type: application/zip`, `Content-Disposition: attachment; filename=...`, `Cache-Control: no-store`, without a client redirect.
+7. Verify download works when another branch is selected for Push; it must still use `main`.
 
-## Deployment and acceptance checklist
+## Deployment and QA gate
 
-1. Extract `Zipverra-v3.0.1` contents into the root of the GitHub repository; do not commit the ZIP itself.
-2. Keep the five existing GitHub App Vercel env vars unchanged. No new variables.
-3. Run `npm install`, `npm test`, `npm run build` in a networked environment. Inspect Vercel and GitHub Actions build logs.
-4. Open the installed iPhone PWA, scroll to bottom of a long ZIP Review and Push. Activity must open at **page top** with Live Push status visible before Recent Actions.
-5. Switch away and back to Activity, verify it returns to top. Check Reduced Motion and iOS Safari standalone behavior.
-6. Check Push/PR/Quick Edit/History/Rollback safely on disposable repo; verify no automatic retry of uncertain mutations.
-7. Validate /api/version v3.0.1 and public PWA update; no private responses or tokens appear in Cache Storage.
+1. Push contents of `Zipverra-v3.0.2/` into the root of the existing GitHub repository branch `main`; do not commit the ZIP itself.
+2. Keep existing Vercel GitHub App env vars; no new variables.
+3. Run `npm install`, `npm test`, and `npm run build` in a networked environment; check Vercel Build Logs.
+4. Confirm `v3.0.2` in header, Settings, footer, `/api/version` and PWA updates; no ZIP or tokens cached by the Service Worker.
+5. Recheck Repos, ZIP Push, Direct Push, PR, Quick Edit, History, Rollback and Activity auto-scroll on disposable repo and real iPhone.
+6. Note that downloads above the **512 MiB compressed ZIP** limit are rejected, and large downloads may still hit host duration and mobile browser constraints.
 
-Detailed implementation and safety notes: [SOURCE_ZIP_DOWNLOAD_V301.md](./SOURCE_ZIP_DOWNLOAD_V301.md) and [STABLE_RELEASE_V300.md](./STABLE_RELEASE_V300.md).
+Details: [SOURCE_ZIP_DOWNLOAD_V302.md](./SOURCE_ZIP_DOWNLOAD_V302.md) and [STABLE_RELEASE_V300.md](./STABLE_RELEASE_V300.md).
 
 ---
 
@@ -85,3 +83,13 @@ Baseline: user-supplied Zipverra Pro v2.5.0 full-source ZIP. Full source ZIP, no
 8. Confirm no draft persists after refresh, proper warning when leaving with unsaved Quick Edit content, and no update/reload while editor is dirty.
 9. Re-test dark/light, 320/375/390/430 mobile widths, safe areas, iPhone keyboard and VoiceOver.
 10. Confirm `v2.6.0` in header, Settings, footer and `/api/version`.
+## v3.0.2 iPhone download regression checklist
+
+- [ ] Tap **Tải ZIP** on a selected private GitHub App repository from installed iPhone PWA.
+- [ ] No blank `codeload.github.com` page appears. ZIP is delivered as an attachment from the Zipverra domain.
+- [ ] Download filename matches the latest `main` HEAD commit subject (safe characters, `.zip` extension).
+- [ ] ZIP can be opened in Files and contains the tracked repository source.
+- [ ] GitHub App grant revoked → safe error, no archive bytes streamed.
+- [ ] Missing `main` → safe 404, no redirect to another branch.
+- [ ] Confirm old Push, PR, Security Scan, History and Rollback still work.
+- [ ] Confirm Next.js production build on Vercel; local build could be blocked by npm registry access.

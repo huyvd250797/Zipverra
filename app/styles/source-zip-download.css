@@ -1,4 +1,4 @@
-/* Zipverra Pro v3.0.1 — native GitHub ZIP download (no ZIP data inside JS). */
+/* Zipverra Pro v3.0.2 — native GitHub ZIP download (no ZIP data inside JS). */
 .source-zip-download {display:flex;flex-wrap:wrap;align-items:center;gap:10px 13px;padding:13px 14px;margin:12px 0 15px;border:1px solid var(--pro-border-strong);border-radius:14px;background:var(--pro-surface-2);min-width:0;}
 .source-zip-download-detail {display:flex;align-items:center;gap:10px;flex:1 1 180px;min-width:0;}
 .source-zip-download-symbol {width:37px;height:37px;border-radius:11px;display:grid;place-items:center;background:var(--pro-accent-surface);color:var(--pro-accent);font-size:21px;font-weight:800;flex-shrink:0;}
