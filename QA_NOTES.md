@@ -1,3 +1,7 @@
+# Zipverra Pro v2.6.0 — PWA Reliability QA
+
+New release tests: **200/200 Node tests passed**; TypeScript parser checked **94 JS/JSX/MJS** and **159 relative imports**; PostCSS parsed **5 stylesheets**. Chromium checked the static update/recovery fixture at 320/375/390/430/768/1280 px without horizontal overflow. **npm registry DNS `EAI_AGAIN` prevents `next build` locally**. Real iPhone and GitHub E2E QA is still required. See `PWA_RELIABILITY_V260.md` and `RELEASE_VALIDATION.md`. Previous Workspace UX tests and constraints remain relevant.
+
 # Zipverra Pro v2.5.0 — Workspace UX QA
 
 - New Workspace presentation does not bypass GitHub App permissions, signed previews or content SHA/HEAD validation.

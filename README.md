@@ -1,11 +1,24 @@
-# Zipverra Pro v2.5.0 — Workspace UX & Navigation
+# Zipverra Pro v2.6.0 — PWA Optimization & Reliability
 
 **Next.js 16 · React 19 · GitHub App · Mobile-first PWA · Vercel-targeted**  
 **Tagline:** Push to GitHub. From Your Phone.
 
-> **Source baseline:** Zipverra Pro v2.4.0 (user-provided full source). This is a focused **mobile Workspace UX and Navigation** release; no new GitHub mutation endpoints or Vercel Deployment Tracking.
+> **Source baseline:** Zipverra Pro v2.5.0 (user-provided full source). This release improves **PWA lifecycle, startup, safe update, offline fallback and recovery visibility**. GitHub mutation endpoints, ZIP/PR/Quick Edit/Rollback semantics and GitHub App authentication remain unchanged.
 
-## What's new in v2.5.0 — Workspace UX & Navigation
+## What's new in v2.6.0 — PWA Optimization & Reliability
+
+- **Safe PWA updates:** version-check API (`/api/version`, public and `no-store`) and service-worker update detection. Shows a manual **Cập nhật** action, disabled during active operations, unsaved Workspace edits or unresolved Push/PR/Rollback. No forced refresh during a GitHub mutation.
+- **Strict offline cache scope:** `public/sw.js` caches only the public `offline.html` page and app icon assets. It explicitly does **not** cache authenticated GitHub API calls, auth/session responses, Next.js RSC payloads, HTML containing private workspace data, ZIP, code, or tokens. Offline navigation shows a generic non-authenticated fallback, not stale private data.
+- **Foreground/resume session checks:** when iPhone returns to the app, checks version/connectivity; the existing GitHub session is revalidated when idle and at most about once per minute. A changed/expired session resets account-specific UI state rather than exposing another user's data. Transient connectivity failure is not silently treated as sign-out.
+- **Recovery Center in Activity:** read-only verification shortcut for pending GitHub Push; user-initiated **Kiểm tra / Tạo PR** action where PR outcome is ambiguous; History shortcut for Safe Rollback verification. Only operations belonging to repositories currently authorized to the user are shown. Never automatically retry a commit or rollback.
+- **Faster perceived startup:** splash minimum reduced from 650ms to 180ms, and maximum from 5.5s to 1.8s; the real UI/skeleton can appear while session status remains unresolved. This is a UI wait-time change, not a measured LCP improvement.
+- **No extra environment variables, databases or dependencies.** Existing GitHub App flow, five tabs, ZIP Web Worker, Security Scan, PR and Safe Rollback preserved.
+
+**Important limitation:** ZIP/Quick Edit drafts are intentionally *not* persisted across browser/PWA restarts; iOS may discard in-memory state and sessionStorage. Recovery is only as complete as the GitHub read-only verification journal still available. You may need to reselect the ZIP and verify GitHub manually. Updates are not background jobs, and the PWA cannot guarantee continued upload while iPhone suspends or closes it.
+
+See [PWA_RELIABILITY_V260.md](./PWA_RELIABILITY_V260.md) for implementation details, security boundaries and iPhone QA cases.
+
+## Previously added in v2.5.0 — Workspace UX & Navigation
 
 - **Repository Explorer:** compact, horizontally scrollable breadcrumbs; directories listed before files; per-session pinned folder shortcuts and improved back/refresh/search controls.
 - **Four file modes inside Repos:** Code (read-only line-numbered viewer), Edit (mobile-friendly indentation/reset toolbar), Review (separate diff and explicit save confirmation), History (file-specific commits with GitHub links). The global navigation remains five tabs.
@@ -42,7 +55,7 @@ See [WORKFLOW_UX.md](./WORKFLOW_UX.md) for flow details, QA and safety invariant
 
 ## Deployment
 
-- Push the **contents of `Zipverra-v2.5.0/`** to the **repository root** on `main`, not the containing folder or ZIP itself.
+- Push the **contents of `Zipverra-v2.6.0/`** to the **repository root** on `main`, not the containing folder or ZIP itself.
 - Preserve these five Vercel Production environment variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
 - No additional database, API token, GitHub permission or package dependency is needed.
 - In CI: `npm install`, `npm test`, `npm run build`. Test Direct Push and PR on a disposable repository before production use.
@@ -73,7 +86,7 @@ Zipverra Pro extends the existing five tabs, **Repos · Upload · Activity · Hi
 The following Production environment variables are still required: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`. **No additional Vercel environment variables, database or external tokens are required.**
 
 - GitHub App **Contents: Read and write**, **Metadata: Read-only**; **Pull requests: Read and write** to use PR workflows; **Workflows: Read and write** if ZIP modifies GitHub Actions.
-- Upload the **contents of `Zipverra-v2.5.0/`** into the repository root; do not upload the ZIP as a source file. Import the GitHub repository on Vercel, or let the existing Vercel project deploy the new commit.
+- Upload the **contents of `Zipverra-v2.6.0/`** into the repository root; do not upload the ZIP as a source file. Import the GitHub repository on Vercel, or let the existing Vercel project deploy the new commit.
 - Run `npm install`, `npm test` and `npm run build` in CI. Production build and live GitHub operations must be verified before critical use.
 - On iPhone use Safari → Share → Add to Home Screen. Continue to respect iOS safe areas and accessibility zoom controls.
 

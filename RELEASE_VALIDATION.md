@@ -1,18 +1,23 @@
-# Zipverra Pro v2.5.0 — Release Validation
+# Zipverra Pro v2.6.0 — Release Validation
 
-- Baseline: user-provided Zipverra Pro v2.4.0 ZIP. Full source, not patch-only.
-- Automated Node tests: **186/186 passed** (177 inherited + 9 Workspace UX tests).
-- Static code checks: **87 JS/JSX/MJS files**, **156 relative imports** and **4 CSS files** (TypeScript JS/JSX parser and PostCSS; zero syntax or missing-path errors).
-- `npm install` was attempted and failed with `EAI_AGAIN` resolving registry.npmjs.org/jszip. **`next build` is not verified here.**
-- No real authenticated GitHub Quick Edit, PR, ZIP Push or Rollback E2E run. No production Vercel build or real iPhone Safari responsive QA performed in this environment.
-- No new environment variables, database, paid service or GitHub backend routes.
+Baseline: user-supplied Zipverra Pro v2.5.0 full-source ZIP. Full source ZIP, not a patch.
 
-## Production release gate (mandatory)
+## Automated checks
 
-1. On CI or Vercel with access to npm: `npm install && npm test && npm run build`. Do not claim deployment success from syntax tests alone.
-2. On iPhone 320/375/390/430 and iPad/desktop: test Workspace breadcrumb, file tree, search, Code/Edit/Review/History tabs, keyboard, dark/light and safe-area navigation.
-3. Type without committing, switch main tab (confirm then return: draft retained); switch repo/branch or profile (cancel vs confirm); leave file/Workspace (cancel vs confirm). Confirm no accidental data loss.
-4. Quick Edit a harmless UTF-8 file in a **disposable** repo. Preview, confirm, commit; verify GitHub SHA and path changed once. Force HEAD to change during preview/save; confirm refusal and recovery without duplicate commits.
-5. Test branch/PR list toggle, Draft PR merge-disabled, MERGE confirmation; verify History filtering only applies to loaded commits. Verify Security Scan and Rollback regression.
-6. Test ZIP upload workflow end-to-end (repo → ZIP → review/security → confirm → Activity) and pending-journal recovery; no automatic Push/PR Merge.
-7. Verify version `v2.5.0` in header, Settings and footer; hard-refresh the PWA and check new stylesheet is loaded.
+- Unit tests: **200/200 passed** (186 inherited + 14 v2.6 PWA/reliability tests); includes Service Worker runtime cache boundaries, safe update, recovery authorization, and inherited GitHub safety regressions.
+- Static code checks: **94 JS/JSX/MJS files**, **159 relative imports** and **5 CSS files** parsed / resolved with zero errors (before packaging).
+- `npm install` failed with `EAI_AGAIN` due npm registry DNS resolution in this environment. **Next.js production `npm run build` is not verified** until run in a networked CI/Vercel build environment.
+- Chromium static PWA banner/Recovery Center fixture checked at 320, 375, 390, 430, 768, 1280 px without horizontal overflow. This was a **static fixture only**, not the Next.js production app. No live GitHub App authenticated E2E or real iPhone Safari/PWA lifecycle test was run.
+
+## Release gate — must pass before calling production verified
+
+1. Push **contents** of `Zipverra-v2.6.0/` into the root of GitHub repository; keep existing Vercel GitHub App env variables.
+2. Run `npm ci` or `npm install`, `npm test`, and `npm run build` on networked CI/Vercel. Check build logs, dynamic `/api/version`, `/sw.js` and `/offline.html` GET all return expected responses.
+3. On iPhone Safari and home-screen PWA, test cold/warm starts, foreground/background return, switching apps and re-login after session expiry. Use actual iOS hardware for certification.
+4. Install v2.6.0 over older PWA: prompt appears, never force reloads while Push/PR/Rollback uncertain or Workspace has unsaved edits; manual update works when safe.
+5. Inspect browser service-worker Cache Storage: public `/offline.html` and icons only. No `/api/`, GitHub data, RSC, authenticated HTML, tokens, ZIP/code content.
+6. Offline tests: with already-open app, correct visible warning; reload/navigation offline shows generic fallback; no automatic GitHub mutation. Reconnect and manually verify ambiguous operation.
+7. Run a disposable-repo ZIP Push and PR; interrupt network after mutation response and verify from Activity without duplicate commits. Test Rollback interruption separately in History.
+8. Confirm no draft persists after refresh, proper warning when leaving with unsaved Quick Edit content, and no update/reload while editor is dirty.
+9. Re-test dark/light, 320/375/390/430 mobile widths, safe areas, iPhone keyboard and VoiceOver.
+10. Confirm `v2.6.0` in header, Settings, footer and `/api/version`.

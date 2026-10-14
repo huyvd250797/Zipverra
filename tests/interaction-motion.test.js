@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs';
 import { createInteractionNotice, shouldAnnounceEvent } from '../lib/interaction-feedback.js';
 const read = path => readFileSync(new URL(`../${path}`, import.meta.url),'utf8');
 
-test('v2.5.0 has separate optional motion layer loaded last',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'2.5.0');
+test('v2.6.0 has separate optional motion layer loaded last',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'2.6.0');
   const layout=read('app/layout.jsx');
   assert.ok(layout.indexOf('pro-design-system.css') < layout.indexOf('pro-motion.css'));
   for(const css of ['--motion-quick','--motion-enter','--motion-steady','--motion-curve','pro-toast-region','pro-skeleton','pro-enter','pro-toast-enter','prefers-reduced-motion:reduce'])

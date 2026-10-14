@@ -13,7 +13,11 @@ function readRecovery() {
   } catch { return null; }
 }
 function storeRecovery(value) {
-  try { if (value) sessionStorage.setItem(PENDING_ROLLBACK_KEY, JSON.stringify(value)); else sessionStorage.removeItem(PENDING_ROLLBACK_KEY); }
+  try {
+    if (value) sessionStorage.setItem(PENDING_ROLLBACK_KEY, JSON.stringify(value));
+    else sessionStorage.removeItem(PENDING_ROLLBACK_KEY);
+    window.dispatchEvent(new Event('zipverra:recovery-changed'));
+  }
   catch { /* Private mode may restrict storage. No credentials are stored. */ }
 }
 function dateLabel(value) {

@@ -11,8 +11,8 @@ export default function SplashScreen({ loading }) {
   const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
-    const minimum = window.setTimeout(() => setMinimumElapsed(true), 650);
-    const failsafe = window.setTimeout(() => setTimedOut(true), 5500);
+    const minimum = window.setTimeout(() => setMinimumElapsed(true), 180);
+    const failsafe = window.setTimeout(() => setTimedOut(true), 1800);
     return () => {
       window.clearTimeout(minimum);
       window.clearTimeout(failsafe);

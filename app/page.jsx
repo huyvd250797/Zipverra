@@ -16,6 +16,8 @@ import { MOBILE_TABS, RECENTS_KEY, THEME_KEY, filterChanges, updateRecentReposit
 import { FAVORITES_KEY, analyzeSource, selectChanges, toggleExcluded, filterReview, sortedRepositories, updateFavorites, isTextPreviewable, decodePreview, makeLineDiff, transferEstimate } from '../lib/smart-push.js';
 import SplashScreen from './components/SplashScreen.jsx';
 import { FeedbackToast, LoadingSkeleton } from './components/InteractionFeedback.jsx';
+import { usePwaReliability, PwaStatusBanner } from './components/PwaReliability.jsx';
+import RecoveryCenter from './components/RecoveryCenter.jsx';
 import { createInteractionNotice, shouldAnnounceEvent } from '../lib/interaction-feedback.js';
 import { shouldWarnWorkspaceExit } from '../lib/workspace-ux.js';
 import { WorkflowStrip, CurrentRepository, StatusIndicator, UXViewIntro, StatusEmpty } from './components/ProfessionalUI.jsx';
@@ -137,7 +139,8 @@ export default function Home() {
   const dismissNotice = useCallback((id) => setNotice(current => current?.id === id ? null : current), []);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const workspaceDirtyRef = useRef(false);
-  const onWorkspaceDirtyChange = useCallback(value => { workspaceDirtyRef.current = Boolean(value); }, []);
+  const [workspaceDirty, setWorkspaceDirty] = useState(false);
+  const onWorkspaceDirtyChange = useCallback(value => { workspaceDirtyRef.current = Boolean(value); setWorkspaceDirty(Boolean(value)); }, []);
   function canLeaveWorkspace(target = '', identityChanged = false) {
     return !shouldWarnWorkspaceExit({workspaceOpen, dirty:workspaceDirtyRef.current, target, current:activeTab, identityChanged}) ||
       window.confirm(identityChanged
@@ -193,6 +196,8 @@ export default function Home() {
   const analyzingRef = useRef(false);
   const archiveProgressAtRef = useRef(0);
   const uploadProgressAtRef = useRef(0);
+  const lastSessionRefresh = useRef(0);
+  const pwa = usePwaReliability({ busy: busy || auth.loading, dirty: workspaceDirty || (Boolean(file || preview) && phase !== PUSH_STAGES.SUCCEEDED), pending: Boolean(pendingCommit || pendingPR) });
 
   useEffect(() => {
     try {
@@ -346,6 +351,44 @@ export default function Home() {
     return () => { active = false; };
   }, []);
 
+  // iOS may suspend Safari/PWA for hours. Revalidate the session on a foreground
+  // return, but never interrupt a GitHub mutation or unsaved Workspace draft.
+  useEffect(() => {
+    if (!pwa.resumeTick || !auth.authenticated || busy || workspaceDirty || !navigator.onLine) return;
+    if (Date.now() - lastSessionRefresh.current < 60000) return;
+    lastSessionRefresh.current = Date.now();
+    let cancelled = false;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 8000);
+    fetch('/api/auth/session', { cache:'no-store', signal:controller.signal })
+      .then(async response => { if (!response.ok) throw Error('session unreachable'); return response.json(); })
+      .then(data => {
+        if (cancelled) return;
+        const currentLogin = auth.user?.login?.toLowerCase();
+        if (!data.authenticated || data.user?.login?.toLowerCase() !== currentLogin) {
+          setAuth({ loading:false, authenticated:false, user:null });
+          setRepos([]);setInstallations([]);setOwner('');setRepo('');setFile(null);setPreview(null);setResult(null);setTransfer(null);
+          setWorkspaceOpen(false);workspaceDirtyRef.current=false;setWorkspaceDirty(false);
+          setStatus('Phiên GitHub đã thay đổi. Hãy đăng nhập lại trước khi thao tác tiếp.');
+          setError('Phiên đăng nhập đã hết hạn hoặc tài khoản đã thay đổi. Vui lòng đăng nhập lại.');
+        }
+      })
+      // Transient network failure must not be treated as sign-out.
+      .catch(() => {}).finally(() => window.clearTimeout(timeout));
+    return () => { cancelled=true;controller.abort();window.clearTimeout(timeout); };
+  }, [pwa.resumeTick, auth.authenticated, auth.user?.login, busy, workspaceDirty]);
+
+  // beforeunload is best-effort on iOS; server-side verification journals remain authoritative.
+  useEffect(() => {
+    const onLeave = event => {
+      if (!busy && !workspaceDirty) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', onLeave);
+    return () => window.removeEventListener('beforeunload', onLeave);
+  }, [busy, workspaceDirty]);
+
   useEffect(() => {
     if (!auth.authenticated) return;
     let active = true;
@@ -375,7 +418,7 @@ export default function Home() {
       clearUploadCheckpoint();
       setPendingCommit(null); clearPending(); setPhase(PUSH_STAGES.IDLE);
       setPendingPR(null); clearPendingPR(); setReleaseStrategy('direct');
-      try { sessionStorage.removeItem('zipverra.rollback.pending.v1'); } catch { /* no-op */ }
+      try { sessionStorage.removeItem('zipverra.rollback.pending.v1'); window.dispatchEvent(new Event('zipverra:recovery-changed')); } catch { /* no-op */ }
     } catch (e) { setError(e.message); }
     finally { setBusy(false); }
   }
@@ -393,6 +436,8 @@ export default function Home() {
   const displayedRepos = useMemo(() => sortedRepositories(repos, favorites, recents).filter((item) => item.full_name.toLowerCase().includes(repoSearch.trim().toLowerCase()) || item.full_name === `${owner}/${repo}`), [repos, favorites, recents, repoSearch, owner, repo]);
   const authorizedRecents = useMemo(() => recents.filter((name) => repos.some((item) => item.full_name === name)), [recents, repos]);
   const chosenRepo = Boolean(owner.trim() && repo.trim() && repos.some((item) => item.full_name.toLowerCase() === `${owner}/${repo}`.toLowerCase()));
+  const visibleRecoveryPush = auth.authenticated && repos.some(r => r.full_name?.toLowerCase() === `${pendingCommit?.owner}/${pendingCommit?.repo}`.toLowerCase());
+  const visibleRecoveryPR = auth.authenticated && repos.some(r => r.full_name?.toLowerCase() === `${pendingPR?.owner}/${pendingPR?.repo}`.toLowerCase());
   const flowStep = deriveWorkflowStep({ phase, chosenRepo, hasFile: Boolean(file), hasPreview: Boolean(preview) });
   const reset = () => {
     setPreview(null);
@@ -740,9 +785,10 @@ export default function Home() {
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar" role="banner">
       <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span><em> Pro</em></strong><small>MOBILE GIT WORKSPACE</small></div></div>
-      <div className="header-actions"><StatusIndicator online={online} authenticated={auth.authenticated} loading={auth.loading}/><span className="version"><span className="live-dot"/> v2.5.0</span></div>
+      <div className="header-actions"><StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/><span className="version"><span className="live-dot"/> v2.6.0</span></div>
     </header>
-    <UXViewIntro activeTab={activeTab} key={activeTab} online={online} pending={Boolean(pendingCommit || pendingPR)}/>
+    <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)}/>
+    <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
     {activeTab !== 'activity' && (error || busy) && <button type="button" className={`mobile-global-status ${error ? 'has-error' : ''}`} onClick={() => goToTab('activity')}><span>{error ? `Cần kiểm tra: ${error}` : `${status || 'Đang xử lý...'} · ${progress}%`}</span><Icon name="arrow" size={17}/></button>}
     <main data-active-view={activeTab}>
       {activeTab === 'repositories' && <section className="hero" aria-label="Zipverra workflow">
@@ -837,14 +883,14 @@ export default function Home() {
               {selectedChanges.length > 0 && !securityReport?.blocked && <><label className="confirm-row"><input type="checkbox" checked={confirmed} disabled={busy} onChange={(e) => setConfirmed(e.target.checked)}/><span>Tôi đã kiểm tra thay đổi và đồng ý {releaseStrategy==='pr' ? 'push lên branch riêng rồi tạo Pull Request' : 'push trực tiếp'} với đích <b>{preview.input.branch}</b>.</span></label><button className="button primary full push-button" disabled={busy || !selectedChanges.length || !!securityReport?.blocked || !confirmed || (mode === 'sync' && stats.delete > 0 && !syncConfirmed) || !auth.authenticated || !online || Boolean(pendingCommit) || Boolean(pendingPR)} onClick={push}><Icon name="upload" size={18}/> {busy ? 'Đang xử lý...' : releaseStrategy==='pr' ? `Push & Create PR (${selectedChanges.length} file)` : `Commit & Push (${selectedChanges.length} file)`}</button></>}
             </>}
           </article>
-          <article ref={activityRef} className="panel activity-panel" data-mobile-view="activity"><div className="activity-title"><div><span className="pro-overline">LIVE OPERATIONS</span><h2>Activity · Tiến trình Push</h2></div><span className={`activity-dot ${busy ? 'pulse' : ''}`} aria-label={busy ? 'Đang thực hiện thao tác' : 'Không có thao tác đang chạy'}/></div>
+          <article ref={activityRef} className="panel activity-panel" data-mobile-view="activity"><RecoveryCenter push={pendingCommit} pr={pendingPR} online={online && pwa.reachable} busy={busy} authenticated={auth.authenticated} authorizedRepos={repos} onVerifyPush={() => verifyPending()} onCheckPR={retryPendingPR} onOpenHistory={() => goToTab('history')}/><div className="activity-title"><div><span className="pro-overline">LIVE OPERATIONS</span><h2>Activity · Tiến trình Push</h2></div><span className={`activity-dot ${busy ? 'pulse' : ''}`} aria-label={busy ? 'Đang thực hiện thao tác' : 'Không có thao tác đang chạy'}/></div>
             <div className={`push-timeline ${hasPrFlow ? 'with-pr' : ''}`} aria-label="Tiến trình push và tạo PR">{timeline.map((step, index) => <div key={step.id} className={`timeline-step timeline-${step.state}`}><span className="timeline-icon">{step.state === 'complete' ? <Icon name="check" size={14}/> : index + 1}</span><div><strong>{({validate:'Validate',upload:'Upload',commit:'Commit',verify:'Verify',pr:'Open PR'})[step.id]}</strong><small>{({complete:'Hoàn tất',active:'Đang xử lý',uncertain:'Chưa xác minh',failed:'Cần kiểm tra',waiting:'Chờ xử lý'})[step.state]}</small></div></div>)}</div>
             {phase === PUSH_STAGES.SUCCEEDED && !pendingCommit && !pendingPR && <div className="workflow-complete"><div><strong>Đã xác minh trên GitHub</strong><small>Bạn có thể bắt đầu bản ZIP tiếp theo mà không cần chọn lại repository.</small></div><button type="button" className="button primary" onClick={startNextVersion} disabled={busy}>Push bản tiếp theo <Icon name="arrow" size={16}/></button></div>}
             <div className="progress-track" role="progressbar" aria-label="Tiến độ xử lý" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><div className="progress-fill" style={{ width: `${progress}%` }}/></div><p className="status-text" role="status">{status || 'Sẵn sàng nhận file ZIP.'}</p>
             {transfer && <div className="transfer-card"><div className="transfer-card-head"><strong>Upload Git blobs</strong><span>{transfer.completed}/{transfer.total} file</span></div><div className="transfer-meter"><span style={{width:`${Math.round(transfer.completed/Math.max(1,transfer.total)*100)}%`}}/></div><div className="transfer-stats"><span>{prettyBytes(transfer.completedBytes)} / {prettyBytes(transfer.totalBytes)}</span><span>{transfer.speedBytesPerSec > 0 ? `${prettyBytes(transfer.speedBytesPerSec)}/s` : 'Đang chuẩn bị…'}</span><span>{transfer.etaSeconds !== null && transfer.etaSeconds < 3600 ? `ETA ~${transfer.etaSeconds}s` : 'ETA chưa xác định'}</span></div><small>Batch {transfer.batch}/{transfer.totalBatches} · Đã dùng lại {transfer.reused} blob · Ước tính có thể dao động theo mạng</small></div>}
-            <div className="push-status-line"><span className={`network-chip ${online ? 'online' : 'offline'}`}>{online ? '● Online' : '● Offline'}</span><span className="stage-chip">{phase.replaceAll('_', ' ')}</span></div>
-            {pendingCommit && <div className="recovery-banner" role="status"><strong>Cần xác minh lần push trước</strong><p>{pendingCommit.owner}/{pendingCommit.repo} · {pendingCommit.branch} · {pendingCommit.message}</p><button type="button" className="button secondary full" disabled={busy || !online || !auth.authenticated} onClick={() => verifyPending()}><Icon name="refresh" size={16}/> {busy && phase === PUSH_STAGES.VERIFYING ? 'Đang xác minh...' : 'Xác minh push trên GitHub'}</button><small>Chỉ kiểm tra trạng thái, không tạo commit mới.</small></div>}
-            {pendingPR && <div className="branch-pending" role="status"><strong>Branch đã push · PR chưa xác nhận</strong><p>{pendingPR.owner}/{pendingPR.repo} · {pendingPR.sourceBranch} → {pendingPR.baseBranch}<br/>Commit {pendingPR.expectedSourceHead.slice(0,12)}</p><button type="button" className="button secondary" onClick={retryPendingPR} disabled={busy || !online || !auth.authenticated}>Kiểm tra / Tạo PR</button><small>Không upload ZIP hoặc tạo commit mới. Server kiểm tra PR đã tồn tại trước khi tạo.</small></div>}
+            <div className="push-status-line"><span className={`network-chip ${online && pwa.reachable ? 'online' : 'offline'}`}>{online && pwa.reachable ? '● Online' : '● Offline'}</span><span className="stage-chip">{phase.replaceAll('_', ' ')}</span></div>
+            {pendingCommit && visibleRecoveryPush && <details className="pwa-recovery-advanced"><summary>Chi tiết Push chưa xác minh</summary><div className="recovery-banner" role="status"><strong>Cần xác minh lần push trước</strong><p>{pendingCommit.owner}/{pendingCommit.repo} · {pendingCommit.branch} · {pendingCommit.message}</p><button type="button" className="button secondary full" disabled={busy || !online || !auth.authenticated} onClick={() => verifyPending()}><Icon name="refresh" size={16}/> {busy && phase === PUSH_STAGES.VERIFYING ? 'Đang xác minh...' : 'Xác minh push trên GitHub'}</button><small>Chỉ kiểm tra trạng thái, không tạo commit mới.</small></div></details>}
+            {pendingPR && visibleRecoveryPR && <details className="pwa-recovery-advanced"><summary>Chi tiết Pull Request chưa xác minh</summary><div className="branch-pending" role="status"><strong>Branch đã push · PR chưa xác nhận</strong><p>{pendingPR.owner}/{pendingPR.repo} · {pendingPR.sourceBranch} → {pendingPR.baseBranch}<br/>Commit {pendingPR.expectedSourceHead.slice(0,12)}</p><button type="button" className="button secondary" onClick={retryPendingPR} disabled={busy || !online || !auth.authenticated}>Kiểm tra / Tạo PR</button><small>Không upload ZIP hoặc tạo commit mới. Server kiểm tra PR đã tồn tại trước khi tạo.</small></div></details>}
             {error && <div className="error-banner" role="alert">{error}{errorHint && <p className="error-hint">{errorHint}</p>}</div>}
             {result && <div className="success-banner"><div className="success-title"><Icon name="check" size={17}/>{result.pr ? ` Pull Request #${result.pr.number} đã mở` : result.branchOnly ? ' Branch đã push thành công' : ' Push thành công!'}</div><p>Đã cập nhật {result.changed ?? 'các'} file. Commit: <code>{result.sha?.slice(0,12)}</code></p>{result.sourceBranch && <p>Branch: <b>{result.sourceBranch}</b></p>}{result.url && <a href={result.url} target="_blank" rel="noopener noreferrer">Xem commit <Icon name="external" size={15}/></a>}{result.pr?.url && <> · <a className="branch-pr-link" href={result.pr.url} target="_blank" rel="noopener noreferrer">Mở Pull Request #{result.pr.number} ↗</a><p>PR chưa được merge vào {result.pr.baseBranch}. Hãy kiểm tra diff, CI rồi Merge trong Repos hoặc GitHub.</p></>}</div>}
           </article>
@@ -864,7 +910,9 @@ export default function Home() {
             <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
               profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
               onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
-            <div className="settings-info"><span>Phiên bản</span><strong>v2.5.0</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v2.6.0</strong></div>
+            <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
+            <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
             <div className="settings-info"><span>Commit message</span><strong>Tên file ZIP</strong></div>
             <p className="hint">Push Profiles, Dashboard cache và Local Activity lưu riêng theo tài khoản GitHub trên thiết bị. Không đồng bộ giữa thiết bị và không chạy task ngầm khi đóng PWA.</p>
@@ -873,7 +921,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v2.5.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v2.6.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <nav className="mobile-bottom-nav" aria-label="Điều hướng Zipverra">{[{id:'repositories',label:'Repos',icon:'branch'},{id:'home',label:'Upload',icon:'upload'},{id:'activity',label:'Activity',icon:'activity'},{id:'history',label:'History',icon:'history'},{id:'settings',label:'Settings',icon:'settings'}].map((tab) => <button type="button" key={tab.id} className={`mobile-nav-item ${activeTab === tab.id ? 'active' : ''}`} aria-current={activeTab === tab.id ? 'page' : undefined} onClick={() => goToTab(tab.id)}><span className="mobile-nav-icon"><Icon name={tab.icon} size={21}/></span><span>{tab.label}</span>{tab.id === 'activity' && (pendingCommit || pendingPR) && <i className="nav-alert" aria-label="Có push cần xác minh"/>}</button>)}</nav>
   </>;

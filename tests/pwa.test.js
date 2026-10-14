@@ -38,8 +38,8 @@ test('splash displays on first HTML paint and has a network failsafe', () => {
   const splash = source('app/components/SplashScreen.jsx');
   assert.match(page, /<SplashScreen loading=\{auth\.loading\}/);
   assert.match(splash, /<div className=\{`app-splash/);
-  assert.match(splash, /setMinimumElapsed\(true\), 650/);
-  assert.match(splash, /setTimedOut\(true\), 5500/);
+  assert.match(splash, /setMinimumElapsed\(true\), 180/);
+  assert.match(splash, /setTimedOut\(true\), 1800/);
   assert.match(splash, /Push to GitHub from Mobile/);
 });
 

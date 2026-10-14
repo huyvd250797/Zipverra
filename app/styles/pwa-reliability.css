@@ -1,0 +1,33 @@
+/* Zipverra Pro v2.6 — offline, updates and recovery with accessible mobile tap targets. */
+.pro-shell .pwa-lifecycle-banner {display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;margin:0 0 15px;border:1px solid var(--pro-border-strong);border-radius:15px;background:var(--pro-surface-2);color:var(--pro-text);min-width:0;}
+.pro-shell .pwa-lifecycle-banner--offline {border-color:color-mix(in srgb,var(--pro-warning) 65%,var(--pro-border));}
+.pro-shell .pwa-lifecycle-banner--update {border-color:var(--pro-accent);background:var(--pro-accent-surface);}
+.pro-shell .pwa-lifecycle-banner>div {flex:1;min-width:0;}
+.pro-shell .pwa-lifecycle-banner strong {display:block;font-size:13px;line-height:1.45;}
+.pro-shell .pwa-lifecycle-banner p {margin:4px 0 0;color:var(--pro-muted);font-size:11px;line-height:1.6;}
+.pro-shell .pwa-lifecycle-banner .button {flex:none;min-height:44px;padding:8px 14px;}
+.pro-shell .pwa-recovery-center {display:grid;gap:13px;border:1px solid var(--pro-border-strong);background:var(--pro-surface-2);padding:15px;border-radius:16px;margin-bottom:20px;}
+.pro-shell .pwa-recovery-heading {display:grid;gap:4px;}
+.pro-shell .pwa-recovery-heading>span {font-size:10px;letter-spacing:1.3px;font-weight:800;color:var(--pro-accent);}
+.pro-shell .pwa-recovery-heading h3 {margin:0;font-size:16px;line-height:1.35;color:var(--pro-text);}
+.pro-shell .pwa-recovery-heading p,.pro-shell .pwa-recovery-footnote {margin:0;color:var(--pro-muted);font-size:11px;line-height:1.55;}
+.pro-shell .pwa-recovery-list {display:grid;gap:8px;}
+.pro-shell .pwa-recovery-item {display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0;padding:12px;border:1px solid var(--pro-border);background:var(--pro-surface);border-radius:12px;}
+.pro-shell .pwa-recovery-item>div {display:grid;gap:5px;min-width:0;}
+.pro-shell .pwa-recovery-item strong {font-size:12px;color:var(--pro-text);}
+.pro-shell .pwa-recovery-item small {display:block;font-size:10px;overflow-wrap:anywhere;color:var(--pro-muted);line-height:1.5;}
+.pro-shell .pwa-recovery-item .button {flex-shrink:0;min-height:42px;font-size:11px;padding:8px 11px;}
+.pro-shell .pwa-recovery-advanced {margin-top:10px;border:1px solid var(--pro-border);padding:10px 12px;border-radius:12px;background:var(--pro-surface-2);}
+.pro-shell .pwa-recovery-advanced>summary {font-size:11px;font-weight:700;cursor:pointer;color:var(--pro-accent);min-height:30px;line-height:30px;}
+.pro-shell .pwa-recovery-advanced .recovery-banner,.pro-shell .pwa-recovery-advanced .branch-pending {margin:8px 0 0;}
+@media(max-width:500px) {
+  .pro-shell .pwa-lifecycle-banner {padding:12px;align-items:flex-start;}
+  .pro-shell .pwa-lifecycle-banner .button {font-size:11px;padding:8px 10px;}
+  .pro-shell .pwa-recovery-center {padding:13px;}
+  .pro-shell .pwa-recovery-item {flex-wrap:wrap;}
+  .pro-shell .pwa-recovery-item>div {flex:1 1 160px;}
+  .pro-shell .pwa-recovery-item .button {flex:1 1 110px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .pro-shell .pwa-lifecycle-banner,.pro-shell .pwa-recovery-center {animation:none;transition:none;}
+}

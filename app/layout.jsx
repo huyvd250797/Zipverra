@@ -2,6 +2,7 @@ import './globals.css';
 import './styles/pro-design-system.css';
 import './styles/pro-motion.css';
 import './styles/workspace-ux.css';
+import './styles/pwa-reliability.css';
 
 export const metadata = {
   title: 'Zipverra Pro — GitHub Workspace',

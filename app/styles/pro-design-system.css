@@ -168,7 +168,7 @@ body { background: var(--pro-bg); color: var(--pro-text); }
 .pro-stepper {display:grid;gap:12px;margin-bottom:18px;}
 .pro-stepper-nav.pro-workflow {position:relative;display:block;margin:0;}
 .pro-stepper-rail {position:absolute;left:11px;right:11px;top:18px;height:3px;border-radius:999px;background:color-mix(in srgb,var(--pro-border) 84%, transparent);overflow:hidden;}
-.pro-stepper-rail span {display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--pro-accent-soft),var(--pro-accent));box-shadow:0 0 18px #38ba9948;transition:width var(--pro-normal) var(--pro-ease);}
+.pro-stepper-rail span {display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--pro-accent-surface),var(--pro-accent));box-shadow:0 0 18px #38ba9948;transition:width var(--pro-normal) var(--pro-ease);}
 .pro-stepper-list {display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;list-style:none;padding:0;margin:0;position:relative;z-index:1;}
 .pro-stepper-item {min-width:0;}
 .pro-workflow .pro-workflow-step {position:relative;display:grid;justify-items:center;align-content:start;gap:8px;width:100%;padding:0;border:0;background:transparent;color:var(--pro-muted);font:inherit;cursor:pointer;min-width:0;}

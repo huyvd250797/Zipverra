@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.6.0 — PWA Optimization & Reliability (2026-10-14)
+
+- Introduced an opt-in service worker with public offline shell/icons only; GitHub/auth/API/private HTML/source are never cached by the service worker.
+- Added no-store `/api/version` for update and network reachability checks, and a manual update prompt that is locked during mutation, unsaved editing and unresolved recovery journals.
+- Added lifecycle handling for foreground/background return and session revalidation without force reload or automatic GitHub writes.
+- Added Recovery Center for user-initiated Push verification, PR check/create and History-based Rollback verification, authorized-repo-only.
+- Reduced splash screen waiting and added responsive offline/update/recovery states.
+- Added regression tests for caching boundaries, version API, safety guards and offline behavior; no new GitHub mutation endpoint or environment variable.
+
 ## v2.5.0 — Workspace UX & Navigation (2026-10-14)
 
 - Reorganized Workspace into four explicit file views (Code / Edit / Review / History), with a line-numbered code viewer and mobile indentation toolbar.
