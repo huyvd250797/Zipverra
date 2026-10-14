@@ -1,4 +1,4 @@
-/* Zipverra Pro 2.1.0 — UI foundation.
+/* Zipverra Pro 2.2.0 — UI foundation.
    Loaded after legacy component CSS. All overrides are visual; no display toggles
    change the existing mobile view/data-mobile-view state machine. */
 :root {
@@ -165,14 +165,27 @@ body { background: var(--pro-bg); color: var(--pro-text); }
 .pro-selected-repo-info strong {font-size:15px;line-height:1.35;overflow-wrap:anywhere;color:var(--pro-text);}
 .pro-selected-repo-info small {display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--pro-muted);}
 .pro-selected-repo>.button {flex:none;min-height:45px;}
-.pro-workflow.workflow-strip {gap:8px;margin-bottom:18px;}
-.pro-workflow .pro-workflow-step {position:relative;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--pro-border);background:var(--pro-surface);color:var(--pro-muted);border-radius:12px;padding:10px 5px;min-height:46px;font:inherit;font-size:11px;font-weight:750;cursor:pointer;transition:background var(--pro-fast),border-color var(--pro-fast);min-width:0;}
-.pro-workflow .pro-workflow-step.current {border-color:var(--pro-accent);background:var(--pro-accent-surface);color:var(--pro-accent);}
-.pro-workflow .pro-workflow-step.done {border-color:var(--pro-border-strong);background:var(--pro-surface-2);color:var(--pro-text);}
-.pro-workflow .pro-workflow-count {display:grid;place-items:center;flex:none;width:22px;height:22px;border-radius:7px;background:var(--pro-surface-2);color:var(--pro-muted);font-size:10px;font-weight:850;}
-.pro-workflow .current .pro-workflow-count {background:var(--pro-accent);color:var(--pro-accent-ink);}
-.pro-workflow .done .pro-workflow-count {color:var(--pro-accent);background:var(--pro-accent-surface);}
-.pro-step-short {display:none;}
+.pro-stepper {display:grid;gap:12px;margin-bottom:18px;}
+.pro-stepper-nav.pro-workflow {position:relative;display:block;margin:0;}
+.pro-stepper-rail {position:absolute;left:11px;right:11px;top:18px;height:3px;border-radius:999px;background:color-mix(in srgb,var(--pro-border) 84%, transparent);overflow:hidden;}
+.pro-stepper-rail span {display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--pro-accent-soft),var(--pro-accent));box-shadow:0 0 18px #38ba9948;transition:width var(--pro-normal) var(--pro-ease);}
+.pro-stepper-list {display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;list-style:none;padding:0;margin:0;position:relative;z-index:1;}
+.pro-stepper-item {min-width:0;}
+.pro-workflow .pro-workflow-step {position:relative;display:grid;justify-items:center;align-content:start;gap:8px;width:100%;padding:0;border:0;background:transparent;color:var(--pro-muted);font:inherit;cursor:pointer;min-width:0;}
+.pro-workflow .pro-workflow-count {display:grid;place-items:center;width:38px;height:38px;border-radius:999px;border:1px solid var(--pro-border);background:var(--pro-surface);color:var(--pro-muted);font-size:12px;font-weight:850;box-shadow:0 8px 22px rgba(4,13,22,.16);transition:transform var(--pro-fast),background var(--pro-fast),border-color var(--pro-fast),color var(--pro-fast),box-shadow var(--pro-fast);}
+.pro-workflow .pro-workflow-label {display:grid;justify-items:center;gap:2px;min-width:0;text-align:center;}
+.pro-workflow .pro-step-index {font-size:9px;letter-spacing:1.1px;color:var(--pro-subtle);font-weight:800;}
+.pro-workflow .pro-step-full {font-size:11px;line-height:1.2;color:var(--pro-text);font-weight:770;}
+.pro-workflow .pro-step-short {display:none;}
+.pro-workflow .upcoming .pro-step-full {color:var(--pro-muted);}
+.pro-workflow .done .pro-workflow-count {background:var(--pro-accent);border-color:var(--pro-accent);color:var(--pro-accent-ink);}
+.pro-workflow .current .pro-workflow-count {background:var(--pro-accent-surface);border-color:var(--pro-accent);color:var(--pro-accent);transform:translateY(-2px) scale(1.05);box-shadow:0 0 0 5px #38ba9924,0 14px 30px rgba(4,13,22,.22);}
+.pro-workflow .current .pro-step-full,.pro-workflow .current .pro-step-index {color:var(--pro-accent);}
+.pro-workflow .pro-workflow-step:hover .pro-workflow-count {transform:translateY(-1px);}
+.pro-stepper-summary {display:grid;gap:4px;padding:14px 16px;border-radius:16px;border:1px solid var(--pro-border);background:linear-gradient(180deg,color-mix(in srgb,var(--pro-surface-2) 86%,transparent),color-mix(in srgb,var(--pro-surface) 96%,transparent));box-shadow:0 10px 30px rgba(4,13,22,.10);}
+.pro-stepper-kicker {font-size:10px;font-weight:850;letter-spacing:1.25px;text-transform:uppercase;color:var(--pro-accent);}
+.pro-stepper-summary strong {font-size:15px;line-height:1.25;color:var(--pro-text);}
+.pro-stepper-summary p {margin:0;font-size:12px;line-height:1.5;color:var(--pro-muted);}
 .pro-repository-symbol {display:grid;place-items:center;flex:none;width:39px;height:39px;border-radius:11px;background:var(--pro-accent-surface);color:var(--pro-accent);font-size:23px;}
 .pro-branch-dot {width:7px;height:7px;border:1.5px solid var(--pro-accent);border-radius:50%;display:inline-block;}
 .pro-view-intro .pro-view-copy {min-width:0;}
@@ -208,10 +221,17 @@ body { background: var(--pro-bg); color: var(--pro-text); }
   .pro-shell .mobile-quick-card .button {font-size:10.5px;min-height:42px;padding:8px 10px;}
   .pro-shell .mobile-quick-card .mobile-quick-label {color:var(--pro-accent);}
   .pro-shell .mobile-quick-card small {color:var(--pro-muted);}
-  .pro-workflow.workflow-strip {gap:5px;margin:2px 0 15px;}
-  .pro-workflow .pro-workflow-step {min-height:43px;padding:8px 2px;flex-direction:column;gap:3px;font-size:9px;}
-  .pro-workflow .pro-workflow-count {width:20px;height:20px;font-size:10px;}
-  .pro-step-full {display:none;}.pro-step-short {display:inline;}
+  .pro-stepper {gap:10px;margin-bottom:16px;}
+  .pro-stepper-rail {left:10px;right:10px;top:15px;height:2px;}
+  .pro-stepper-list {gap:6px;}
+  .pro-workflow .pro-workflow-step {gap:6px;}
+  .pro-workflow .pro-workflow-count {width:32px;height:32px;font-size:11px;}
+  .pro-workflow .pro-step-index {display:none;}
+  .pro-workflow .pro-step-full {display:none;}
+  .pro-workflow .pro-step-short {display:inline;font-size:10px;line-height:1.15;color:inherit;font-weight:760;}
+  .pro-stepper-summary {padding:12px 13px;border-radius:14px;}
+  .pro-stepper-summary strong {font-size:14px;}
+  .pro-stepper-summary p {font-size:11px;}
   .pro-selected-repo {flex-wrap:wrap;padding:13px;gap:10px;}
   .pro-selected-repo-info {flex:1 1 145px;}
   .pro-selected-repo>.button {min-height:42px;padding:9px 11px;}
@@ -234,7 +254,10 @@ body { background: var(--pro-bg); color: var(--pro-text); }
   .pro-view-intro h2 {font-size:22px;}
   .pro-shell .mobile-quick-card strong {font-size:11.5px;}
   .pro-shell .mobile-quick-card .button {font-size:10px;}
-  .pro-workflow .pro-workflow-step {font-size:8px;}
+  .pro-stepper-list {gap:4px;}
+  .pro-workflow .pro-workflow-count {width:29px;height:29px;font-size:10px;}
+  .pro-workflow .pro-step-short {font-size:9px;}
+  .pro-stepper-summary strong {font-size:13px;}
   .pro-selected-repo>.button {flex:1 0 100%;}
 }
 @media(prefers-reduced-motion:reduce){

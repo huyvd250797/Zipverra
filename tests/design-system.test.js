@@ -8,10 +8,10 @@ const read=(name)=>readFileSync(join(root,name),'utf8');
 const page=read('app/page.jsx'), ui=read('app/components/ProfessionalUI.jsx');
 const theme=read('app/styles/pro-design-system.css');
 
-test('v2.1.0 metadata and new design stylesheet are connected to RootLayout',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'2.1.0');
+test('v2.2.0 metadata and performance UI stylesheet are connected to RootLayout',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'2.2.0');
   assert.match(read('app/layout.jsx'), /import '\.\/styles\/pro-design-system\.css'/);
-  assert.match(page,/v2\.1\.0/);
+  assert.match(page,/v2\.2\.0/);
 });
 test('UI design tokens share colors, space, radius and motion defaults',()=>{
   for(const token of ['--pro-bg','--pro-surface','--pro-border','--pro-text','--pro-muted','--pro-accent','--pro-focus','--pro-radius-lg','--pro-space-4','--pro-ease'])
@@ -26,10 +26,13 @@ test('UX chrome preserves five tabs and screen-state visibility',()=>{
   assert.match(page,/aria-current=\{activeTab === tab\.id/);
   assert.match(page,/<UXViewIntro activeTab=\{activeTab\}/);
 });
-test('workflow is accessible and uses actual progress stages',()=>{
+test('workflow stepper is accessible and uses progress rail + active-step summary',()=>{
   assert.match(page,/<WorkflowStrip currentStep=\{flowStep\}/);
-  assert.match(ui,/aria-current=\{index === currentStep \? 'step'/);
-  assert.match(ui,/aria-label=\{`Bước \$\{index\+1\}/);
+  assert.match(ui,/className="pro-stepper"/);
+  assert.match(ui,/className="pro-stepper-rail"/);
+  assert.match(ui,/role="status" aria-live="polite"/);
+  assert.match(ui,/aria-current=\{index === activeIndex \? 'step'/);
+  assert.match(ui,/aria-label=\{`Bước \$\{index \+ 1\}/);
   assert.match(page,/role="progressbar" aria-label="Tiến độ xử lý"/);
 });
 test('UI changes preserve repository-first selection, review and Activity redirect',()=>{

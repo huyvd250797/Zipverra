@@ -659,7 +659,7 @@ export default function Home() {
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar" role="banner">
       <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span><em> Pro</em></strong><small>MOBILE GIT WORKSPACE</small></div></div>
-      <div className="header-actions"><StatusIndicator online={online} authenticated={auth.authenticated} loading={auth.loading}/><span className="version"><span className="live-dot"/> v2.1.0</span></div>
+      <div className="header-actions"><StatusIndicator online={online} authenticated={auth.authenticated} loading={auth.loading}/><span className="version"><span className="live-dot"/> v2.2.0</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} online={online} pending={Boolean(pendingCommit || pendingPR)}/>
     {activeTab !== 'activity' && (error || busy) && <button type="button" className={`mobile-global-status ${error ? 'has-error' : ''}`} onClick={() => goToTab('activity')}><span>{error ? `Cần kiểm tra: ${error}` : `${status || 'Đang xử lý...'} · ${progress}%`}</span><Icon name="arrow" size={17}/></button>}
@@ -779,7 +779,7 @@ export default function Home() {
             <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
               profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
               onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
-            <div className="settings-info"><span>Phiên bản</span><strong>v2.1.0</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v2.2.0</strong></div>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
             <div className="settings-info"><span>Commit message</span><strong>Tên file ZIP</strong></div>
             <p className="hint">Push Profiles, Dashboard cache và Local Activity lưu riêng theo tài khoản GitHub trên thiết bị. Không đồng bộ giữa thiết bị và không chạy task ngầm khi đóng PWA.</p>
@@ -788,7 +788,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v2.1.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v2.2.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <nav className="mobile-bottom-nav" aria-label="Điều hướng Zipverra">{[{id:'repositories',label:'Repos',icon:'branch'},{id:'home',label:'Upload',icon:'upload'},{id:'activity',label:'Activity',icon:'activity'},{id:'history',label:'History',icon:'history'},{id:'settings',label:'Settings',icon:'settings'}].map((tab) => <button type="button" key={tab.id} className={`mobile-nav-item ${activeTab === tab.id ? 'active' : ''}`} aria-current={activeTab === tab.id ? 'page' : undefined} onClick={() => goToTab(tab.id)}><span className="mobile-nav-icon"><Icon name={tab.icon} size={21}/></span><span>{tab.label}</span>{tab.id === 'activity' && (pendingCommit || pendingPR) && <i className="nav-alert" aria-label="Có push cần xác minh"/>}</button>)}</nav>
   </>;

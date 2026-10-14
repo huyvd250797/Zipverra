@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v2.1.0: professional mobile design system, refined GitHub ZIP push UX, accessibility and safe source workspace",
+  "description": "Zipverra Pro v2.2.0: performance engine, fast startup polish and refined workflow stepper for mobile Git push",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

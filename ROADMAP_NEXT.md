@@ -1,8 +1,8 @@
-# Zipverra Pro — UX/UI & Performance Roadmap after v2.1.0
+# Zipverra Pro — UX/UI & Performance Roadmap after v2.2.0
 
-**Current baseline:** Zipverra Pro v2.1.0 — Professional UI Design System, upgraded directly from v2.0.0.
+**Current baseline:** Zipverra Pro v2.2.0 — Performance Engine & Fast Startup, upgraded directly from v2.1.0.
 
-## v2.2.0 — Performance Engine & Fast Startup (next)
+## v2.3.0 — Smart Workflow UX 4.0 (next)
 
 - Extract large `app/page.jsx` presentation fragments into memoized, well-scoped view components while preserving a single safe source of truth for GitHub mutations and recovery.
 - Profile cold/warm startup and minimize splash delays; avoid blocking UI waiting for GitHub API. Introduce skeleton and stale-but-labeled non-sensitive cached metadata where authorized.

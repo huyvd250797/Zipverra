@@ -27,22 +27,45 @@ export function StatusIndicator({ online, authenticated, loading }) {
 
 export function WorkflowStrip({ currentStep = 0, onRepo, onUpload, onActivity }) {
   const steps = [
-    { label: 'Repository', compact: 'Repo' },
-    { label: 'Upload ZIP', compact: 'ZIP' },
-    { label: 'Analyze', compact: 'Review' },
-    { label: 'Confirm', compact: 'Confirm' },
-    { label: 'Activity', compact: 'Push' },
+    { label: 'Repository', compact: 'Repo', description: 'Chọn nơi nhận source.' },
+    { label: 'Upload ZIP', compact: 'Upload', description: 'Tải file ZIP từ điện thoại.' },
+    { label: 'Analyze', compact: 'Analyze', description: 'Giải nén, so sánh và quét bảo mật.' },
+    { label: 'Confirm', compact: 'Confirm', description: 'Kiểm tra thay đổi trước khi gửi.' },
+    { label: 'Activity', compact: 'Push', description: 'Theo dõi Push và xác minh kết quả.' },
   ];
-  return <nav className="workflow-strip pro-workflow" aria-label="Quy trình cập nhật source">
-    {steps.map((step,index) => <button type="button" key={step.label}
-      className={`pro-workflow-step ${index < currentStep ? 'done' : index === currentStep ? 'current' : ''}`}
-      aria-current={index === currentStep ? 'step' : undefined}
-      aria-label={`Bước ${index+1}: ${step.label}`}
-      onClick={index === 0 ? onRepo : index === 4 ? onActivity : onUpload}>
-      <span className="pro-workflow-count">{index < currentStep ? '✓' : String(index+1).padStart(2,'0')}</span>
-      <span className="pro-workflow-label"><span className="pro-step-full">{step.label}</span><span className="pro-step-short">{step.compact}</span></span>
-    </button>)}
-  </nav>;
+  const activeIndex = Math.min(Math.max(currentStep, 0), steps.length - 1);
+  const completion = Math.min(Math.max(currentStep, 0), steps.length) / steps.length;
+  const handlers = [onRepo, onUpload, onUpload, onUpload, onActivity];
+  const activeStep = steps[activeIndex];
+  return <section className="pro-stepper" aria-label="Quy trình cập nhật source">
+    <nav className="pro-stepper-nav pro-workflow" aria-label="Quy trình cập nhật source">
+      <div className="pro-stepper-rail" aria-hidden="true"><span style={{ width: `${Math.max(8, completion * 100)}%` }}/></div>
+      <ol className="pro-stepper-list">
+        {steps.map((step,index) => {
+          const state = index < currentStep ? 'done' : index === activeIndex ? 'current' : 'upcoming';
+          return <li key={step.label} className={`pro-stepper-item ${state}`}>
+            <button type="button"
+              className={`pro-workflow-step ${state}`}
+              aria-current={index === activeIndex ? 'step' : undefined}
+              aria-label={`Bước ${index + 1}: ${step.label}`}
+              onClick={handlers[index]}>
+              <span className="pro-workflow-count">{index < currentStep ? '✓' : index + 1}</span>
+              <span className="pro-workflow-label">
+                <span className="pro-step-index">{String(index + 1).padStart(2, '0')}</span>
+                <span className="pro-step-full">{step.label}</span>
+                <span className="pro-step-short">{step.compact}</span>
+              </span>
+            </button>
+          </li>;
+        })}
+      </ol>
+    </nav>
+    <div className="pro-stepper-summary" role="status" aria-live="polite">
+      <span className="pro-stepper-kicker">Step {activeIndex + 1} of {steps.length}</span>
+      <strong>{activeStep.label}</strong>
+      <p>{activeStep.description}</p>
+    </div>
+  </section>;
 }
 
 export function CurrentRepository({ owner, repo, branch, busy, onChoose }) {

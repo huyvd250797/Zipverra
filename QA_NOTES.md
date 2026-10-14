@@ -1,4 +1,4 @@
-# Zipverra Pro v2.1.0 — UI / UX release QA
+# Zipverra Pro v2.2.0 — Performance / Fast Startup QA
 
 Automated: **162/162 Node tests passed**; TypeScript parser checked **81 modules**; **147 relative imports** verified, styles parsed by PostCSS.
 Not verified: real Next production build (`EAI_AGAIN` npm registry); real GitHub E2E; Chromium responsive browser screenshot test timed out. Manual verification remains mandatory.

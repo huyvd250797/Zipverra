@@ -1,4 +1,4 @@
-# Zipverra Pro v2.1.0 — Professional UI Design System
+# Zipverra Pro v2.2.0 — Performance Engine & Fast Startup
 
 ## Source of truth
 
