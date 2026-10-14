@@ -1,19 +1,22 @@
-# Zipverra Pro v2.0.0 — Release Validation
+# Zipverra Pro v2.1.0 — Release Validation
 
-- Source baseline: v1.12.0 provided by the user.
-- Local regression and Pro suite: **154/154 tests passed**.
-- JS/JSX/MJS parser and relative import checks passed (separate commands).
-- Production Next.js build and GitHub E2E: not verified due to npm registry DNS outage; Vercel CI must pass before describing the deployment as production-validated.
-- New REST endpoint: `/api/github/dashboard` is authenticated, origin-checked, read-only, and bounded to five GitHub App authorized repositories.
-- Zero new environment variables, no new dependencies and no database added.
-- Repository selection, upload security, PR, History, Rollback and GitHub App auth remain in source.
+- Source baseline: user-provided Zipverra Pro v2.0.0 ZIP.
+- UI-specific code: `app/components/ProfessionalUI.jsx` + `app/styles/pro-design-system.css`; `app/page.jsx` and `app/layout.jsx` integrate the components. All other GitHub API/server routes and security algorithms are preserved.
+- Unit suite: **162/162 tests passed**, including eight v2.1.0 design-system tests.
+- Parser: **81 JS/JSX/MJS** source modules parsed with TypeScript and **147 relative import references** verified. CSS parsed with PostCSS; zero parser errors.
+- `npm install`: failed with `EAI_AGAIN` from npm registry (`jszip` download), so **Next.js production build NOT verified locally**. Vercel CI must pass before production release.
+- Chromium-based screenshot/responsive tests **not completed** in packaging environment (browser process timed out). Layouts remain to be verified on real browsers/devices; no claim of passing visual regression tests.
+- GitHub App live write operations, PR merge and Safe Rollback E2E **not executed** with a production repository.
+- No new environment variables, dependencies, endpoints, database or extra GitHub App permissions.
+- ZIP archive checksum and extraction checks listed in packaging report.
 
-## Test before publishing to production
+## Required release acceptance on Vercel & iPhone
 
-1. Install dependencies and run `npm test` and `npm run build` on Vercel or trusted CI.
-2. Smoke-test GitHub App login and Dashboard on a disposable public/private test repository.
-3. Exercise direct push, Pull Request branch, manual Merge and recovery flows.
-4. Test profile application, stale preview reset, account switching and local activity on iPhone.
-5. Confirm Android/iPhone safe areas, 320/375/390/430 px mobile layouts, and dark/light modes.
+1. `npm install` and `npm run build` succeed with the configured GitHub App env variables.
+2. Login, repo selection, Upload ZIP, Review/Security Scan, Direct Push, PR branch, Activity SHA Verify work in a disposable repo.
+3. Navigate all five tabs without losing selected ZIP, preview or recovery state. Switch light/dark; verify 320, 375, 390, 430, 768, 1280 px and iPhone safe areas.
+4. Quick Edit Save, PR Merge and History/Safe Rollback work under existing permissions.
+5. Test keyboard navigation/focus ring, VoiceOver labels and reduced motion.
+6. Confirm correct `v2.1.0` version in header, Settings and footer. Confirm refresh/rehydration of PWA does not show stale CSS.
 
-See `README.md`, `QA_NOTES.md` and `ROADMAP_NEXT.md` for full details.
+See `README.md`, `DESIGN_SYSTEM.md`, `QA_NOTES.md` and `ROADMAP_NEXT.md`.

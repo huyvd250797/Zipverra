@@ -1,3 +1,21 @@
+# Zipverra Pro v2.1.0 — UI / UX release QA
+
+Automated: **162/162 Node tests passed**; TypeScript parser checked **81 modules**; **147 relative imports** verified, styles parsed by PostCSS.
+Not verified: real Next production build (`EAI_AGAIN` npm registry); real GitHub E2E; Chromium responsive browser screenshot test timed out. Manual verification remains mandatory.
+
+- [ ] No horizontal scroll at 320/375/390/430/768/1280 px; no overlap with Dynamic Island/home indicator.
+- [ ] Repos first: select repo → shows selected card and Upload ZIP; unauthenticated state leads to login.
+- [ ] Upload shows repo/branch and five-step workflow; file picker works in standalone iOS Files app.
+- [ ] Review shows security findings, exclusion, Sync deletion confirm, diff and correctly disabled Push before confirmation.
+- [ ] Push jumps to Activity at the start; progressbar shows real current progress; ambiguous commits stay unconfirmed.
+- [ ] PR mode creates separate branch and PR; no automatic merge; branch protection respected.
+- [ ] History, Safe Rollback, Quick Edit and Push Profiles remain accessible without extra tab.
+- [ ] Dark and Light mode support high-contrast text; inputs don't cause Safari focus zoom.
+- [ ] Keyboard focus visible; reduced motion works; text labels remain readable at system text scaling.
+- [ ] No GitHub token, ZIP or source code newly persisted by the UI-only release.
+
+---
+
 # Zipverra Pro v2.0.0 — Release QA
 
 ## Automated validation

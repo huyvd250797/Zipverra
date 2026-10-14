@@ -1,4 +1,5 @@
 import './globals.css';
+import './styles/pro-design-system.css';
 
 export const metadata = {
   title: 'Zipverra Pro — GitHub Workspace',

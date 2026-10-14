@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v2.0.0: multi-repository dashboard, per-repo push profiles, local activity, protected GitHub ZIP push, branch and PR, history and rollback",
+  "description": "Zipverra Pro v2.1.0: professional mobile design system, refined GitHub ZIP push UX, accessibility and safe source workspace",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

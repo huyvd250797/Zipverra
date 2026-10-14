@@ -1,5 +1,15 @@
 # Zipverra Changelog
 
+## v2.1.0 — Professional UI Design System (2026-10-14)
+
+- Migrated app chrome to semantic, shared light/dark visual tokens with consistent spacing, typography, borders and interactions.
+- New presentational UI primitives: WorkflowStrip, CurrentRepository, StatusIndicator, UXViewIntro and StatusEmpty.
+- Refreshed repository selection, upload flow, review and activity visuals; clear actionable selected repository and status indicators.
+- Five-tab mobile navigation retained; keyboard focus rings, reduced motion and safe areas reinforced.
+- GitHub App authentication, Git blob upload, PR, Quick Edit, Security Scan, History and Safe Rollback not modified.
+- 162/162 unit tests passed; syntax and relative-import scans passed; Next build not verified due npm DNS.
+
+
 ## v2.0.0 — Zipverra Pro: Mobile Git Workspace (2026-10-14)
 
 - Pro Dashboard in Repos: quick multi-repo HEAD status with server-side GitHub App permission checks (up to five repos).
