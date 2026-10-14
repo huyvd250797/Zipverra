@@ -1,3 +1,16 @@
+# Zipverra Pro v2.5.0 — Workspace UX QA
+
+- New Workspace presentation does not bypass GitHub App permissions, signed previews or content SHA/HEAD validation.
+- `npm test`: 186/186 passed; syntax/import/CSS static checks passed. Real `next build` blocked by `EAI_AGAIN` npm DNS, real-device/browser and GitHub E2E not verified.
+- [ ] iPhone 320 / 375 / 390 / 430 px: explorer breadcrumb scrolls without horizontal page overflow, 44 px touch controls, bottom safe area clear.
+- [ ] Search and folder pins work in current Workspace session; no secrets/source bytes persisted to localStorage.
+- [ ] Edit a text file then switch to Code/History/Review: draft remains. Leaving Workspace asks for confirmation; tab change retains draft in memory after acknowledgement.
+- [ ] Repository/branch/profile change or logout asks before discarding unsaved text; Cancel must stop navigation/mutation.
+- [ ] Preview & Save require explicit checkbox; backend rejects stale HEAD/invalid proof and high-confidence secrets.
+- [ ] Branch Manager has PR and Branch switcher; no automatic merge; History local search does not alter server history.
+
+---
+
 # Zipverra Pro v2.4.0 — Smart Workflow UX 4.0 QA
 
 Automated: **162/162 Node tests passed**; TypeScript parser checked **81 modules**; **147 relative imports** verified, styles parsed by PostCSS.

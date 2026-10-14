@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 export default function BranchPrPanel({ owner, repo, branch, online, busy, api, onSelectBranch, onMerge }) {
   const [opened, setOpened] = useState(false);
+  const [section, setSection] = useState('prs');
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
@@ -38,18 +39,19 @@ export default function BranchPrPanel({ owner, repo, branch, online, busy, api, 
     </button>
     {opened && <div className="branch-pr-content">
       <p className="branch-pr-note">Branch riêng và PR giúp review trước khi Merge vào <b>main</b>. ZIP Push thông thường vẫn trực tiếp lên branch đã chọn.</p>
+      <div className="branch-pr-tabs" role="group" aria-label="Chọn nội dung quản lý GitHub"><button type="button" className={section==='prs'?'active':''} aria-pressed={section==='prs'} onClick={()=>setSection('prs')}>Pull Requests{data?` · ${data.prs.length}`:''}</button><button type="button" className={section==='branches'?'active':''} aria-pressed={section==='branches'} onClick={()=>setSection('branches')}>Branches{data?` · ${data.branches.length}`:''}</button></div>
       <button type="button" className="button secondary full" onClick={load} disabled={!online || busy || loading || mergeBusy}>{loading ? 'Đang tải...' : 'Refresh branches & PRs'}</button>
       {error && <div className="branch-pr-error" role="alert">{error}</div>}
       {notice && <div className="branch-pr-success" role="status">{notice}</div>}
       {data && <>
-        <h3>Branches <small>({data.branches.length}{data.branches.length===60 ? '+' : ''})</small></h3>
-        <div className="branch-pr-list" role="list">{data.branches.map(item => <div key={item.name} className="branch-pr-item" role="listitem"><div><strong>{item.name}</strong><small>{item.sha?.slice(0,8)} {item.protected ? '· Protected' : ''}</small></div><button type="button" className="branch-pr-mini" disabled={busy || mergeBusy || item.name===branch} onClick={()=>{onSelectBranch(item.name);setOpened(false);}}>Dùng branch</button></div>)}</div>
-        <h3>Open Pull Requests <small>({data.prs.length}{data.prs.length===50 ? '+' : ''})</small></h3>
+        {section==='branches'&&<><h3>Branches <small>({data.branches.length}{data.branches.length===60 ? '+' : ''})</small></h3>
+        <div className="branch-pr-list" role="list">{data.branches.map(item => <div key={item.name} className="branch-pr-item" role="listitem"><div><strong>{item.name}</strong><small>{item.sha?.slice(0,8)} {item.protected ? '· Protected' : ''}</small></div><button type="button" className="branch-pr-mini" disabled={busy || mergeBusy || item.name===branch} onClick={()=>{onSelectBranch(item.name);setOpened(false);}}>Dùng branch</button></div>)}</div></>}
+        {section==='prs'&&<><h3>Open Pull Requests <small>({data.prs.length}{data.prs.length===50 ? '+' : ''})</small></h3>
         {data.prs.length ? <div className="branch-pr-list" role="list">{data.prs.map(item => <div className="branch-pr-pr" role="listitem" key={item.number}>
           <strong>#{item.number} · {item.title}</strong>
           <small>{item.sourceBranch} → {item.baseBranch} · {item.head?.slice(0,8)}{item.draft ? ' · Draft' : ''}</small>
           <div className="branch-pr-actions"><a href={item.url} target="_blank" rel="noopener noreferrer" className="branch-pr-mini">Mở PR ↗</a><button type="button" className="branch-pr-mini" disabled={busy || mergeBusy || item.draft} onClick={()=>{setMergeCandidate(item);setMergeConfirm('');setError('');}}>Merge…</button></div>
-        </div>)}</div> : <p className="branch-pr-note">Không có PR đang mở.</p>}
+        </div>)}</div> : <p className="branch-pr-note">Không có PR đang mở.</p>}</>}
       </>}
       {mergeCandidate && <div className="branch-pr-merge">
         <h3>Xác nhận merge PR #{mergeCandidate.number}</h3>

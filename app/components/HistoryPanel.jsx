@@ -35,6 +35,7 @@ function Counts({ value }) {
 
 export default function HistoryPanel({ authenticated, owner, repo, branch, online, busy, setBusy, pendingPush, api, requestOnce, onRollback }) {
   const [items, setItems] = useState([]);
+  const [historyFilter, setHistoryFilter] = useState('');
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -54,7 +55,7 @@ export default function HistoryPanel({ authenticated, owner, repo, branch, onlin
 
   useEffect(() => { setRecovery(readRecovery()); }, []);
   useEffect(() => {
-    setItems([]); setPage(0); setHasMore(false); setSelected(''); setCompareBase('');
+    setItems([]); setHistoryFilter(''); setPage(0); setHasMore(false); setSelected(''); setCompareBase('');
     setCompareHead(''); setComparison(null); setPreview(null); setChecked(false); setPhrase(''); setError(''); setNotice('');
   }, [owner, repo, branch, authenticated]);
 
@@ -137,11 +138,13 @@ export default function HistoryPanel({ authenticated, owner, repo, branch, onlin
       <div className="history-actions"><button type="button" className="button secondary" disabled={!canRead || isWorking} onClick={() => load(1)}>↻ Refresh History</button>
         {hasMore && <button type="button" className="button ghost" disabled={!canRead || isWorking} onClick={() => load(page + 1)}>Tải thêm</button>}</div>
       {items.length === 0 && !loading && <div className="history-empty">Nhấn Refresh History để tải lịch sử commit của branch.</div>}
-      <div className="history-list" role="list" aria-label="Lịch sử commits">{items.map((item, index) => <div role="listitem" className={`history-commit ${selected === item.sha ? 'selected' : ''}`} key={item.sha}>
+      {items.length>0&&<div className="history-filter"><label htmlFor="history-filter">Lọc commit đã tải</label><input id="history-filter" type="search" value={historyFilter} onChange={e=>setHistoryFilter(e.target.value)} placeholder="Tìm message, tác giả hoặc SHA"/></div>}
+      <div className="history-list" role="list" aria-label="Lịch sử commits">{items.filter(item => !historyFilter.trim() || [item.message,item.author,item.sha].some(part=>String(part||'').toLocaleLowerCase().includes(historyFilter.trim().toLocaleLowerCase()))).map((item, index) => <div role="listitem" className={`history-commit ${selected === item.sha ? 'selected' : ''}`} key={item.sha}>
         <button type="button" className="history-commit-select" disabled={isWorking} onClick={() => { setSelected(item.sha); setCompareBase(item.sha); setPreview(null); setComparison(null); setChecked(false); setPhrase(''); }}>
           <span className="history-commit-title">{item.message || 'Commit không có tiêu đề'}</span><span className="history-commit-meta"><code>{item.sha.slice(0, 12)}</code> · {item.author} · {dateLabel(item.date)} {page === 1 && index === 0 ? '· Latest' : ''}</span>
         </button><a target="_blank" rel="noopener noreferrer" href={item.url || `https://github.com/${owner}/${repo}/commit/${item.sha}`} aria-label="Mở commit trên GitHub">↗</a>
       </div>)}</div>
+      {items.length > 0 && !items.some(item => [item.message,item.author,item.sha].some(part=>String(part||'').toLocaleLowerCase().includes(historyFilter.trim().toLocaleLowerCase()))) && <p className="history-empty">Không tìm thấy commit trong danh sách đã tải.</p>}
       {items.length > 1 && <section className="history-section"><h3>So sánh phiên bản</h3><div className="history-compare-grid"><label>Phiên bản gốc<select value={compareBase} disabled={isWorking} onChange={e => setCompareBase(e.target.value)}><option value="">Chọn commit</option>{items.map(c => <option key={c.sha} value={c.sha}>{c.sha.slice(0, 9)} · {c.message.slice(0, 32)}</option>)}</select></label><label>Phiên bản đích<select value={compareHead} disabled={isWorking} onChange={e => setCompareHead(e.target.value)}><option value="">Chọn commit</option>{items.map(c => <option key={c.sha} value={c.sha}>{c.sha.slice(0, 9)} · {c.message.slice(0, 32)}</option>)}</select></label></div><button type="button" className="button secondary full" disabled={!canRead || isWorking || !compareBase || !compareHead} onClick={compare}>So sánh thay đổi</button>
         {comparison && <div className="history-preview"><p><strong>{comparison.total} file</strong> thay đổi giữa hai commit</p><Counts value={comparison.counts}/><DiffRows changes={comparison.changes}/></div>}</section>}
       <section className="history-section"><h3>Khôi phục source an toàn</h3><p>Chọn commit trong danh sách phía trên. Zipverra chỉ chấp nhận commit thuộc lịch sử của branch đang chọn.</p>

@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.5.0 — Workspace UX & Navigation (2026-10-14)
+
+- Reorganized Workspace into four explicit file views (Code / Edit / Review / History), with a line-numbered code viewer and mobile indentation toolbar.
+- Improved Explorer with horizontally scrollable breadcrumbs, alphabetical directory-first sorting, local folder pins and consolidated search.
+- Added navigation protection for unsaved Quick Edit content when leaving Workspace, changing branch/repo, applying profiles or logging out. Tab switches preserve the draft in memory; identity changes explicitly discard after user confirmation.
+- Added separate Branches / Pull Requests tabs within the existing expandable manager and a local filter for already-fetched History commits.
+- New semantic `lib/workspace-ux.js` helpers and scoped responsive stylesheet; backend mutation routes, signed preview, GitHub authorization and safe recovery unchanged.
+- Added 9 Workspace UX regression tests. Next production build and real-device QA still required; npm registry DNS is unavailable in packaging environment.
+
 ## v2.4.0 — Premium Interaction & Motion (2026-10-14)
 
 - Added shared `pro-motion.css` motion tokens with subtle tab enter, tactile tap feedback, and connected stepper movement without changing workflow state.

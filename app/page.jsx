@@ -17,6 +17,7 @@ import { FAVORITES_KEY, analyzeSource, selectChanges, toggleExcluded, filterRevi
 import SplashScreen from './components/SplashScreen.jsx';
 import { FeedbackToast, LoadingSkeleton } from './components/InteractionFeedback.jsx';
 import { createInteractionNotice, shouldAnnounceEvent } from '../lib/interaction-feedback.js';
+import { shouldWarnWorkspaceExit } from '../lib/workspace-ux.js';
 import { WorkflowStrip, CurrentRepository, StatusIndicator, UXViewIntro, StatusEmpty } from './components/ProfessionalUI.jsx';
 import MobileViewportGuard from './components/MobileViewportGuard.jsx';
 const HistoryPanel = dynamic(() => import('./components/HistoryPanel.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải HistoryPanel…"/> });
@@ -135,6 +136,15 @@ export default function Home() {
   }, []);
   const dismissNotice = useCallback((id) => setNotice(current => current?.id === id ? null : current), []);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
+  const workspaceDirtyRef = useRef(false);
+  const onWorkspaceDirtyChange = useCallback(value => { workspaceDirtyRef.current = Boolean(value); }, []);
+  function canLeaveWorkspace(target = '', identityChanged = false) {
+    return !shouldWarnWorkspaceExit({workspaceOpen, dirty:workspaceDirtyRef.current, target, current:activeTab, identityChanged}) ||
+      window.confirm(identityChanged
+        ? 'File trong Workspace chưa được commit. Đổi repository/branch sẽ bỏ bản nháp. Tiếp tục?'
+        : 'Workspace có thay đổi chưa commit. Chuyển tab? Bản nháp vẫn được giữ trong Workspace.');
+  }
+
   const [theme, setTheme] = useState('dark');
   const [proProfiles, setProProfiles] = useState([]);
   const [proActivity, setProActivity] = useState([]);
@@ -199,7 +209,7 @@ export default function Home() {
     try { window.localStorage.setItem(THEME_KEY, theme); } catch { /* optional preference */ }
   }, [theme]);
   function goToTab(tab) {
-    if (!MOBILE_TABS.includes(tab)) return;
+    if (!MOBILE_TABS.includes(tab) || !canLeaveWorkspace(tab)) return;
     setActiveTab(tab);
     if (typeof window !== 'undefined') {
       if (tab === 'activity' && window.matchMedia('(min-width: 761px)').matches) {
@@ -259,11 +269,15 @@ export default function Home() {
     try{localStorage.setItem(accountStorageKey(PRO_PROFILES_KEY,auth.user),JSON.stringify(next));}catch{}
   }
   function applyProfile(profile) {
+    if (!canLeaveWorkspace('', true)) return;
+    workspaceDirtyRef.current = false;setWorkspaceOpen(false);
     if (!auth.authenticated || `${owner}/${repo}`.toLowerCase()!==profile.repo.toLowerCase() || busy || pendingCommit || pendingPR) return;
     setBranch(profile.branch);setMode(profile.mode);setReleaseStrategy(profile.strategy);
     setFile(null); if(fileInput.current)fileInput.current.value=''; reset(); goToTab('home');
   }
   function selectAndApplyProfile(profile) {
+    if (!canLeaveWorkspace('', true)) return;
+    workspaceDirtyRef.current = false;
     if (!auth.authenticated || busy || pendingCommit || pendingPR ||
         !repos.some(r=>r.full_name.toLowerCase()===profile.repo.toLowerCase())) return;
     const [nextOwner,nextRepo]=profile.repo.split('/');
@@ -349,6 +363,7 @@ export default function Home() {
   }, [preview]);
 
   async function logout() {
+    if (!canLeaveWorkspace('', true)) return;
     setBusy(true); setError('');
     try {
       const response = await fetch('/api/auth/logout', { method: 'POST', cache: 'no-store' });
@@ -392,7 +407,13 @@ export default function Home() {
     setProgress(0);
     if (!pendingCommit) setPhase(PUSH_STAGES.IDLE);
   };
-  function change(setter, value) { setter(value); reset(); }
+  function change(setter, value) {
+    if (workspaceOpen && [setOwner,setRepo,setBranch].includes(setter)) {
+      if (!canLeaveWorkspace('', true)) return;
+      workspaceDirtyRef.current = false;setWorkspaceOpen(false);
+    }
+    setter(value); reset();
+  }
   function getInputs() {
     if (!auth.authenticated) throw new Error('Hãy đăng nhập GitHub trước khi tiếp tục.');
     if (!owner.trim() || !repo.trim()) throw new Error('Hãy chọn hoặc nhập repository.');
@@ -411,7 +432,8 @@ export default function Home() {
     finally { setBusy(false); setLoadingRepos(false); }
   }
   function chooseRepo(value) {
-    if (!value || busy || pendingCommit || pendingPR) return;
+    if (!value || busy || pendingCommit || pendingPR || !canLeaveWorkspace('', true)) return;
+    workspaceDirtyRef.current = false;setWorkspaceOpen(false);
     const index = value.indexOf('/');
     setOwner(value.slice(0, index));
     setRepo(value.slice(index + 1));
@@ -718,7 +740,7 @@ export default function Home() {
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar" role="banner">
       <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span><em> Pro</em></strong><small>MOBILE GIT WORKSPACE</small></div></div>
-      <div className="header-actions"><StatusIndicator online={online} authenticated={auth.authenticated} loading={auth.loading}/><span className="version"><span className="live-dot"/> v2.4.0</span></div>
+      <div className="header-actions"><StatusIndicator online={online} authenticated={auth.authenticated} loading={auth.loading}/><span className="version"><span className="live-dot"/> v2.5.0</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online} pending={Boolean(pendingCommit || pendingPR)}/>
     {activeTab !== 'activity' && (error || busy) && <button type="button" className={`mobile-global-status ${error ? 'has-error' : ''}`} onClick={() => goToTab('activity')}><span>{error ? `Cần kiểm tra: ${error}` : `${status || 'Đang xử lý...'} · ${progress}%`}</span><Icon name="arrow" size={17}/></button>}
@@ -761,7 +783,7 @@ export default function Home() {
             {activeTab === 'repositories' && chosenRepo && <BranchPrPanel key={`${owner}/${repo}`} owner={owner} repo={repo} branch={branch} online={online} busy={busy} api={api} onSelectBranch={(next)=>change(setBranch,next)} onMerge={(outcome,number)=>logLocalAction({kind:'merge',state:'success',repo:`${owner}/${repo}`,sha:outcome?.sha,message:`Merged PR #${number}`})}/>}
             <button type="button" className="button secondary full mobile-repo-next" onClick={() => goToTab('home')} disabled={!auth.authenticated || !owner || !repo || busy}>Tiếp tục · Upload ZIP <Icon name="arrow" size={17}/></button>
           </article>
-          {workspaceOpen && <WorkspacePanel key={`${owner}/${repo}@${branch}`} authenticated={auth.authenticated} owner={owner} repo={repo} branch={branch} online={online} busy={busy} onBack={()=>{setWorkspaceOpen(false);goToTab('repositories');}} api={api} onCommit={(outcome)=>{reset();logLocalAction({kind:'quick-edit',state:'success',repo:`${owner}/${repo}`,sha:outcome?.sha,message:'Quick Edit saved'});}} />}
+          {workspaceOpen && <WorkspacePanel key={`${owner}/${repo}@${branch}`} authenticated={auth.authenticated} owner={owner} repo={repo} branch={branch} online={online} busy={busy} onBack={()=>{workspaceDirtyRef.current=false;setWorkspaceOpen(false);goToTab('repositories');}} onDirtyChange={onWorkspaceDirtyChange} api={api} onCommit={(outcome)=>{reset();logLocalAction({kind:'quick-edit',state:'success',repo:`${owner}/${repo}`,sha:outcome?.sha,message:'Quick Edit saved'});}} />}
 
           <article className="panel upload-panel" data-mobile-view="home">
             <StepTitle n="02" title="Upload ZIP" desc="Giải nén trong Web Worker, không chặn thao tác điện thoại."/>
@@ -842,7 +864,7 @@ export default function Home() {
             <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
               profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
               onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
-            <div className="settings-info"><span>Phiên bản</span><strong>v2.4.0</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v2.5.0</strong></div>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
             <div className="settings-info"><span>Commit message</span><strong>Tên file ZIP</strong></div>
             <p className="hint">Push Profiles, Dashboard cache và Local Activity lưu riêng theo tài khoản GitHub trên thiết bị. Không đồng bộ giữa thiết bị và không chạy task ngầm khi đóng PWA.</p>
@@ -851,7 +873,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v2.4.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v2.5.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <nav className="mobile-bottom-nav" aria-label="Điều hướng Zipverra">{[{id:'repositories',label:'Repos',icon:'branch'},{id:'home',label:'Upload',icon:'upload'},{id:'activity',label:'Activity',icon:'activity'},{id:'history',label:'History',icon:'history'},{id:'settings',label:'Settings',icon:'settings'}].map((tab) => <button type="button" key={tab.id} className={`mobile-nav-item ${activeTab === tab.id ? 'active' : ''}`} aria-current={activeTab === tab.id ? 'page' : undefined} onClick={() => goToTab(tab.id)}><span className="mobile-nav-icon"><Icon name={tab.icon} size={21}/></span><span>{tab.label}</span>{tab.id === 'activity' && (pendingCommit || pendingPR) && <i className="nav-alert" aria-label="Có push cần xác minh"/>}</button>)}</nav>
   </>;
