@@ -1,53 +1,16 @@
-# Zipverra Pro v3.0.4 — Compact UI & Contextual Help
+# Zipverra Pro v3.0.5 — Compact Header Icon Hotfix
 
-> Maintenance UX release based on the user-supplied **v3.0.3** full source. This update simplifies screen copy on mobile without changing any GitHub mutation endpoint, session model or ZIP download transport.
+This full-source release upgrades v3.0.4 with a minimal UI adjustment on iPhone: GitHub connected check is positioned before the version in the main header (without a circular frame), Refresh is an unframed icon in Repositories, and the shared `?` help retains a smaller circular outline. Icons have consistent visual glyph sizing; interactive controls preserve accessible touch targets.
 
-## Changes in v3.0.4
+**No change** to GitHub auth, repository listing, ZIP upload/download, PR, Quick Edit, History, Rollback, Security Scan or the PWA recovery model.
 
-- **One help control per mobile tab:** a single `?` next to the top-right connection status opens a labelled native dialog with guidance specific to Repos, Upload, Activity, History or Settings.
-- **Less on-screen text:** removed duplicated marketing hero text, repetitive step descriptions, oversized ZIP download explanations, and recurring static hints.
-- **Preserved required warnings:** Sync deletion risk, Critical security findings, disabled Push reasons, unverified GitHub activity and PR not-merged state remain directly visible. Help is not a substitute for mandatory review or explicit approval.
-- **Smaller cards:** compact Repos launchpad, concise stepper summary and shorter source ZIP action.
-- **Accessible:** native dialog supports Escape to close, backdrop close, focus management by browser, visible keyboard focus, reduced motion and long-content scrolling.
-- **PWA:** version and public-only cache namespace updated to 3.0.4; the existing Save to Files behavior is unchanged.
+## Deploy
 
-## Deploy v3.0.4
+Unzip and copy the **contents** of `Zipverra-v3.0.5/` to the repository root on `main` (not the enclosing folder). Keep the existing five GitHub App environment variables. After Vercel deploy, verify header icons, Refresh, Help and all five tabs on iPhone PWA.
 
-1. Extract `Zipverra-v3.0.4` and push **the files inside it** into the GitHub repository root on `main`.
-2. Keep Vercel environment variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
-3. Confirm Vercel `next build`, then test all five tab help dialogs and the Review/Push protections on an iPhone.
-4. The Download ZIP flow is unchanged: choose the repo, prepare its `main` ZIP, then Save to Files.
+## Validation
 
-## Previous release notes
-
-# Zipverra Pro v3.0.3 — iPhone Save to Files Fix
-
-> Maintenance hotfix based on the provided **Zipverra Pro v3.0.2** source archive. This release addresses the iOS native ZIP preview / Quick Look handoff by keeping the ZIP preparation inside the app and offering an explicit native **Save to Files** share action. It does not change GitHub Push/PR/Rollback APIs.
-
-## What's new in v3.0.3
-
-- Replaced the direct browser ZIP link with **in-app ZIP preparation** using authenticated `fetch()` to the existing same-origin source ZIP endpoint.
-- An explicit second tap on **Lưu vào Tệp** invokes the iOS Web Share file sheet while Zipverra stays on the current screen. The user selects **Lưu vào Tệp / Save to Files** and chooses a folder; the app cannot silently write to iOS Files.
-- iOS versions that cannot share ZIP files offer a browser fallback, and the UI explains that Safari may show a native ZIP preview. Native Quick Look is controlled by iOS and cannot be force-closed by a web app.
-- Shows actual received-byte progress, a Cancel action, clear ready/error states, and the sanitized commit-based filename.
-- Maintains a **48 MiB in-app memory cap** to avoid exhausting iPhone RAM. Larger archives can use the explicit **Tải trực tiếp ZIP lớn** browser fallback, which may open Safari Quick Look. The server's existing **512 MiB streamed ZIP ceiling** is unchanged.
-- Does **not** save ZIP contents, access tokens or private GitHub files to localStorage, IndexedDB or Service Worker cache.
-- Keeps ZIP Push, Quick Edit, PR, History, Security Scan and Rollback logic unchanged.
-
-### iPhone usage
-
-1. Open **Zipverra Pro v3.0.3** in Safari or the installed PWA.
-2. Select a repository under **Repos** (the app may switch to Upload automatically).
-3. Tap **Chuẩn bị ZIP** in Download Source ZIP, then wait for **ZIP đã sẵn sàng** and the commit-based filename.
-4. Tap **Lưu vào Tệp**, then choose **Lưu vào Tệp / Save to Files** in the system share sheet. Pick a destination in Files.
-5. If the device does not support sharing ZIP files, the button becomes **Tải ZIP** and falls back to a browser download. Native preview screens may still occur in that fallback.
-
-### Deployment
-
-1. Extract **`Zipverra-v3.0.3/`** and push its **contents** to the repository root on `main`.
-2. Keep the existing Vercel env vars: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
-3. Confirm Next.js/Vercel production build, the PWA version `v3.0.3`, and test ZIP preparation + Save to Files on an actual iPhone. Networked build and real iOS validation could not be completed in the packaging environment.
-4. See [SOURCE_ZIP_DOWNLOAD_V303.md](./SOURCE_ZIP_DOWNLOAD_V303.md) and [RELEASE_VALIDATION.md](./RELEASE_VALIDATION.md).
+Run `npm install`, `npm test` and `npm run build` in a networked environment. The local test runner checks logic/regression and does not replace production build or real-iPhone QA.
 
 ---
 

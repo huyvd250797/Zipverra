@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.0.4",
+  "version": "3.0.5",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.0.4: compact mobile UX with one contextual help dialog per screen, retained GitHub App security, ZIP download and safe push workflows",
+  "description": "Zipverra Pro v3.0.5: aligned mobile icons, compact contextual help, safe GitHub App workflows",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

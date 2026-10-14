@@ -1,6 +1,8 @@
-/* Zipverra Pro v3.0.4 — one contextual help control per active mobile screen. */
-.compact-help-trigger {display:grid;place-items:center;flex:none;width:42px;height:42px;min-width:42px;min-height:42px;padding:0;border:1px solid var(--pro-border-strong);border-radius:50%;background:var(--pro-surface-2);color:var(--pro-text);font-family:inherit;font-size:17px;font-weight:800;line-height:1;cursor:pointer;touch-action:manipulation;}
-.compact-help-trigger:hover {background:var(--pro-accent-surface);color:var(--pro-accent);}
+/* Zipverra Pro v3.0.5 — matching icon sizes; only Help has a compact circular outline. */
+.compact-help-trigger {position:relative;isolation:isolate;display:grid;place-items:center;flex:none;width:40px;height:40px;min-width:40px;min-height:40px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--pro-text);font-family:inherit;font-size:17px;font-weight:800;line-height:1;cursor:pointer;touch-action:manipulation;}
+.compact-help-trigger::before {content:'';position:absolute;inset:4px;z-index:-1;border:1px solid var(--pro-border-strong);border-radius:50%;background:var(--pro-surface-2);pointer-events:none;}
+.compact-help-trigger:hover {color:var(--pro-accent);}
+.compact-help-trigger:hover::before {background:var(--pro-accent-surface);border-color:var(--pro-accent);}
 .compact-help-trigger:focus-visible,.compact-help-close:focus-visible {outline:3px solid var(--pro-focus);outline-offset:3px;}
 .compact-help-dialog {box-sizing:border-box;position:fixed;margin:auto;inset:0;max-width:min(470px,calc(100vw - 30px));width:100%;max-height:min(82dvh,680px);padding:0;border:1px solid var(--pro-border-strong);border-radius:22px;background:var(--pro-surface);color:var(--pro-text);box-shadow:0 24px 80px rgba(0,0,0,.48);overscroll-behavior:contain;overflow:auto;}
 .compact-help-dialog::backdrop {background:rgba(3,11,21,.72);backdrop-filter:blur(5px);}
@@ -36,7 +38,7 @@
   .polish-shell .pro-view-intro h2 {font-size:20px;letter-spacing:-.65px;margin:0;line-height:1.15;}
   .polish-shell .pro-view-indicators {gap:5px;}
   .polish-shell .pro-view-tools {gap:5px;}
-  .polish-shell .repo-connection-icon,.polish-shell .repo-refresh-icon {width:30px;height:30px;}
+  .polish-shell .repo-refresh-icon {width:40px;height:40px;}
   .polish-shell .pro-view-intro .mobile-connection {box-sizing:border-box;font-size:0!important;line-height:0;width:10px;height:10px;min-width:10px;min-height:10px;padding:0;border:0;border-radius:50%;background:var(--pro-accent);}
   .polish-shell .pro-view-intro .mobile-connection.disconnected {background:#e58b88;}
   .polish-shell .compact-help-trigger {width:40px;min-width:40px;height:40px;min-height:40px;}
@@ -52,8 +54,8 @@
 @media(max-width:350px) {
   .polish-shell .pro-view-intro h2 {font-size:18px;}
   .polish-shell .pro-view-tools {gap:3px;}
-  .polish-shell .repo-connection-icon,.polish-shell .repo-refresh-icon {width:28px;height:28px;}
-  .polish-shell .compact-help-trigger {width:38px;min-width:38px;height:38px;min-height:38px;}
+  .polish-shell .repo-refresh-icon {width:40px;height:40px;}
+  .polish-shell .compact-help-trigger {width:40px;min-width:40px;height:40px;min-height:40px;}
   .compact-help-dialog {max-width:calc(100vw - 18px);}
 }
 @media(prefers-reduced-motion:reduce) {
@@ -64,4 +66,19 @@
   .polish-shell .pro-view-intro.mobile-context {display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 18px;padding:12px 0;border-bottom:1px solid var(--pro-border);}
   .polish-shell .pro-view-intro h2 {font-size:22px;line-height:1.2;margin:0;}
   .polish-shell .pro-view-indicators {gap:8px;}
+}
+
+/* v3.0.5: visually unframed Refresh + connected check; consistent 17px icon strokes. */
+.polish-shell .header-connected-mark {display:grid;place-items:center;flex:none;width:20px;height:40px;padding:0;border:0;background:transparent;color:var(--pro-accent);}
+.polish-shell .header-connected-mark svg {width:17px;height:17px;stroke-width:2.5;}
+.polish-shell .header-actions {gap:9px;}
+.polish-shell .pro-view-tools {gap:2px;}
+.polish-shell .pro-view-tools .repo-refresh-icon {display:grid;place-items:center;flex:none;box-sizing:border-box;width:40px;height:40px;min-width:40px;min-height:40px;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;color:var(--pro-muted);touch-action:manipulation;}
+.polish-shell .pro-view-tools .repo-refresh-icon svg {width:17px;height:17px;}
+.polish-shell .pro-view-tools .repo-refresh-icon:hover:not(:disabled) {color:var(--pro-accent);background:transparent;}
+.polish-shell .pro-view-tools .repo-refresh-icon:active:not(:disabled) {transform:scale(.96);}
+@media(max-width:350px) {
+  .polish-shell .header-actions {gap:5px;}
+  .polish-shell .header-connected-mark {width:18px;}
+  .polish-shell .pro-view-indicators {gap:3px;}
 }

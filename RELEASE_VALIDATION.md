@@ -1,3 +1,25 @@
+# Zipverra Pro v3.0.5 — Header Icon Alignment Release Validation
+
+**Baseline:** user-supplied v3.0.4 source ZIP.
+
+- Header: connected check is a bare icon directly before the version badge, without a redundant version status dot.
+- Repository header: one unframed Refresh icon; no duplicated connected check.
+- Contextual Help: one `?` per screen, with a 32px visible ring and a 40px button hit target. Matching icon/glyph size: 17px.
+- Regressions: **252/252 unit tests passed**.
+- Static: **112 JS/JSX modules, 187 relative imports, and 9 CSS stylesheets verified**.
+- **30/30 GitHub API routes byte-for-byte identical** to v3.0.4.
+- Chromium fixture: Dark/Light modes at 320, 375, 390, 430, 768, and 1280px; no horizontal overflow; connected check comes before version and Refresh is unframed.
+- **Production build is not verified** locally because Next.js dependencies are absent (`next: not found`). Validate `npm install && npm run build` in CI/Vercel, then check actual PWA behavior on iPhone.
+
+## Rollout checklist
+
+1. Push the *contents* of `Zipverra-v3.0.5/` to the GitHub repository root on `main`.
+2. Confirm Vercel build passes and installed PWA updates to `v3.0.5`.
+3. Confirm compact icons and Help dialog in Repos on iPhone 320/375/390/430 px; test dark and light modes.
+4. Smoke-test Refresh, ZIP upload/download, Quick Edit, PR, History and Safe Rollback on a disposable repository.
+
+---
+
 # Zipverra Pro v3.0.4 — Release Validation
 
 **Baseline:** user-provided v3.0.3 source archive.

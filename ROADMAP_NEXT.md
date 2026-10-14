@@ -1,6 +1,6 @@
-# Zipverra Pro — Roadmap after v3.0.4 Compact UI & Contextual Help
+# Zipverra Pro — Roadmap after v3.0.5 — Header Icon Alignment Hotfix
 
-**Current baseline:** v3.0.4 — Compact UI & Contextual Help (built from v3.0.3; production iPhone E2E remains to be verified).
+**Current baseline:** v3.0.5 — Header Icon Alignment Hotfix (built directly from the supplied v3.0.4 full source; production iPhone E2E remains to be verified).
 
 The v3.0.4 UX polish keeps one Help control per mobile tab and trims redundant static descriptions. The v3.0.3 Save to Files implementation, commit-based ZIP naming, GitHub App authorization, Push, PR, History and Rollback remain intact.
 

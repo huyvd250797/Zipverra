@@ -1,5 +1,13 @@
 # Changelog
 
+## v3.0.5 — Header Icon Alignment Hotfix (2026-10-14)
+
+- Moved bare GitHub connected check into the global app header before the version label.
+- Removed duplicate check indicator from the repository screen.
+- Removed Refresh circular background and border; retained the icon-only control and its 40px hit area.
+- Reduced Help visual ring to 32px within a 40px tap target; icon typography matches check/refresh.
+- Kept existing read/write GitHub endpoints untouched, as well as the five-tab layout and one-help-button policy.
+
 ## v3.0.4 — Compact UI & Contextual Help (2026-10-14)
 
 - Consolidated noncritical guidance into one contextual `?` dialog per mobile screen.

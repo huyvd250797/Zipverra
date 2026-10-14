@@ -197,7 +197,7 @@ test('UI offers PR strategy, Activity recovery, PR Manager in Repos and no sixth
  assert.match(src,/Direct Push/);assert.match(src,/Push & Create PR/);
  assert.match(src,/completeVerified/);assert.match(src,/retryPendingPR/);
  assert.match(src,/BranchPrPanel/);assert.match(manager,/MERGE/);
- assert.match(src,/v3\.0\.4/);
+ assert.match(src,/v3\.0\.5/);
 });
 
 test('base branch moving during POST create is still rejected even if release ref exists',async()=>{
