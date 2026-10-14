@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.0.3 — iPhone Save to Files Download Fix (2026-10-14)
+
+- Eliminated normal in-app navigation into iOS ZIP Quick Look: files are now prepared via same-origin `fetch` and stored only as a bounded in-memory Blob.
+- Added an explicit iOS Web Share Level 2 action on a fresh user tap to choose **Save to Files**; older browsers fall back to blob download.
+- Displayed real received-byte progress, Cancel, saved/ready filename guidance and clear GitHub error states.
+- Protected iPhone memory with a 48 MiB in-app download cap; larger ZIPs have an explicitly labeled Safari fallback. The authenticated backend download remains read-only and retains its existing 512 MiB stream cap.
+- Preserved commit-based `main` HEAD archive filename and immutable commit SHA selection.
+- Updated PWA version/cache namespace and tests; no new environment variables or GitHub App permissions.
+- Production Next.js build and real iPhone Share/Files E2E remain to be verified after deployment.
+
 ## v3.0.2 — Source ZIP Download iPhone Fix (2026-10-14)
 
 - Fixed iOS PWA download redirect that could open a blank `codeload.github.com` screen without a saved ZIP.

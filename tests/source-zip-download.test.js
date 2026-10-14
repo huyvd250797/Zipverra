@@ -176,10 +176,12 @@ test('missing main prevents reading commit or fetching ZIP',async()=>{
   });
 });
 
-test('iPhone download link stays on Zipverra origin; filename controlled by Content-Disposition',()=>{
+test('iPhone download stays in the PWA; in-app preparation and user-tap share handle ZIP',()=>{
   const ui=read('app/components/SourceZipDownload.jsx');const api=read('app/api/github/source-zip/route.js');
-  assert.match(ui,/href=\{url\}/);assert.match(ui,/download aria-label=/);
-  assert.doesNotMatch(ui,/target="_blank"|window\.open\(|codeload\.github\.com/);
+  assert.match(ui,/fetch\(url/);
+  assert.match(ui,/navigator\.share\(/);
+  assert.match(ui,/onClick=\{download\.shareSupported \? saveToFiles : downloadInBrowser\}/);
+  assert.doesNotMatch(ui,/window\.open\(|codeload\.github\.com|window\.location/);
   assert.match(api,/Content-Disposition/);assert.match(api,/getMainSourceZipStream/);
   assert.doesNotMatch(api,/headers\.set\('Location'/);
   assert.match(read('app/layout.jsx'),/source-zip-download\.css/);

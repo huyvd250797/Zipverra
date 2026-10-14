@@ -1,8 +1,8 @@
-# Zipverra Pro — Roadmap after v3.0.2 Source ZIP Download iPhone Fix
+# Zipverra Pro — Roadmap after v3.0.3 Save to Files Fix
 
-**Current baseline:** v3.0.2 — Source ZIP Download iPhone Fix (maintenance hotfix; iPhone E2E still needs verification after deployment).
+**Current baseline:** v3.0.3 — iPhone Save to Files Fix (maintenance hotfix; iPhone E2E still needs verification after deployment).
 
-The v3.0.2 hotfix fixes iPhone main-branch ZIP download and commit-title filenames while preserving GitHub App authorization, mobile Push workflow, Pull Requests, History, and Safe Rollback.
+The v3.0.3 hotfix fixes native iOS ZIP preview takeover by preparing files in the app and using the user-initiated Save to Files share sheet. Commit-title filenames, GitHub App authorization, mobile Push workflow, Pull Requests, History, and Safe Rollback remain intact.
 
 ## Next recommended versions
 

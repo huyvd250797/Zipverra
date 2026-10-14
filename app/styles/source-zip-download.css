@@ -1,4 +1,4 @@
-/* Zipverra Pro v3.0.2 — native GitHub ZIP download (no ZIP data inside JS). */
+/* Zipverra Pro v3.0.3 — native GitHub ZIP download (no ZIP data inside JS). */
 .source-zip-download {display:flex;flex-wrap:wrap;align-items:center;gap:10px 13px;padding:13px 14px;margin:12px 0 15px;border:1px solid var(--pro-border-strong);border-radius:14px;background:var(--pro-surface-2);min-width:0;}
 .source-zip-download-detail {display:flex;align-items:center;gap:10px;flex:1 1 180px;min-width:0;}
 .source-zip-download-symbol {width:37px;height:37px;border-radius:11px;display:grid;place-items:center;background:var(--pro-accent-surface);color:var(--pro-accent);font-size:21px;font-weight:800;flex-shrink:0;}
@@ -20,3 +20,17 @@
   .source-zip-download-label small {font-size:10px;}
 }
 @media(prefers-reduced-motion:reduce) { .source-zip-download-action {transition:none!important;} .source-zip-download-action:active {transform:none!important;} }
+
+/* v3.0.3: In-app preparation keeps the PWA screen mounted on iPhone. */
+.source-zip-download--share .source-zip-download-action:disabled {opacity:.6;cursor:wait;}
+.source-zip-download-progress,.source-zip-download-ready,.source-zip-download-error {flex-basis:100%;min-width:0;display:grid;gap:7px;padding:11px 12px;border-radius:12px;border:1px solid var(--pro-border);background:var(--pro-surface);color:var(--pro-text);font-size:11.5px;line-height:1.55;overflow-wrap:anywhere;}
+.source-zip-download-progress {grid-template-columns:1fr auto;align-items:center;}
+.source-zip-download-progress progress {grid-column:1/-1;width:100%;height:8px;accent-color:var(--pro-accent);border:0;}
+.source-zip-download-ready {background:var(--pro-accent-surface);border-color:var(--pro-border-strong);}
+.source-zip-download-ready strong {color:var(--pro-accent);font-size:12px;}
+.source-zip-download-ready p {margin:0;color:var(--pro-muted);}
+.source-zip-filename {display:block;max-width:100%;overflow-wrap:anywhere;font-size:11px;}
+.source-zip-download-error {color:var(--pro-text);border-color:var(--pro-border-strong);}
+.source-zip-download-text-action {border:0;background:transparent;justify-self:start;padding:4px 0;color:var(--pro-accent);font-weight:750;font-size:11px;text-decoration:underline;text-underline-offset:3px;min-height:28px;cursor:pointer;}
+.source-zip-download-text-action:focus-visible {outline:2px solid var(--pro-accent);outline-offset:3px;}
+@media(max-width:370px){.source-zip-download-progress {grid-template-columns:1fr auto;}.source-zip-download--share .source-zip-download-action{min-width:90px;}}

@@ -1,8 +1,8 @@
-# Zipverra Pro v3.0.2 — Release Validation
+# Zipverra Pro v3.0.3 — Release Validation
 
 **Source baseline:** the user-supplied `Zipverra-main.zip`, containing Zipverra Pro v3.0.1.
 
-## Local verification for v3.0.2
+## Local verification for v3.0.3
 
 - `node --test tests/*.test.js`: **235/235 passed**, including **13 Source ZIP Download tests** for a simulated private GitHub App session, signed archive retrieval, streaming download, commit-derived filename and safe errors.
 - Static checks: **106 JS/JSX/MJS modules parsed**, **176 relative imports resolved**, **8 CSS files parsed**.
@@ -24,10 +24,10 @@
 
 ## Deployment and QA gate
 
-1. Push contents of `Zipverra-v3.0.2/` into the root of the existing GitHub repository branch `main`; do not commit the ZIP itself.
+1. Push contents of `Zipverra-v3.0.3/` into the root of the existing GitHub repository branch `main`; do not commit the ZIP itself.
 2. Keep existing Vercel GitHub App env vars; no new variables.
 3. Run `npm install`, `npm test`, and `npm run build` in a networked environment; check Vercel Build Logs.
-4. Confirm `v3.0.2` in header, Settings, footer, `/api/version` and PWA updates; no ZIP or tokens cached by the Service Worker.
+4. Confirm `v3.0.3` in header, Settings, footer, `/api/version` and PWA updates; no ZIP or tokens cached by the Service Worker.
 5. Recheck Repos, ZIP Push, Direct Push, PR, Quick Edit, History, Rollback and Activity auto-scroll on disposable repo and real iPhone.
 6. Note that downloads above the **512 MiB compressed ZIP** limit are rejected, and large downloads may still hit host duration and mobile browser constraints.
 
@@ -83,7 +83,20 @@ Baseline: user-supplied Zipverra Pro v2.5.0 full-source ZIP. Full source ZIP, no
 8. Confirm no draft persists after refresh, proper warning when leaving with unsaved Quick Edit content, and no update/reload while editor is dirty.
 9. Re-test dark/light, 320/375/390/430 mobile widths, safe areas, iPhone keyboard and VoiceOver.
 10. Confirm `v2.6.0` in header, Settings, footer and `/api/version`.
-## v3.0.2 iPhone download regression checklist
+## v3.0.3 iPhone Save to Files regression checklist
+
+- [ ] Open `v3.0.3` in installed iPhone PWA, choose a private authorized repository, tap **Chuẩn bị ZIP**.
+- [ ] PWA stays visible during ZIP download, showing real byte progress; Cancel stops network transfer.
+- [ ] On **ZIP đã sẵn sàng**, compare displayed filename with `main` HEAD commit subject.
+- [ ] Tap **Lưu vào Tệp**, then choose **Save to Files** in iOS share sheet, choose a folder, and confirm ZIP appears in Files.
+- [ ] The share sheet dismissal returns to Zipverra and does not navigate to native Quick Look.
+- [ ] If file sharing is unavailable, test **Tải ZIP** browser fallback and document the possible Quick Look preview.
+- [ ] Verify error cases: offline, revoked GitHub App authorization, missing `main`, truncated/HTML/oversized archive, cancel and retry.
+- [ ] ZIP over **48 MiB** uses explicit browser fallback; server maximum **512 MiB** streamed. No ZIP data in browser persistent storage or Service Worker Cache Storage.
+- [ ] Confirm Direct Push, PR, Quick Edit, History, Security Scan and Rollback are unaffected.
+- [ ] `npm run build` passes on Vercel/CI; actual iPhone Safari/PWA checks completed before declaring production verified.
+
+## Historical v3.0.2 iPhone download checklist
 
 - [ ] Tap **Tải ZIP** on a selected private GitHub App repository from installed iPhone PWA.
 - [ ] No blank `codeload.github.com` page appears. ZIP is delivered as an attachment from the Zipverra domain.

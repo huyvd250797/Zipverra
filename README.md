@@ -1,34 +1,41 @@
-# Zipverra Pro v3.0.2 — Source ZIP Download iPhone Fix
+# Zipverra Pro v3.0.3 — iPhone Save to Files Fix
 
-> Hotfix from the user-supplied **Zipverra Pro v3.0.1** GitHub source ZIP. The broken codeload browser redirect is replaced with a secure same-origin ZIP attachment stream. **No Vercel Deployment Tracking.**
+> Maintenance hotfix based on the provided **Zipverra Pro v3.0.2** source archive. This release addresses the iOS native ZIP preview / Quick Look handoff by keeping the ZIP preparation inside the app and offering an explicit native **Save to Files** share action. It does not change GitHub Push/PR/Rollback APIs.
 
-## New in v3.0.2
+## What's new in v3.0.3
 
-- Source ZIP downloads no longer open a blank `codeload.github.com` page in Safari/PWA.
-- The server streams the GitHub ZIP archive to the browser using `Content-Type: application/zip` and `Content-Disposition: attachment`.
-- Archive filename comes from the **first line of the verified HEAD commit message on branch `main`**, sanitized for iPhone/Windows filenames. Fallback is `repo-shortSHA.zip`.
-- The GitHub archive request is pinned to the same commit SHA used to derive the filename.
-- The temporary GitHub codeload URL and the GitHub App credential are never sent to the client.
-- Download is read-only, works for authorized private repositories, and validates actual ZIP magic bytes before streaming.
-- Stream size budget: up to **512 MiB compressed**; large archives depend on Vercel function duration, network throughput and iOS browser behavior.
+- Replaced the direct browser ZIP link with **in-app ZIP preparation** using authenticated `fetch()` to the existing same-origin source ZIP endpoint.
+- An explicit second tap on **Lưu vào Tệp** invokes the iOS Web Share file sheet while Zipverra stays on the current screen. The user selects **Lưu vào Tệp / Save to Files** and chooses a folder; the app cannot silently write to iOS Files.
+- iOS versions that cannot share ZIP files offer a browser fallback, and the UI explains that Safari may show a native ZIP preview. Native Quick Look is controlled by iOS and cannot be force-closed by a web app.
+- Shows actual received-byte progress, a Cancel action, clear ready/error states, and the sanitized commit-based filename.
+- Maintains a **48 MiB in-app memory cap** to avoid exhausting iPhone RAM. Larger archives can use the explicit **Tải trực tiếp ZIP lớn** browser fallback, which may open Safari Quick Look. The server's existing **512 MiB streamed ZIP ceiling** is unchanged.
+- Does **not** save ZIP contents, access tokens or private GitHub files to localStorage, IndexedDB or Service Worker cache.
+- Keeps ZIP Push, Quick Edit, PR, History, Security Scan and Rollback logic unchanged.
 
 ### iPhone usage
 
-1. Open the updated Zipverra PWA. If the PWA is still showing `v3.0.1`, use Settings → Check for updates and activate the new version when safe.
-2. Select the repository under Repos (the app may navigate to Upload automatically).
-3. Tap **Tải ZIP** on the Download Source ZIP card. The file downloads from the Zipverra domain rather than opening codeload in a new tab.
-4. Open Safari Downloads or iPhone **Files → Downloads** to find the `.zip` file named after the latest commit message on `main`.
+1. Open **Zipverra Pro v3.0.3** in Safari or the installed PWA.
+2. Select a repository under **Repos** (the app may switch to Upload automatically).
+3. Tap **Chuẩn bị ZIP** in Download Source ZIP, then wait for **ZIP đã sẵn sàng** and the commit-based filename.
+4. Tap **Lưu vào Tệp**, then choose **Lưu vào Tệp / Save to Files** in the system share sheet. Pick a destination in Files.
+5. If the device does not support sharing ZIP files, the button becomes **Tải ZIP** and falls back to a browser download. Native preview screens may still occur in that fallback.
 
 ### Deployment
 
-1. Extract **`Zipverra-v3.0.2/`** and push the **contents**, not the ZIP itself, to the root of the current GitHub repository on `main`.
-2. Keep the same Vercel GitHub App env variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
-3. Confirm Vercel build and manually test a private repository, iPhone Safari/PWA download and the actual filename. The current environment cannot perform authenticated real-device E2E.
-4. See [SOURCE_ZIP_DOWNLOAD_V302.md](./SOURCE_ZIP_DOWNLOAD_V302.md) and [RELEASE_VALIDATION.md](./RELEASE_VALIDATION.md).
+1. Extract **`Zipverra-v3.0.3/`** and push its **contents** to the repository root on `main`.
+2. Keep the existing Vercel env vars: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
+3. Confirm Next.js/Vercel production build, the PWA version `v3.0.3`, and test ZIP preparation + Save to Files on an actual iPhone. Networked build and real iOS validation could not be completed in the packaging environment.
+4. See [SOURCE_ZIP_DOWNLOAD_V303.md](./SOURCE_ZIP_DOWNLOAD_V303.md) and [RELEASE_VALIDATION.md](./RELEASE_VALIDATION.md).
 
 ---
 
-# Zipverra Pro v3.0.1 — Source ZIP Download
+## Historical release notes
+
+# Zipverra Pro v3.0.2 — Source ZIP Download iPhone Fix
+
+> Previous v3.0.2 changed the old client-visible codeload redirect to authenticated same-origin streaming with a commit-title ZIP filename. It did not prevent the native iOS Quick Look preview that is now handled through the explicit share-to-Files flow in v3.0.3.
+
+ — Source ZIP Download
 
 > Upgraded directly from **Zipverra Pro v3.0.0 Stable Release**. This maintenance release adds an authenticated, browser-native **download of the selected repository's `main` branch as ZIP**. The ZIP Push flow, Pull Requests, History, Quick Edit, Security Scan, and Safe Rollback are unchanged.
 
