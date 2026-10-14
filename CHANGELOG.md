@@ -1,5 +1,16 @@
 # Changelog
 
+## v2.9.0 — Production Hardening (2026-10-14)
+
+- Fixed the iPhone Activity tab after Push retaining the previous long-screen scroll position; scroll now occurs after React tab commit, plus a second Safari correction frame.
+- Ordered live operation progress ahead of Recovery Center/Recent Actions on Activity.
+- Added a bounded 4 MiB streamed GitHub JSON request parser and safe 400/413 error handling.
+- Added baseline security response headers, disabled X-Powered-By and created safe error/404 pages.
+- Added production-hardening unit tests, refreshed PWA version and Service Worker public cache namespace.
+- Continued using the same GitHub App permissions/credentials and previous safety protocols; no new env vars.
+- Build, device E2E and live GitHub integration still require networked CI/production validation.
+
+
 ## v2.8.0 — Advanced UX Polish (2026-10-14)
 
 - Direct upgrade from v2.6.0; v2.7.0 features were not included.

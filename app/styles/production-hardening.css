@@ -1,0 +1,23 @@
+/* v2.9.0: viewport and error-state hardening; no mutation-side effects. */
+html { scroll-padding-top: 0; }
+.pro-shell .activity-panel { scroll-margin-top: 16px; }
+.pro-shell .activity-title { position: relative; }
+.pro-shell .activity-title h2 { text-wrap: balance; }
+@media (max-width: 760px) {
+  /* The live operation always precedes the recovery summary and recent actions. */
+  .pro-shell main[data-active-view="activity"] .activity-panel { scroll-margin-top: 0; }
+  .pro-shell main[data-active-view="activity"] .activity-title { margin-bottom: 10px; }
+  .pro-shell main[data-active-view="activity"] .push-timeline { margin-top: 10px; }
+  .pro-shell main[data-active-view="activity"] .pro-journal-panel { margin-top: 8px; }
+}
+.pro-fatal-screen { min-height: 100dvh; display: grid; place-items: center; padding: max(24px,env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px)) max(24px,env(safe-area-inset-bottom,0px)); background: var(--pro-bg,#080c17); color: var(--pro-text,#e9f1ff); }
+.pro-fatal-panel { width: min(100%,460px); padding: clamp(20px,5vw,34px); border: 1px solid var(--pro-border,#26354d); border-radius: 22px; background: var(--pro-surface,#111a2a); text-align: center; }
+.pro-fatal-symbol { width: 52px; height: 52px; margin: 0 auto 18px; display: grid; place-items: center; border-radius: 15px; background: var(--pro-accent-surface,#143a36); color: var(--pro-accent,#68e5bd); font-size: 19px; font-weight: 800; }
+.pro-fatal-panel h1 { font-size: clamp(20px,5vw,26px); margin: 0 0 12px; }
+.pro-fatal-panel p { font-size: 14px; line-height: 1.65; color: var(--pro-muted,#a1b2c7); }
+.pro-fatal-panel small { display:block; margin-top: 18px; color: var(--pro-muted,#a1b2c7); font-size: 11px; line-height: 1.5; }
+.pro-fatal-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 20px; }
+.pro-fatal-actions a,.pro-fatal-actions button { display: inline-flex; align-items:center; justify-content:center; min-height: 46px; padding: 11px 16px; border-radius: 12px; background: var(--pro-accent,#42d6ad); color: var(--pro-accent-ink,#052d26); font: inherit; font-size: 13px; font-weight: 750; border: 0; cursor: pointer; }
+.pro-fatal-actions a { background: var(--pro-surface-2,#1c2a3a); color: var(--pro-text,#e9f1ff); border: 1px solid var(--pro-border,#26354d); }
+.pro-fatal-actions :focus-visible { outline: 3px solid var(--pro-accent,#42d6ad); outline-offset: 3px; }
+@media(prefers-reduced-motion:reduce) { .pro-fatal-screen * { transition: none !important; } }

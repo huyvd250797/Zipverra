@@ -1,4 +1,4 @@
-/* Zipverra Pro v2.8.0 — targeted polish only. No GitHub mutation behavior. */
+/* Zipverra Pro v2.9.0 — targeted polish only. No GitHub mutation behavior. */
 :root {
   --polish-soft-line: color-mix(in srgb, var(--pro-border) 80%, transparent);
   --polish-focus-offset: 3px;

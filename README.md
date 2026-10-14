@@ -1,3 +1,27 @@
+# Zipverra Pro v2.9.0 — Production Hardening
+
+> Upgraded directly from the user-supplied **Zipverra Pro v2.8.0** full source. Focus: mobile Activity auto-scroll after Push, verified timeline priority, bounded GitHub API requests, secure response headers and safe error boundaries. **No Vercel Deployment Tracking**.
+
+## v2.9.0 — What's new
+
+- **Fixed iPhone Activity positioning:** tab changes scroll after React renders instead of before, including an explicit Safari scroll reset over animation frames. The Live Push flow appears above Recovery Center / Recent Actions.
+- **Bounded API JSON:** 4 MiB streaming request parser; oversized input returns 413 before GitHub writes; malformed JSON is rejected without exposing internals.
+- **HTTP hardening:** `nosniff`, referrer, frame and permissions policy headers. Service Worker remains no-store and caches public assets only.
+- **Runtime recovery UX:** sanitized page-level error and 404 views. GitHub writes are never auto-replayed.
+- **PWA version:** `2.9.0` in header, Settings, footer, version API, offline fallback and Service Worker cache namespace.
+- **Existing features retained:** GitHub App authentication, Web Worker ZIP upload, signed security scan, PR, Quick Edit, History, Safe Rollback, Profile and Recovery Center.
+
+## Deploying v2.9.0
+
+1. Put the **contents of `Zipverra-v2.9.0/`** at the repository root on branch `main` (not the containing folder).
+2. Keep existing Vercel variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
+3. Confirm CI/Vercel build succeeds, then test the mobile Activity scroll bug on a disposable repository before using production.
+4. Review [PRODUCTION_HARDENING_V290.md](./PRODUCTION_HARDENING_V290.md) and [RELEASE_VALIDATION.md](./RELEASE_VALIDATION.md). **Production build and live GitHub/iPhone E2E are not verified from this environment.**
+
+---
+
+## Historical release notes
+
 # Zipverra Pro v2.8.0 — Advanced UX Polish
 
 > Direct upgrade from the user-supplied v2.6.0 full source. Version 2.7.0 was intentionally skipped; its architecture refactor is **not** part of this release. No Vercel Deployment Tracking.

@@ -12,6 +12,7 @@ import { scanSelectedChanges, reportSelectedSecurity } from '../lib/source-secur
 import { LIMITS } from '../lib/constants.js';
 import { deriveWorkflowStep, shouldPublishProgress, checkZipCandidate } from '../lib/workflow-ux.js';
 import { PUSH_STAGES, JOURNAL_KEY, withSafeRetry, validJournal } from '../lib/reliability.js';
+import { scheduleTabViewport } from '../lib/tab-scroll.js';
 import { MOBILE_TABS, RECENTS_KEY, THEME_KEY, filterChanges, updateRecentRepositories, getPushTimeline } from '../lib/mobile-ui.js';
 import { FAVORITES_KEY, analyzeSource, selectChanges, toggleExcluded, filterReview, sortedRepositories, updateFavorites, isTextPreviewable, decodePreview, makeLineDiff, transferEstimate } from '../lib/smart-push.js';
 import SplashScreen from './components/SplashScreen.jsx';
@@ -223,14 +224,21 @@ export default function Home() {
     document.documentElement.dataset.theme = resolveTheme(theme, prefersLight);
     try { window.localStorage.setItem(THEME_KEY, theme); } catch { /* optional preference */ }
   }, [theme, prefersLight]);
+  // Move the viewport only after the new tab commits to the DOM. In mobile
+  // Safari, scrollTo issued before setActiveTab renders can retain the previous
+  // long Review/Recent Actions scroll position and hide Live Push progress.
+  const pendingSameTabScroll = useRef(null);
+  useEffect(() => () => pendingSameTabScroll.current?.(), []);
+  useEffect(() => {
+    return scheduleTabViewport(window, document, activeTab, activityRef.current);
+  }, [activeTab]);
   function goToTab(tab) {
     if (!MOBILE_TABS.includes(tab) || !canLeaveWorkspace(tab)) return;
-    setActiveTab(tab);
-    if (typeof window !== 'undefined') {
-      if (tab === 'activity' && window.matchMedia('(min-width: 761px)').matches) {
-        window.requestAnimationFrame(() => activityRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }));
-      } else window.scrollTo({ top: 0, behavior: 'auto' });
+    if (tab === activeTab && typeof window !== 'undefined') {
+      pendingSameTabScroll.current?.();
+      pendingSameTabScroll.current = scheduleTabViewport(window, document, tab, activityRef.current);
     }
+    setActiveTab(tab);
   }
   function saveUploadCheckpoint(value) {
     try { window.localStorage.setItem(UPLOAD_CHECKPOINT_KEY, JSON.stringify(value)); } catch { /* no persistent storage available */ }
@@ -810,7 +818,7 @@ export default function Home() {
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar" role="banner">
       <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span><em> Pro</em></strong><small>MOBILE GIT WORKSPACE</small></div></div>
-      <div className="header-actions"><StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/><span className="version"><span className="live-dot"/> v2.8.0</span></div>
+      <div className="header-actions"><StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/><span className="version"><span className="live-dot"/> v2.9.0</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)}/>
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
@@ -909,7 +917,7 @@ export default function Home() {
               {selectedChanges.length > 0 && !securityReport?.blocked && <><label className="confirm-row"><input type="checkbox" checked={confirmed} disabled={busy} onChange={(e) => setConfirmed(e.target.checked)}/><span>Tôi đã kiểm tra thay đổi và đồng ý {releaseStrategy==='pr' ? 'push lên branch riêng rồi tạo Pull Request' : 'push trực tiếp'} với đích <b>{preview.input.branch}</b>.</span></label><button className="button primary full push-button" disabled={!canSubmitPush} aria-describedby="push-readiness-help" onClick={push}><Icon name="upload" size={18}/> {busy ? 'Đang xử lý...' : releaseStrategy==='pr' ? `Push & Create PR (${selectedChanges.length} file)` : `Commit & Push (${selectedChanges.length} file)`}</button></>}
             </>}
           </article>
-          <article ref={activityRef} className="panel activity-panel" data-mobile-view="activity"><RecoveryCenter push={pendingCommit} pr={pendingPR} online={online && pwa.reachable} busy={busy} authenticated={auth.authenticated} authorizedRepos={repos} onVerifyPush={() => verifyPending()} onCheckPR={retryPendingPR} onOpenHistory={() => goToTab('history')}/><div className="activity-title"><div><span className="pro-overline">LIVE OPERATIONS</span><h2>Activity · Tiến trình Push</h2></div><span className={`activity-dot ${busy ? 'pulse' : ''}`} aria-label={busy ? 'Đang thực hiện thao tác' : 'Không có thao tác đang chạy'}/></div>
+          <article ref={activityRef} className="panel activity-panel" data-mobile-view="activity"><div id="activity-live-flow" className="activity-title"><div><span className="pro-overline">LIVE OPERATIONS</span><h2>Activity · Tiến trình Push</h2></div><span className={`activity-dot ${busy ? 'pulse' : ''}`} aria-label={busy ? 'Đang thực hiện thao tác' : 'Không có thao tác đang chạy'}/></div>
             {phase === PUSH_STAGES.IDLE && !busy && !result && !pendingCommit && !pendingPR && <ActivityEmpty canUpload={chosenRepo} onUpload={() => goToTab('home')}/>}
             <div className={`push-timeline ${hasPrFlow ? 'with-pr' : ''}`} aria-label="Tiến trình push và tạo PR">{timeline.map((step, index) => <div key={step.id} className={`timeline-step timeline-${step.state}`}><span className="timeline-icon">{step.state === 'complete' ? <Icon name="check" size={14}/> : index + 1}</span><div><strong>{({validate:'Validate',upload:'Upload',commit:'Commit',verify:'Verify',pr:'Open PR'})[step.id]}</strong><small>{({complete:'Hoàn tất',active:'Đang xử lý',uncertain:'Chưa xác minh',failed:'Cần kiểm tra',waiting:'Chờ xử lý'})[step.state]}</small></div></div>)}</div>
             {phase === PUSH_STAGES.SUCCEEDED && !pendingCommit && !pendingPR && <div className="workflow-complete"><div><strong>Đã xác minh trên GitHub</strong><small>Bạn có thể bắt đầu bản ZIP tiếp theo mà không cần chọn lại repository.</small></div><button type="button" className="button primary" onClick={startNextVersion} disabled={busy}>Push bản tiếp theo <Icon name="arrow" size={16}/></button></div>}
@@ -920,6 +928,7 @@ export default function Home() {
             {pendingPR && visibleRecoveryPR && <details className="pwa-recovery-advanced"><summary>Chi tiết Pull Request chưa xác minh</summary><div className="branch-pending" role="status"><strong>Branch đã push · PR chưa xác nhận</strong><p>{pendingPR.owner}/{pendingPR.repo} · {pendingPR.sourceBranch} → {pendingPR.baseBranch}<br/>Commit {pendingPR.expectedSourceHead.slice(0,12)}</p><button type="button" className="button secondary" onClick={retryPendingPR} disabled={busy || !online || !auth.authenticated}>Kiểm tra / Tạo PR</button><small>Không upload ZIP hoặc tạo commit mới. Server kiểm tra PR đã tồn tại trước khi tạo.</small></div></details>}
             {error && <div className="error-banner" role="alert">{error}{errorHint && <p className="error-hint">{errorHint}</p>}</div>}
             {result && <PushOutcome result={result} onCopy={copyCommitSha}/>}
+            <RecoveryCenter push={pendingCommit} pr={pendingPR} online={online && pwa.reachable} busy={busy} authenticated={auth.authenticated} authorizedRepos={repos} onVerifyPush={() => verifyPending()} onCheckPR={retryPendingPR} onOpenHistory={() => goToTab('history')}/>
           </article>
           {activeTab === 'history' && <HistoryPanel authenticated={auth.authenticated} owner={owner} repo={repo} branch={branch} online={online} busy={busy} setBusy={setBusy} pendingPush={pendingCommit} api={api} requestOnce={requestOnce} onRollback={(outcome)=>logLocalAction({kind:'rollback',state:'success',repo:`${owner}/${repo}`,sha:outcome.sha,message:'Rollback verified'})}/>}
           {activeTab === 'activity' && <article className="panel pro-journal-panel" data-mobile-view="activity"><ActivityJournal items={proActivity} onClear={clearLocalActions}/></article>}
@@ -937,7 +946,7 @@ export default function Home() {
             <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
               profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
               onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
-            <div className="settings-info"><span>Phiên bản</span><strong>v2.8.0</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v2.9.0</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -948,7 +957,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v2.8.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v2.9.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <nav className="mobile-bottom-nav" aria-label="Điều hướng Zipverra">{[{id:'repositories',label:'Repos',icon:'branch'},{id:'home',label:'Upload',icon:'upload'},{id:'activity',label:'Activity',icon:'activity'},{id:'history',label:'History',icon:'history'},{id:'settings',label:'Settings',icon:'settings'}].map((tab) => <button type="button" key={tab.id} className={`mobile-nav-item ${activeTab === tab.id ? 'active' : ''}`} aria-current={activeTab === tab.id ? 'page' : undefined} aria-label={`Mở ${tab.label}${tab.id === 'activity' && (pendingCommit || pendingPR) ? ' — có thao tác cần xác minh' : ''}`} onClick={() => goToTab(tab.id)}><span className="mobile-nav-icon"><Icon name={tab.icon} size={21}/></span><span>{tab.label}</span>{tab.id === 'activity' && (pendingCommit || pendingPR) && <i className="nav-alert" aria-label="Có push cần xác minh"/>}</button>)}</nav>
   </>;
