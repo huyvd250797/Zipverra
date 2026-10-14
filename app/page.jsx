@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { encodeBase64 } from '../lib/base64.js';
 import { readArchiveOffThread } from '../lib/archive-worker-client.js';
@@ -15,14 +15,16 @@ import { PUSH_STAGES, JOURNAL_KEY, withSafeRetry, validJournal } from '../lib/re
 import { MOBILE_TABS, RECENTS_KEY, THEME_KEY, filterChanges, updateRecentRepositories, getPushTimeline } from '../lib/mobile-ui.js';
 import { FAVORITES_KEY, analyzeSource, selectChanges, toggleExcluded, filterReview, sortedRepositories, updateFavorites, isTextPreviewable, decodePreview, makeLineDiff, transferEstimate } from '../lib/smart-push.js';
 import SplashScreen from './components/SplashScreen.jsx';
+import { FeedbackToast, LoadingSkeleton } from './components/InteractionFeedback.jsx';
+import { createInteractionNotice, shouldAnnounceEvent } from '../lib/interaction-feedback.js';
 import { WorkflowStrip, CurrentRepository, StatusIndicator, UXViewIntro, StatusEmpty } from './components/ProfessionalUI.jsx';
 import MobileViewportGuard from './components/MobileViewportGuard.jsx';
-const HistoryPanel = dynamic(() => import('./components/HistoryPanel.jsx'), { ssr: false, loading: () => <p className="workflow-loading" role="status">Đang mở HistoryPanel…</p> });
-const WorkspacePanel = dynamic(() => import('./components/WorkspacePanel.jsx'), { ssr: false, loading: () => <p className="workflow-loading" role="status">Đang mở WorkspacePanel…</p> });
-const BranchPrPanel = dynamic(() => import('./components/BranchPrPanel.jsx'), { ssr: false, loading: () => <p className="workflow-loading" role="status">Đang mở BranchPrPanel…</p> });
-const ProDashboard = dynamic(() => import('./components/ProDashboard.jsx'), { ssr: false, loading: () => <p className="workflow-loading" role="status">Đang mở ProDashboard…</p> });
-const PushProfiles = dynamic(() => import('./components/PushProfiles.jsx'), { ssr: false, loading: () => <p className="workflow-loading" role="status">Đang mở PushProfiles…</p> });
-const ActivityJournal = dynamic(() => import('./components/ActivityJournal.jsx'), { ssr: false, loading: () => <p className="workflow-loading" role="status">Đang mở ActivityJournal…</p> });
+const HistoryPanel = dynamic(() => import('./components/HistoryPanel.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải HistoryPanel…"/> });
+const WorkspacePanel = dynamic(() => import('./components/WorkspacePanel.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải WorkspacePanel…"/> });
+const BranchPrPanel = dynamic(() => import('./components/BranchPrPanel.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải BranchPrPanel…"/> });
+const ProDashboard = dynamic(() => import('./components/ProDashboard.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải ProDashboard…"/> });
+const PushProfiles = dynamic(() => import('./components/PushProfiles.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải PushProfiles…"/> });
+const ActivityJournal = dynamic(() => import('./components/ActivityJournal.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải ActivityJournal…"/> });
 import { PRO_PROFILES_KEY, PRO_ACTIVITY_KEY, PRO_DASHBOARD_KEY, accountStorageKey,
   normalizeProfiles, upsertProfile, removeProfile, addActivity, normalizeActivity, proSnapshot, dashboardRepos } from '../lib/pro-workspace.js';
 
@@ -124,6 +126,14 @@ function Icon({ name, size = 20 }) {
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('repositories');
+  const [notice, setNotice] = useState(null);
+  const noticeSequence = useRef(0);
+  const notify = useCallback((event, verified = false) => {
+    if (!shouldAnnounceEvent(event, verified)) return;
+    const message = createInteractionNotice(event);
+    if (message) setNotice({ ...message, id: ++noticeSequence.current });
+  }, []);
+  const dismissNotice = useCallback((id) => setNotice(current => current?.id === id ? null : current), []);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [theme, setTheme] = useState('dark');
   const [proProfiles, setProProfiles] = useState([]);
@@ -193,7 +203,7 @@ export default function Home() {
     setActiveTab(tab);
     if (typeof window !== 'undefined') {
       if (tab === 'activity' && window.matchMedia('(min-width: 761px)').matches) {
-        window.requestAnimationFrame(() => activityRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+        window.requestAnimationFrame(() => activityRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }));
       } else window.scrollTo({ top: 0, behavior: 'auto' });
     }
   }
@@ -289,7 +299,7 @@ export default function Home() {
 
   useEffect(() => {
     setOnline(navigator.onLine);
-    const onNetwork = () => setOnline(navigator.onLine);
+    const onNetwork = () => { const connected = navigator.onLine; setOnline(connected); notify(connected ? 'network-online' : 'network-offline'); };
     window.addEventListener('online', onNetwork);
     window.addEventListener('offline', onNetwork);
     const pendingPr = readPendingPR();
@@ -410,13 +420,14 @@ export default function Home() {
     if (fileInput.current) fileInput.current.value = '';
     reset();
     saveRecent(value);
+    notify('repo-selected');
     goToTab('home');
   }
   function chooseFile(next) {
     if (busy || pendingCommit || pendingPR || !chosenRepo) return;
     const candidateError = next ? checkZipCandidate(next, LIMITS.zipBytes) : null;
     change(setFile, candidateError ? null : next || null);
-    if (candidateError) { setError(candidateError); setStatus('Hãy chọn một file .zip hợp lệ.'); }
+    if (candidateError) { setError(candidateError); setStatus('Hãy chọn một file .zip hợp lệ.'); notify('zip-invalid'); }
     if (fileInput.current) fileInput.current.value = '';
   }
   // A new ZIP is deliberately analyzed automatically. Security review and the Push
@@ -466,7 +477,8 @@ export default function Home() {
       setStatus(changes.length ? `Đã phân tích: ${changes.length} thay đổi cần xử lý.` : 'ZIP và repository đã đồng bộ, không có gì cần push.');
       setProgress(100);
       setPhase(PUSH_STAGES.IDLE);
-    } catch (e) { setError(e.message); setErrorHint(e.hint || ''); setPreview(null); setStatus(''); setPhase(PUSH_STAGES.FAILED); }
+      notify(changes.length ? 'review-ready' : 'no-changes');
+    } catch (e) { setError(e.message); setErrorHint(e.hint || ''); setPreview(null); setStatus(''); setPhase(PUSH_STAGES.FAILED); notify('action-failed'); }
     finally { analyzingRef.current = false; setBusy(false); }
   }
   function finishVerified(outcome) {
@@ -475,6 +487,7 @@ export default function Home() {
     setProgress(100);
     setPhase(PUSH_STAGES.SUCCEEDED);
     setActiveTab('activity');
+    notify('push-verified', true);
     logLocalAction({kind:'push',state:'success',repo:`${owner}/${repo}`,sha:outcome.sha,message:'Commit verified on GitHub'});
     setPendingCommit(null);
     clearPending();
@@ -505,6 +518,7 @@ export default function Home() {
       logLocalAction({kind:'pr',state:'success',repo:`${prData.owner}/${prData.repo}`,sha:outcome.sha,message:`Opened Pull Request #${pr.number}`});
       setPendingPR(null); clearPendingPR();
       setStatus(`Pull Request #${pr.number} đã được tạo/xác minh. Chờ review và merge trên GitHub.`);
+      notify('pr-verified', true);
       setError(''); setErrorHint('');
     } catch(e) {
       setError(`Đã push branch thành công nhưng chưa xác minh PR: ${e.message}`);
@@ -524,6 +538,7 @@ export default function Home() {
       logLocalAction({kind:'pr',state:'success',repo:`${pendingPR.owner}/${pendingPR.repo}`,sha:pendingPR.expectedSourceHead,message:`Verified Pull Request #${pr.number}`});
       setPendingPR(null); clearPendingPR(); setPhase(PUSH_STAGES.SUCCEEDED);
       setStatus(`Pull Request #${pr.number} đã được tạo/xác minh.`);
+      notify('pr-verified', true);
     } catch(e) {
       setError(`Chưa xác minh được PR: ${e.message}`);
       setErrorHint('Không cần push ZIP lại. Có thể kiểm tra trực tiếp Pull Requests trên GitHub rồi thử lại.');
@@ -678,6 +693,7 @@ export default function Home() {
     } catch (e) {
       setError(e.message);
       setErrorHint(e.hint || '');
+      notify('action-failed');
       setProgress(0);
       if (commitPayload) {
         if (releaseStrategy === 'direct' && (e.httpStatus === 403 || e.httpStatus === 422)) {
@@ -697,13 +713,14 @@ export default function Home() {
   return <>
     <MobileViewportGuard/>
     <SplashScreen loading={auth.loading}/>
+    <FeedbackToast notice={notice} onDismiss={dismissNotice}/>
     <div className="shell pro-shell">
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar" role="banner">
       <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span><em> Pro</em></strong><small>MOBILE GIT WORKSPACE</small></div></div>
-      <div className="header-actions"><StatusIndicator online={online} authenticated={auth.authenticated} loading={auth.loading}/><span className="version"><span className="live-dot"/> v2.3.0</span></div>
+      <div className="header-actions"><StatusIndicator online={online} authenticated={auth.authenticated} loading={auth.loading}/><span className="version"><span className="live-dot"/> v2.4.0</span></div>
     </header>
-    <UXViewIntro activeTab={activeTab} online={online} pending={Boolean(pendingCommit || pendingPR)}/>
+    <UXViewIntro activeTab={activeTab} key={activeTab} online={online} pending={Boolean(pendingCommit || pendingPR)}/>
     {activeTab !== 'activity' && (error || busy) && <button type="button" className={`mobile-global-status ${error ? 'has-error' : ''}`} onClick={() => goToTab('activity')}><span>{error ? `Cần kiểm tra: ${error}` : `${status || 'Đang xử lý...'} · ${progress}%`}</span><Icon name="arrow" size={17}/></button>}
     <main data-active-view={activeTab}>
       {activeTab === 'repositories' && <section className="hero" aria-label="Zipverra workflow">
@@ -722,13 +739,13 @@ export default function Home() {
           <article className="panel repository-panel" data-mobile-view="repositories" style={workspaceOpen ? {display:'none'} : undefined}>
             <StepTitle n="01" title="Chọn repository" desc="Chọn nơi nhận source trước khi tải ZIP."/>
 
-            {auth.loading ? <div className="repo-auth-minimal">Đang kết nối GitHub...</div> : !auth.authenticated ? <div className="auth-card">
+            {auth.loading ? <LoadingSkeleton kind="inline" label="Đang kiểm tra kết nối GitHub…"/> : !auth.authenticated ? <div className="auth-card">
               <p className="auth-muted">Kết nối GitHub để chọn repository được cấp quyền.</p>
               <a className="button primary full login-button" href="/api/auth/login"><Icon name="github" size={19}/> Continue with GitHub <Icon name="arrow" size={16}/></a>
             </div> : <div className="repo-auth-minimal"><div className="repo-auth-user"><Icon name="check" size={15}/> @{auth.user?.login} <span>Connected</span></div><button type="button" className="button secondary" onClick={loadRepos} disabled={busy || loadingRepos}><Icon name="refresh" size={15}/> Refresh</button></div>}
             {chosenRepo && <div className="pro-selected-repo" aria-label="Repository được chọn"><div className="pro-selected-repo-info"><span className="pro-overline">REPOSITORY ĐANG CHỌN</span><strong>{owner}/{repo}</strong><small><Icon name="branch" size={14}/> {branch} · {releaseStrategy === 'pr' ? 'Pull Request' : 'Direct Push'}</small></div><button type="button" className="button primary" disabled={busy || Boolean(pendingCommit) || Boolean(pendingPR)} onClick={() => goToTab('home')}>Upload ZIP <Icon name="arrow" size={17}/></button></div>}
             <div className="field"><label htmlFor="repo-search">Tìm repository</label><div className="input-icon"><Icon name="search" size={17}/><input id="repo-search" type="search" value={repoSearch} disabled={busy || !auth.authenticated} placeholder="Lọc theo tên repository" onChange={(e) => setRepoSearch(e.target.value)}/></div></div>
-            {loadingRepos && <div className="repo-skeleton" aria-label="Đang tải danh sách repository"><span/><span/><span/></div>}
+            {loadingRepos && <LoadingSkeleton kind="repos" label="Đang tải danh sách repository…"/>}
             {authorizedRecents.length > 0 && <div className="recents-block"><span className="mini-label">GẦN ĐÂY · lưu trên thiết bị</span><div className="recent-list">{authorizedRecents.slice(0, 3).map((name) => <button type="button" key={name} className="recent-chip" disabled={busy || !auth.authenticated} onClick={() => chooseRepo(name)}>{name}</button>)}</div></div>}
             {favorites.length > 0 && <div className="favorites-block"><span className="mini-label">PINNED REPOSITORIES</span><div className="favorite-list">{displayedRepos.filter(r => favorites.includes(r.full_name)).map(r => <div key={r.full_name} className="favorite-row"><button type="button" disabled={busy} onClick={() => chooseRepo(r.full_name)}>{r.full_name}</button><button type="button" className="favorite-star" onClick={() => toggleFavorite(r.full_name)} aria-label={`Bỏ ghim ${r.full_name}`}>★</button></div>)}</div></div>}
             <div className="field"><label htmlFor="repo-select">Chọn repository</label><select id="repo-select" disabled={busy || !auth.authenticated || !repos.length} value={displayedRepos.some((x) => x.full_name === `${owner}/${repo}`) ? `${owner}/${repo}` : ''} onChange={(e) => chooseRepo(e.target.value)}><option value="">{repos.length ? (displayedRepos.length ? 'Chọn repository được cấp quyền' : 'Không có repo phù hợp') : 'Chưa có repo được GitHub App cấp quyền'}</option>{displayedRepos.map((x) => <option key={x.full_name} value={x.full_name}>{x.full_name}{x.private ? ' 🔒' : ''}</option>)}</select>{chosenRepo && <button type="button" className="favorite-toggle" onClick={() => toggleFavorite(`${owner}/${repo}`)}>{favorites.includes(`${owner}/${repo}`) ? '★ Đã ghim repository' : '☆ Ghim repository này'}</button>}</div>
@@ -774,7 +791,7 @@ export default function Home() {
         <div className="side-column">
           <article ref={previewRef} className="panel preview-panel" data-mobile-view="home">
             <StepTitle n="03" title="Kiểm tra & xác nhận" desc="Xem file thay đổi, đánh dấu đồng ý rồi Push. Activity sẽ tự mở." centerOnMobile/>
-            {!preview ? <StatusEmpty icon="scan" title="Sẵn sàng phân tích source" description="Sau khi chọn ZIP, Zipverra tự phân tích và đưa bạn tới Review. Push chỉ thực hiện khi bạn xác nhận."/> : <>
+            {!preview ? busy && (phase === PUSH_STAGES.ANALYZING || phase === PUSH_STAGES.PREFLIGHT) ? <LoadingSkeleton kind="panel" label="Đang phân tích ZIP và kiểm tra GitHub…"/> : <StatusEmpty icon="scan" title="Sẵn sàng phân tích source" description="Sau khi chọn ZIP, Zipverra tự phân tích và đưa bạn tới Review. Push chỉ thực hiện khi bạn xác nhận."/> : <>
               <div className="summary-line"><span className="pill">{preview.input.owner}/{preview.input.repo}</span><span className="pill branch-pill"><Icon name="branch" size={14}/> {preview.input.branch}</span></div>
               <div className="release-summary" role="status">{preview.releaseStrategy==='pr'
                 ? <>Pull Request: <b>{preview.releaseBranch}</b> → <b>{preview.input.branch}</b>. ZIP sẽ được commit vào branch riêng, không đụng trực tiếp branch đích.</>
@@ -825,7 +842,7 @@ export default function Home() {
             <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
               profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
               onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
-            <div className="settings-info"><span>Phiên bản</span><strong>v2.3.0</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v2.4.0</strong></div>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
             <div className="settings-info"><span>Commit message</span><strong>Tên file ZIP</strong></div>
             <p className="hint">Push Profiles, Dashboard cache và Local Activity lưu riêng theo tài khoản GitHub trên thiết bị. Không đồng bộ giữa thiết bị và không chạy task ngầm khi đóng PWA.</p>
@@ -834,7 +851,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v2.3.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v2.4.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <nav className="mobile-bottom-nav" aria-label="Điều hướng Zipverra">{[{id:'repositories',label:'Repos',icon:'branch'},{id:'home',label:'Upload',icon:'upload'},{id:'activity',label:'Activity',icon:'activity'},{id:'history',label:'History',icon:'history'},{id:'settings',label:'Settings',icon:'settings'}].map((tab) => <button type="button" key={tab.id} className={`mobile-nav-item ${activeTab === tab.id ? 'active' : ''}`} aria-current={activeTab === tab.id ? 'page' : undefined} onClick={() => goToTab(tab.id)}><span className="mobile-nav-icon"><Icon name={tab.icon} size={21}/></span><span>{tab.label}</span>{tab.id === 'activity' && (pendingCommit || pendingPR) && <i className="nav-alert" aria-label="Có push cần xác minh"/>}</button>)}</nav>
   </>;

@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v2.3.0: Smart Workflow UX 4.0, automatic ZIP analysis, guided review, fast mobile navigation and safer repeat pushes",
+  "description": "Zipverra Pro v2.4.0: premium mobile micro-interactions, accessible motion, skeleton loading, safe feedback toasts and refined progress flow",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

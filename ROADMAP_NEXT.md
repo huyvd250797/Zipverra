@@ -1,20 +1,17 @@
-# Zipverra Pro — UX/UI & Performance Roadmap after v2.3.0
+# Zipverra Pro — UX/UI & Performance Roadmap after v2.4.0
 
-**Current baseline:** Zipverra Pro v2.3.0 — Smart Workflow UX 4.0, upgraded directly from v2.2.0.
+**Current baseline:** Zipverra Pro v2.4.0 — Premium Interaction & Motion, upgraded directly from v2.3.0.
 
-## v2.4.0 — Premium Interaction & Motion (next)
+## v2.5.0 — Workspace UX & Navigation (next)
 
-- Consistent, short micro-interactions for tab navigation, upload selection, progress and completion using transform/opacity.
-- Clear error/success feedback without overusing toast overlays, especially near iPhone's safe area and bottom navigation.
-- Reduced-motion support, accessible live status and keyboard/VoiceOver navigation; never animate actual transfer progress artificially.
-- Skeleton loading for expensive optional views and smoother perceived transitions between Repository, Upload, Review and Activity.
-- Responsive device testing, Core Web Vitals measured on real network/device, and production build gating before release.
+**Goal:** Make advanced GitHub source editing and PR review genuinely comfortable on iPhone, without adding a sixth tab.
 
-## v2.5.0 — Workspace UX & Navigation
-
-- Rework Repository Explorer, File History, Quick Edit and PR navigation for thumb-friendly iPhone usage.
-- Search-first file picker, compact breadcrumbs, stronger unsaved-edit guard and clearer return paths.
-- Maintain the five tabs; no arbitrary new sections in the core ZIP Push flow.
+- Repository Explorer: searchable tree, compact breadcrumbs, favorite folders and clear return-to-Repo navigation.
+- Quick Edit: unsaved-changes exit guard, mobile editing toolbar, clear diff before Save, large-file read-only notice.
+- Pull Requests: compact, review-first mobile layout, CI/merge status entry points; no automatic merge.
+- History: visual grouping, timeline filters and safer rollback confirmation presentation.
+- Maintain GitHub App permission checks, exact HEAD/SHA guards, Security Scan and explicit commit consent.
+- Acceptance: 320–430 px iPhone QA, reduced motion, keyboard/VoiceOver, no horizontal overflow and real GitHub E2E on disposable repo.
 
 ## v2.6.0 — PWA Optimization & Reliability
 

@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.4.0 — Premium Interaction & Motion (2026-10-14)
+
+- Added shared `pro-motion.css` motion tokens with subtle tab enter, tactile tap feedback, and connected stepper movement without changing workflow state.
+- Added one-at-a-time, dismissible, accessible toast notifications sourced only from fixed non-sensitive messages. Push and PR success require GitHub verification.
+- Added reusable skeleton placeholders for loading repositories, session, ZIP analysis and dynamically imported GitHub panels.
+- Reduced-motion rules remove nonessential animation and shimmer; desktop Activity scroll now respects device accessibility preferences.
+- Added automated interaction/motion regression tests; preserved ZIP Push, PR, Quick Edit, Security Scan, History, Rollback and Push Profiles.
+- Known QA limitations: npm registry DNS prevents local `next build`; headless Chromium times out in this environment, so actual mobile device testing remains required.
+
 ## v2.3.0 — Smart Workflow UX 4.0 (2026-10-14)
 
 - Automatic ZIP analysis after selection; remains read-only until explicit Review confirmation and Push.

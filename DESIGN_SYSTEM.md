@@ -1,7 +1,8 @@
-# Zipverra Pro v2.3.0 — Smart Workflow UX 4.0
+# Zipverra Pro v2.4.0 — Smart Workflow UX 4.0
 
 ## Source of truth
 
+- `app/styles/pro-motion.css`: purpose-driven animation, loading skeleton and toast rules, imported last.
 - `app/styles/pro-design-system.css`: semantic UI tokens, shared component styling, responsive rules, focus/low-motion support; imported **after** legacy `app/globals.css` from `app/layout.jsx`.
 - `app/components/ProfessionalUI.jsx`: small reusable presentation-only components; no API requests, no local/session storage, no mutations. Do not move authorization or data-safety operations here.
 - `app/page.jsx`: retains all workflow state and GitHub API orchestration. UI modernization must never reset ZIP/preview/PR recovery on an unrelated tab change.
