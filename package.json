@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "2.9.0",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v2.9.0: production hardening, reliable mobile Activity navigation, safe request bounds, security headers and error boundaries",
+  "description": "Zipverra Pro v3.0.0: production hardening, reliable mobile Activity navigation, safe request bounds, security headers and error boundaries",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

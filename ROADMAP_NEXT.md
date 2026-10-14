@@ -1,22 +1,34 @@
-# Zipverra Pro — Roadmap after v2.9.0
+# Zipverra Pro — Roadmap after v3.0.0 Stable Release
 
-**Baseline:** v2.9.0 — Production Hardening. Upgraded directly from the supplied v2.8.0 full source. No Vercel Deployment Tracking and no unimplemented v2.7.0 architecture migration.
+**Current baseline:** v3.0.0 — Stable Release.
 
-## Next: v3.0.0 — Zipverra Pro Stable Release
+This release stabilizes the mobile Git workflow, trims UI noise in the repository selection experience, fixes the iPhone skip-link visual issue, and preserves the GitHub App / security / rollback safety model already built across previous versions.
 
-v3.0.0 is a *release gate*, not an automatic version bump. The following must be demonstrated and documented before the Stable label can be used:
+## Next recommended versions
 
-1. A successful `npm ci`/`npm install` and Next.js 16 `npm run build` on CI/Vercel. Record the build SHA and any warnings.
-2. Automated unit and security regression tests green, and a **real** GitHub App authenticated E2E run on an isolated disposable repository: Direct Push, verified SHA, PR create/review/merge, Quick Edit, History, Rollback and recovery after a timeout.
-3. Safari on an actual iPhone **standalone PWA**: start Push after scrolling the Upload Review to the bottom; immediately land on Activity at the top with live stage/timeline visible. Repeat with normal-speed animation and reduced-motion enabled, plus a second navigation to Activity.
-4. Production diagnostics: validate `GET /api/version` no-store response, new public SW namespace, no private Cache Storage entries, 403/413/429 error presentation and expired GitHub App sessions.
-5. Light/Dark/System theme and 320px/375px/390px/430px viewport checks, safe-area keyboard, touch targets, VoiceOver focus and tab switching.
-6. Measure real-device LCP, INP, CLS, initial load, and API round-trips; compare against v2.8.0 instead of claiming unmeasured speedups.
-7. Review dependency advisories and configuration. Ship tagged GitHub release only after all critical checks pass.
+### v3.1.0 — Repository Workflow Clarity
+Focus:
+- Better empty/loading/error states for repository list, branch list and Quick Edit.
+- Stronger contextual guidance before Upload / Review / Push.
+- Smarter repo/branch memory with clearer “current destination” summaries.
+- Cleaner desktop/tablet adaptive layouts while preserving mobile-first flow.
 
-## Post-stable candidates (not part of v2.9.0)
+### v3.2.0 — Measured Performance Architecture
+Focus:
+- Reduce unnecessary re-renders in large workspace screens.
+- Deeper component splitting and memoization around Activity / History / Workspace.
+- Performance telemetry for startup, repo refresh and ZIP analysis.
+- More predictable loading budget on older mobile devices.
 
-- v3.1.0 — measured component/state isolation and performance architecture (the deferred v2.7.0 work).
-- v3.2.0 — reliable upload improvements for larger single-file assets (requires backend design beyond Vercel function body limits).
+### v3.3.0 — Large Source Delivery Reliability+
+Focus:
+- Better resumable upload recovery for larger source packages.
+- Stronger preflight estimation before blob upload begins.
+- More transparent progress, ETA and retry guidance for unstable networks.
+- Optional batching refinements while keeping mutation safety strict.
 
-**Explicitly excluded:** auto-merge, force-push, automatic retries of ambiguous Git mutations, background iOS uploads, Vercel API tracking.
+## Product direction kept unchanged
+- No force-push.
+- No automatic retry of ambiguous Git mutations.
+- No background iOS upload claims beyond platform limits.
+- No broad OAuth repo scope fallback; GitHub App remains the primary authorization model.

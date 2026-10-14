@@ -7,12 +7,12 @@ const read = path => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'
 const ready = { hasPreview:true, selectedCount:3, critical:0, authenticated:true, online:true, busy:false,
   pending:false, confirmed:true, syncDeleteCount:0, syncConfirmed:false };
 
-test('v2.8 release from v2.6 baseline includes full PWA version and stylesheet', () => {
-  assert.equal(JSON.parse(read('package.json')).version,'2.9.0');
-  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '2\.9\.0'/);
-  assert.match(read('public/sw.js'), /zipverra-public-v2\.9\.0/);
+test('v3.0 stable release keeps full PWA version and stylesheet', () => {
+  assert.equal(JSON.parse(read('package.json')).version,'3.0.0');
+  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.0\.0'/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.0\.0/);
   assert.match(read('app/layout.jsx'), /advanced-ux-polish\.css/);
-  assert.match(read('app/page.jsx'), /v2\.9\.0/);
+  assert.match(read('app/page.jsx'), /v3\.0\.0/);
 });
 
 test('readiness cannot approve a missing preview, missing changes or unconfirmed review', () => {
@@ -62,6 +62,9 @@ test('Repos has compact launchpad and uses real selected authorization', () => {
   const main=read('app/page.jsx'); const ui=read('app/components/PolishedWorkspace.jsx');
   assert.match(main,/selected=\{chosenRepo\}/);
   assert.match(main,/onWorkspace=\{\(\) => \{ setWorkspaceOpen\(true\)/);
+  assert.match(main,/repoTools=\{activeTab === 'repositories' && auth\.authenticated/);
+  assert.match(main,/repo-refresh-icon/);
+  assert.doesNotMatch(main,/repo-auth-minimal/);
   assert.match(ui,/disabled=\{!selected \|\| disabled\}/);
   assert.match(ui,/WorkspaceLaunchpad/);
   assert.doesNotMatch(ui,/fetch\(|localStorage|sessionStorage/);
@@ -100,6 +103,8 @@ test('accessibility: skip link, landmark, focus, mobile touch and reduced motion
   assert.match(main,/id="zipverra-main" tabIndex=\{-1\}/);
   assert.match(main,/aria-label=\{`Mở \$\{tab\.label\}/);
   assert.match(css,/:focus-visible/);
+  assert.match(css,/pointer-events:none/);
+  assert.match(css,/opacity:0/);
   assert.match(css,/min-height:44px/);
   assert.match(css,/safe-area-inset-bottom/);
   assert.match(css,/prefers-reduced-motion:reduce/);

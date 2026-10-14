@@ -1,4 +1,4 @@
-/* v2.9.0: viewport and error-state hardening; no mutation-side effects. */
+/* v3.0.0: viewport and error-state hardening; no mutation-side effects. */
 html { scroll-padding-top: 0; }
 .pro-shell .activity-panel { scroll-margin-top: 16px; }
 .pro-shell .activity-title { position: relative; }

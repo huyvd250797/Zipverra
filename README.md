@@ -1,26 +1,28 @@
-# Zipverra Pro v2.9.0 — Production Hardening
+# Zipverra Pro v3.0.0 — Stable Release
 
-> Upgraded directly from the user-supplied **Zipverra Pro v2.8.0** full source. Focus: mobile Activity auto-scroll after Push, verified timeline priority, bounded GitHub API requests, secure response headers and safe error boundaries. **No Vercel Deployment Tracking**.
+> Upgraded from the user-supplied **Zipverra Pro v2.9.0** source. Focus: stable mobile UX, compact repository status controls, safer accessibility presentation on iPhone, and preserved GitHub App / security / rollback workflow.
 
-## v2.9.0 — What's new
+## v3.0.0 — What's new
 
-- **Fixed iPhone Activity positioning:** tab changes scroll after React renders instead of before, including an explicit Safari scroll reset over animation frames. The Live Push flow appears above Recovery Center / Recent Actions.
-- **Bounded API JSON:** 4 MiB streaming request parser; oversized input returns 413 before GitHub writes; malformed JSON is rejected without exposing internals.
-- **HTTP hardening:** `nosniff`, referrer, frame and permissions policy headers. Service Worker remains no-store and caches public assets only.
-- **Runtime recovery UX:** sanitized page-level error and 404 views. GitHub writes are never auto-replayed.
-- **PWA version:** `2.9.0` in header, Settings, footer, version API, offline fallback and Service Worker cache namespace.
-- **Existing features retained:** GitHub App authentication, Web Worker ZIP upload, signed security scan, PR, Quick Edit, History, Safe Rollback, Profile and Recovery Center.
+- **Stable Release baseline:** promotes Zipverra Pro to a stable branch without changing the safe Git mutation model.
+- **Cleaner Repositories UX:** removed the large Connected / Refresh row from the repository section on mobile.
+- **Compact top-right controls:** repository connection status is now a simple check icon, with a refresh icon beside the Online indicator.
+- **Skip-link iPhone fix:** the accessibility skip link stays visually hidden until true keyboard/accessibility focus, avoiding the top-screen UI glitch.
+- **Versioning updated:** app header, Settings, footer, offline shell, version API and Service Worker cache namespace now use `3.0.0`.
+- **Regression tests:** local packaging validation completed with **222 / 222 passing tests**.
 
-## Deploying v2.9.0
+## Deploying v3.0.0
 
-1. Put the **contents of `Zipverra-v2.9.0/`** at the repository root on branch `main` (not the containing folder).
+1. Put the **contents of `Zipverra-v3.0.0/`** at the repository root on branch `main` (not the containing folder).
 2. Keep existing Vercel variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
-3. Confirm CI/Vercel build succeeds, then test the mobile Activity scroll bug on a disposable repository before using production.
-4. Review [PRODUCTION_HARDENING_V290.md](./PRODUCTION_HARDENING_V290.md) and [RELEASE_VALIDATION.md](./RELEASE_VALIDATION.md). **Production build and live GitHub/iPhone E2E are not verified from this environment.**
+3. Confirm CI/Vercel build succeeds, then test repository selection, ZIP upload, Push, Activity, History and Settings on a real mobile device.
+4. Review [STABLE_RELEASE_V300.md](./STABLE_RELEASE_V300.md) and [RELEASE_VALIDATION.md](./RELEASE_VALIDATION.md). **Production build and live GitHub/iPhone E2E are not verified from this environment.**
 
 ---
 
 ## Historical release notes
+
+
 
 # Zipverra Pro v2.8.0 — Advanced UX Polish
 
@@ -34,7 +36,7 @@
 - System theme, mobile touch/focus improvements, skip navigation and responsive polish.
 - PWA cache/version updated, keeping privacy-first offline behavior.
 
-Read `ADVANCED_UX_V280.md` for UI acceptance and `ROADMAP_NEXT.md` for v2.9.0 Production Hardening.
+Read `ADVANCED_UX_V280.md` for UI acceptance and `ROADMAP_NEXT.md` for v3.0.0 Production Hardening.
 
 
 

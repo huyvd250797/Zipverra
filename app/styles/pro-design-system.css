@@ -191,6 +191,7 @@ body { background: var(--pro-bg); color: var(--pro-text); }
 .pro-view-intro .pro-view-copy {min-width:0;}
 .pro-view-intro .pro-view-copy p {font-size:11px;color:var(--pro-muted);margin:4px 0 0;line-height:1.4;}
 .pro-view-indicators {display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.pro-view-tools {display:flex;align-items:center;gap:7px;}
 .pro-pending-marker {width:22px;height:22px;border-radius:50%;background:#7c4e21;color:#ffe4b8;display:grid;place-items:center;font-size:12px;font-weight:800;}
 /* Unified focus visibility, including keyboard access on desktop and external keyboards on iPad. */
 :where(button,a,input,select,textarea,summary,[tabindex]):focus-visible {outline:3px solid var(--pro-focus)!important;outline-offset:3px!important;}
@@ -209,6 +210,8 @@ body { background: var(--pro-bg); color: var(--pro-text); }
   .pro-view-intro h2 {font-size:25px;letter-spacing:-.85px;margin-top:7px;color:var(--pro-text);}
   .pro-view-intro .mobile-connection {font-size:10px;border-color:var(--pro-border-strong);padding:6px 10px;}
   .pro-view-intro .mobile-connection.connected {color:var(--pro-accent);background:var(--pro-accent-surface);}
+  .pro-view-tools {gap:6px;}
+  .repo-connection-icon,.repo-refresh-icon {width:32px;height:32px;}
   .pro-shell .hero {padding:6px 0 15px;}
   .pro-shell .hero .eyebrow {font-size:9px;}
   .pro-shell .hero h1 {font-size:clamp(26px,7.2vw,34px);margin-top:11px;letter-spacing:-1.15px;}

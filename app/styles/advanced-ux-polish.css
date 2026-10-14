@@ -1,10 +1,10 @@
-/* Zipverra Pro v2.9.0 — targeted polish only. No GitHub mutation behavior. */
+/* Zipverra Pro v3.0.0 — targeted polish only. No GitHub mutation behavior. */
 :root {
   --polish-soft-line: color-mix(in srgb, var(--pro-border) 80%, transparent);
   --polish-focus-offset: 3px;
 }
-.polish-skip-link {position:fixed;z-index:12000;left:12px;top:calc(10px + env(safe-area-inset-top,0px));padding:12px 16px;border-radius:12px;background:var(--pro-accent);color:var(--pro-accent-ink);font-weight:800;transform:translateY(-170%);transition:transform var(--pro-fast) ease;}
-.polish-skip-link:focus {transform:translateY(0);}
+.polish-skip-link {position:fixed;z-index:12000;left:max(12px,env(safe-area-inset-left,0px));top:max(10px,env(safe-area-inset-top,0px));padding:11px 15px;border-radius:14px;background:var(--pro-accent);color:var(--pro-accent-ink);font-weight:800;line-height:1.2;opacity:0;pointer-events:none;transform:translateY(calc(-100% - 12px));box-shadow:0 12px 30px rgba(0,0,0,.18);transition:transform var(--pro-fast) ease,opacity var(--pro-fast) ease;}
+.polish-skip-link:focus-visible {opacity:1;pointer-events:auto;transform:translateY(0);}
 .polish-shell #zipverra-main:focus {outline:none;}
 .polish-kicker {display:inline-block;font-size:10px;font-weight:840;letter-spacing:1.6px;text-transform:uppercase;color:var(--pro-accent);}
 /* Replace the repeated hero + second repository card with a compact actionable launchpad. */

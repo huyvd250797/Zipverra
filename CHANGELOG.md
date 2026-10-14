@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.0.0 — Stable Release (2026-10-14)
+
+- Promoted Zipverra Pro to a Stable Release baseline after preserving all previously implemented GitHub App, Security Validation, rollback and recovery protections.
+- Removed the large Connected / Refresh status bar from the repository selection area on mobile to reduce UI clutter.
+- Introduced compact repository status controls in the top-right Repositories header: a connected check icon and a refresh icon button.
+- Fixed the iPhone skip-link visual glitch; the accessibility shortcut is now fully hidden by default and appears only on proper keyboard/accessibility focus.
+- Updated in-app version strings, offline shell version, PWA public cache namespace and regression expectations to v3.0.0.
+- Regression suite passes 222/222 local tests in the packaging environment.
+- Build, live GitHub App E2E and real-device production validation should still be completed after deployment.
+
 ## v2.9.0 — Production Hardening (2026-10-14)
 
 - Fixed the iPhone Activity tab after Push retaining the previous long-screen scroll position; scroll now occurs after React tab commit, plus a second Safari correction frame.

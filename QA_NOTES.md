@@ -1,8 +1,8 @@
-# Zipverra Pro v2.9.0 — QA Notes
+# Zipverra Pro v3.0.0 — QA Notes
 
 Primary regression: Activity on iPhone **must start at the top** immediately after Push, with live timeline/status above Recovery Center and Recent Actions. Run on Safari and installed home-screen PWA, normal/reduced motion, long Review and long Recent Actions. Verify no forced commit retries.
 
-CI / Vercel build, live iPhone, and real authenticated GitHub E2E are release blockers until verified. See PRODUCTION_HARDENING_V290.md and RELEASE_VALIDATION.md.
+CI / Vercel build, live iPhone, and real authenticated GitHub E2E are release blockers until verified. See STABLE_RELEASE_V300.md and RELEASE_VALIDATION.md.
 
 ---
 

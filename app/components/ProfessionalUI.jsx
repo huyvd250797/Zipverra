@@ -9,12 +9,12 @@ const views = Object.freeze({
   settings: { eyebrow: 'PREFERENCES', title: 'Settings', description: 'Tùy chỉnh workspace và GitHub App.', step: '05' },
 });
 
-export function UXViewIntro({ activeTab, online, pending }) {
+export function UXViewIntro({ activeTab, online, pending, repoTools = null }) {
   const screen = views[activeTab] || views.repositories;
   return <div className="mobile-context pro-view-intro" aria-label={`Màn hình ${screen.title}`}>
     <div className="pro-view-copy"><span className="mobile-eyebrow">{screen.eyebrow} <span aria-hidden="true">/ {screen.step}</span></span>
       <h2>{screen.title}</h2><p>{screen.description}</p></div>
-    <div className="pro-view-indicators"><span className={`mobile-connection ${online ? 'connected' : 'disconnected'}`}>{online ? 'Online' : 'Offline'}</span>{pending && <span className="pro-pending-marker" aria-label="Có thao tác cần xác minh" title="Cần xác minh">!</span>}</div>
+    <div className="pro-view-indicators"><span className={`mobile-connection ${online ? 'connected' : 'disconnected'}`}>{online ? 'Online' : 'Offline'}</span>{repoTools ? <div className="pro-view-tools" role="group" aria-label="Repository controls">{repoTools}</div> : null}{pending && <span className="pro-pending-marker" aria-label="Có thao tác cần xác minh" title="Cần xác minh">!</span>}</div>
   </div>;
 }
 

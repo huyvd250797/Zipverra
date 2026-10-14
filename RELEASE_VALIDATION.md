@@ -1,8 +1,8 @@
-# Zipverra Pro v2.9.0 — Release Validation
+# Zipverra Pro v3.0.0 — Release Validation
 
 **Source baseline:** user-supplied Zipverra Pro v2.8.0 full source.
 
-## Local verification for v2.9.0
+## Local verification for v3.0.0
 
 - `node --test tests/*.test.js`: **222/222 passed** (to be rerun after source packaging).
 - New Activity tab positioning tests verify post-render scheduling, iPhone zero-scroll, second Safari animation frame, desktop Activity anchor and cleanup.
@@ -13,15 +13,15 @@
 
 ## Deployment and acceptance checklist
 
-1. Extract `Zipverra-v2.9.0` contents into the root of the GitHub repository; do not commit the ZIP itself.
+1. Extract `Zipverra-v3.0.0` contents into the root of the GitHub repository; do not commit the ZIP itself.
 2. Keep the five existing GitHub App Vercel env vars unchanged. No new variables.
 3. Run `npm install`, `npm test`, `npm run build` in a networked environment. Inspect Vercel and GitHub Actions build logs.
 4. Open the installed iPhone PWA, scroll to bottom of a long ZIP Review and Push. Activity must open at **page top** with Live Push status visible before Recent Actions.
 5. Switch away and back to Activity, verify it returns to top. Check Reduced Motion and iOS Safari standalone behavior.
 6. Check Push/PR/Quick Edit/History/Rollback safely on disposable repo; verify no automatic retry of uncertain mutations.
-7. Validate /api/version v2.9.0 and public PWA update; no private responses or tokens appear in Cache Storage.
+7. Validate /api/version v3.0.0 and public PWA update; no private responses or tokens appear in Cache Storage.
 
-Detailed implementation and safety notes: [PRODUCTION_HARDENING_V290.md](./PRODUCTION_HARDENING_V290.md).
+Detailed implementation and safety notes: [STABLE_RELEASE_V300.md](./STABLE_RELEASE_V300.md).
 
 ---
 
