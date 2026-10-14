@@ -1,4 +1,4 @@
-# Zipverra Pro v2.2.0 — Performance Engine & Fast Startup
+# Zipverra Pro v2.3.0 — Smart Workflow UX 4.0
 
 ## Source of truth
 

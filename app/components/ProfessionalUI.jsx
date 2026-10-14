@@ -25,7 +25,7 @@ export function StatusIndicator({ online, authenticated, loading }) {
   </span>;
 }
 
-export function WorkflowStrip({ currentStep = 0, onRepo, onUpload, onActivity }) {
+export function WorkflowStrip({ currentStep = 0, onRepo, onUpload, onReview, onActivity }) {
   const steps = [
     { label: 'Repository', compact: 'Repo', description: 'Chọn nơi nhận source.' },
     { label: 'Upload ZIP', compact: 'Upload', description: 'Tải file ZIP từ điện thoại.' },
@@ -35,19 +35,21 @@ export function WorkflowStrip({ currentStep = 0, onRepo, onUpload, onActivity })
   ];
   const activeIndex = Math.min(Math.max(currentStep, 0), steps.length - 1);
   const completion = Math.min(Math.max(currentStep, 0), steps.length) / steps.length;
-  const handlers = [onRepo, onUpload, onUpload, onUpload, onActivity];
-  const activeStep = steps[activeIndex];
+  const handlers = [onRepo, onUpload, onReview, onReview, onActivity];
+  const activeStep = currentStep >= steps.length ? {label: 'Completed', description: 'Đã push và xác minh commit. Sẵn sàng cho phiên bản tiếp theo.'} : steps[activeIndex];
   return <section className="pro-stepper" aria-label="Quy trình cập nhật source">
     <nav className="pro-stepper-nav pro-workflow" aria-label="Quy trình cập nhật source">
       <div className="pro-stepper-rail" aria-hidden="true"><span style={{ width: `${Math.max(8, completion * 100)}%` }}/></div>
       <ol className="pro-stepper-list">
         {steps.map((step,index) => {
           const state = index < currentStep ? 'done' : index === activeIndex ? 'current' : 'upcoming';
+          const unavailable = (index === 2 || index === 3) && currentStep < 3 || index === 4 && currentStep < 4;
           return <li key={step.label} className={`pro-stepper-item ${state}`}>
             <button type="button"
               className={`pro-workflow-step ${state}`}
-              aria-current={index === activeIndex ? 'step' : undefined}
+              aria-current={currentStep < steps.length && index === activeIndex ? 'step' : undefined}
               aria-label={`Bước ${index + 1}: ${step.label}`}
+              disabled={unavailable}
               onClick={handlers[index]}>
               <span className="pro-workflow-count">{index < currentStep ? '✓' : index + 1}</span>
               <span className="pro-workflow-label">
@@ -61,7 +63,7 @@ export function WorkflowStrip({ currentStep = 0, onRepo, onUpload, onActivity })
       </ol>
     </nav>
     <div className="pro-stepper-summary" role="status" aria-live="polite">
-      <span className="pro-stepper-kicker">Step {activeIndex + 1} of {steps.length}</span>
+      <span className="pro-stepper-kicker">Step {Math.min(currentStep + 1, steps.length)} of {steps.length}</span>
       <strong>{activeStep.label}</strong>
       <p>{activeStep.description}</p>
     </div>

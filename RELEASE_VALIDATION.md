@@ -1,22 +1,20 @@
-# Zipverra Pro v2.2.0 — Release Validation
+# Zipverra Pro v2.3.0 — Release Validation
 
-- Source baseline: user-provided Zipverra Pro v2.0.0 ZIP.
-- UI-specific code: `app/components/ProfessionalUI.jsx` + `app/styles/pro-design-system.css`; `app/page.jsx` and `app/layout.jsx` integrate the components. All other GitHub API/server routes and security algorithms are preserved.
-- Unit suite: **162/162 tests passed**, including workflow-stepper and performance UX regression tests.
-- Parser: **81 JS/JSX/MJS** source modules parsed with TypeScript and **147 relative import references** verified. CSS parsed with PostCSS; zero parser errors.
-- `npm install`: failed with `EAI_AGAIN` from npm registry (`jszip` download), so **Next.js production build NOT verified locally**. Vercel CI must pass before production release.
-- Chromium-based screenshot/responsive tests **not completed** in packaging environment (browser process timed out). Layouts remain to be verified on real browsers/devices; no claim of passing visual regression tests.
-- GitHub App live write operations, PR merge and Safe Rollback E2E **not executed** with a production repository.
-- No new environment variables, dependencies, endpoints, database or extra GitHub App permissions.
-- ZIP archive checksum and extraction checks listed in packaging report.
+- Source baseline: user-provided v2.2.0.
+- No new GitHub API routes, env vars, database or Next.js dependencies.
+- Automated regression suite and TypeScript JS/JSX syntax checks: see packaging notes and `tests/workflow-ux.test.js`.
+- UI layout fixture checked with Chromium at 320/375/390/430/768/1280 px; **this is not an interactive production app test**.
+- `npm install` failed with registry DNS error `EAI_AGAIN` for `jszip`, so `next build` **not verified in this environment**.
+- No authenticated live GitHub Push/PR, production Vercel deployment or Safe Rollback E2E executed.
 
-## Required release acceptance on Vercel & iPhone
+## Release gate — run before production
 
-1. `npm install` and `npm run build` succeed with the configured GitHub App env variables.
-2. Login, repo selection, Upload ZIP, Review/Security Scan, Direct Push, PR branch, Activity SHA Verify work in a disposable repo.
-3. Navigate all five tabs without losing selected ZIP, preview or recovery state. Switch light/dark; verify 320, 375, 390, 430, 768, 1280 px and iPhone safe areas.
-4. Quick Edit Save, PR Merge and History/Safe Rollback work under existing permissions.
-5. Test keyboard navigation/focus ring, VoiceOver labels and reduced motion.
-6. Confirm correct `v2.2.0` version in header, Settings and footer. Confirm the connected workflow stepper renders cleanly on iPhone widths and PWA refresh does not show stale CSS.
+1. GitHub Actions/Vercel: `npm install && npm test && npm run build`.
+2. Check iPhone Safari and standalone PWA (notch/dynamic island, bottom bar, dark/light and 320–430 px).
+3. Choose repo → ZIP auto analyze → Review → Select/exclude → Confirm → Activity; ensure no automatic Push.
+4. Test PR flow (branch create, PR recovery, merge confirmation) and 403 protected branch handling.
+5. Verify Security Scan blocks Critical in UI/server, Sync deletions require separate consent, ambiguous mutations do not retry.
+6. Verify with a disposable repo before modifying important repositories.
+7. Confirm header/footer/Settings show `v2.3.0` and cache refresh loads new CSS.
 
-See `README.md`, `DESIGN_SYSTEM.md`, `QA_NOTES.md` and `ROADMAP_NEXT.md`.
+See `WORKFLOW_UX.md` and `QA_NOTES.md` for additional checks.

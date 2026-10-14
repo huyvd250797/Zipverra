@@ -1,4 +1,4 @@
-/* Zipverra Pro 2.2.0 — UI foundation.
+/* Zipverra Pro 2.3.0 — UI foundation.
    Loaded after legacy component CSS. All overrides are visual; no display toggles
    change the existing mobile view/data-mobile-view state machine. */
 :root {
@@ -262,4 +262,34 @@ body { background: var(--pro-bg); color: var(--pro-text); }
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;}
+}
+
+/* v2.3 — Smart Workflow UX 4.0: primary actions stay visible before fold. */
+.pro-shell main[data-active-view="home"] .hero {display:none;}
+.pro-shell .workflow-options {margin:16px 0 12px;border:1px solid var(--pro-border);background:var(--pro-surface-2);border-radius:14px;overflow:hidden;}
+.pro-shell .workflow-options>summary {display:flex;align-items:center;gap:9px;min-height:48px;padding:12px 14px;cursor:pointer;font-size:12px;font-weight:780;color:var(--pro-text);list-style:none;}
+.pro-shell .workflow-options>summary::-webkit-details-marker {display:none;}
+.pro-shell .workflow-options>summary>svg {color:var(--pro-accent);flex:none;}
+.pro-shell .workflow-options>summary>span {margin-left:auto;color:var(--pro-muted);font-size:10px;font-weight:650;white-space:nowrap;}
+.pro-shell .workflow-options[open]>summary {border-bottom:1px solid var(--pro-border);}
+.pro-shell .workflow-options-body {padding:0 14px 14px;}
+.pro-shell .workflow-insights {margin:16px 0;}
+.pro-shell .workflow-insights>summary {cursor:pointer;list-style:none;}
+.pro-shell .workflow-insights>summary::-webkit-details-marker {display:none;}
+.pro-shell .workflow-insights>summary:after {content:'⌄';margin-left:auto;color:var(--pro-muted);font-size:21px;line-height:1;transition:transform var(--pro-fast) var(--pro-ease);}
+.pro-shell .workflow-insights[open]>summary:after {transform:rotate(180deg);}
+.pro-shell .workflow-insights .insight-warnings,.pro-shell .workflow-insights .insight-clean {margin-top:12px;}
+.pro-shell .workflow-next {margin-top:12px;}
+.pro-shell .workflow-complete {display:flex;align-items:center;justify-content:space-between;gap:14px;margin:16px 0 6px;padding:15px;border:1px solid var(--pro-border-strong);background:var(--pro-accent-surface);border-radius:15px;}
+.pro-shell .workflow-complete>div {display:grid;gap:4px;min-width:0;}
+.pro-shell .workflow-complete strong {font-size:13px;color:var(--pro-accent);}
+.pro-shell .workflow-complete small {font-size:11px;color:var(--pro-muted);line-height:1.5;}
+.pro-shell .workflow-complete .button {flex:none;min-height:42px;}
+.pro-shell .workflow-loading {color:var(--pro-muted);font-size:12px;line-height:1.6;padding:16px;border:1px solid var(--pro-border);border-radius:12px;background:var(--pro-surface);}
+@media (max-width:760px) {
+  .pro-shell .workflow-options>summary {font-size:11px;padding:12px;}
+  .pro-shell .workflow-options-body {padding:0 12px 12px;}
+  .pro-shell .workflow-complete {flex-direction:column;align-items:stretch;}
+  .pro-shell .workflow-complete .button {width:100%;}
+  .pro-shell .workflow-next {min-height:48px;}
 }

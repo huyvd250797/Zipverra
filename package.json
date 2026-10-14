@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v2.2.0: performance engine, fast startup polish and refined workflow stepper for mobile Git push",
+  "description": "Zipverra Pro v2.3.0: Smart Workflow UX 4.0, automatic ZIP analysis, guided review, fast mobile navigation and safer repeat pushes",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

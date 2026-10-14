@@ -1,3 +1,14 @@
+# Changelog
+
+## v2.3.0 — Smart Workflow UX 4.0 (2026-10-14)
+
+- Automatic ZIP analysis after selection; remains read-only until explicit Review confirmation and Push.
+- Reduced Upload screen vertical clutter and consolidated advanced Merge/Sync and Direct Push/PR options.
+- Guided Review navigation and actionable verified-success shortcut to push another ZIP on the same repo.
+- Code-split optional Workspace/History/PR modules, memoized review filtering and coalesced progress rendering.
+- Retained GitHub App authorization, signed blob security attestations, safe commit verification and rollback invariants.
+- New workflow UX tests and viewport screenshots for a **static layout fixture** (not Next/Vercel E2E).
+
 # Zipverra Changelog
 
 ## v2.1.0 — Professional UI Design System (2026-10-14)

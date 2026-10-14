@@ -1,37 +1,30 @@
-# Zipverra Pro v2.2.0 — Performance Engine & Fast Startup
+# Zipverra Pro v2.3.0 — Smart Workflow UX 4.0
 
 **Next.js 16 · React 19 · GitHub App · Mobile-first PWA · Vercel-targeted**  
 **Tagline:** Push to GitHub. From Your Phone.
 
-> Source baseline: Zipverra Pro v2.1.0, supplied by the user. This v2.2.0 focuses on **faster perceived startup, workflow rendering polish and a redesigned mobile progress flow stepper**, not a rewrite of GitHub APIs. **No Vercel Deployment Tracking** is included.
+> **Source baseline:** Zipverra Pro v2.2.0. This is a guided workflow and responsiveness release: no new GitHub mutation endpoints or Vercel Deployment Tracking.
 
-## What's new in v2.2.0 — Performance Engine & Fast Startup
+## What's new in v2.3.0
 
-- Shared `app/styles/pro-design-system.css` provides dark/light semantic tokens for backgrounds, text, borders, accent, spacing, radii, focus ring, shadows and motion. Loaded from `app/layout.jsx` after legacy styles to minimize regressions.
-- New presentation-only reusable components in `app/components/ProfessionalUI.jsx`: accessible mobile screen heading, current repo summary, online/GitHub status chip, five-step workflow navigation and empty review state. **No GitHub API calls or source data persistence** in these components.
-- Reworked topbar, panels, buttons, inputs, upload/drop zone, review summaries, activity timeline and bottom navigation with restrained colors and consistent sizing. Retains the **five existing mobile tabs**.
-- Repositories display an actionable selected-repo card and clear **Upload ZIP** action. Upload highlights the chosen repo and the current step. Activity uses a real progressbar with `aria-valuenow`, never fabricated server progress.
-- Global `:focus-visible` styling, accessible labels, minimum touch target sizing and `prefers-reduced-motion` protection. Existing iPhone safe-area treatment retained.
-- Security-critical APIs (blob attestations, commit, PR creation/merge, Quick Edit, History, Safe Rollback) remain unchanged.
-- Validation: 162/162 Node unit tests passed; 81 JS/JSX/MJS modules parsed; 147 relative imports resolved; CSS parser passed. npm install/build blocked by npm registry DNS `EAI_AGAIN`; **production build and real-browser interaction not verified** on this host. Verify using Vercel CI and iPhone.
+- **One-tap ZIP selection → automatic analysis.** Uploading a ZIP runs Web Worker parsing and the preflight/snapshot comparison automatically; the Push action remains an explicit checkbox + button.
+- **Less scrolling.** The marketing hero appears only on Repos; Upload opens near the connected workflow stepper and selected repository. Advanced Merge/Sync and Direct Push/PR options are collapsed by default.
+- **Faster Review.** Mobile automatically scrolls to Review when results arrive; structural warnings expand if noteworthy. Security warnings remain visible, with Critical blocking Push/PR.
+- **Next version shortcut.** After verified success in Activity, start another ZIP with the same repository and branch; no commit is created by this shortcut.
+- **Rendering efficiency.** History/Workspace/PR/Profiles/Dashboard/Journal load as separate client chunks; History/Settings/Journal render only on the active tab. Dashboard is lazy until its section is expanded.
+- **Progress UI coalescing.** ZIP parsing and blob upload progress updates are throttled without changing network operations, saved checkpoints or final status.
+- **Reliable navigation.** Tab changes retain in-memory ZIP and review state. Reloading still requires reselecting ZIP, while the existing pending commit/PR journal supports safe verification.
+- **Core GitHub safeguards untouched.** GitHub App auth, blob security proofs, selection gates, SHA verify, PR branch safety, Quick Edit, History and non-force Rollback remain in place.
 
-### Primary workflow
-
-**Repos → Upload ZIP → Analyze & Security Review → Confirm Direct Push or Pull Request → Activity / Verify SHA**.
-
-#
-### Additional highlights in v2.2.0
-
-- Redesigned **workflow stepper** from block buttons into a connected progress flow with an active-step summary for mobile.
-- Improved perceived startup by simplifying the workflow chrome and reducing noisy UI during the Upload & Review stage.
-- Preserved Direct Push, Pull Request, Quick Edit, Security Scan, History and Safe Rollback flows.
+See [WORKFLOW_UX.md](./WORKFLOW_UX.md) for flow details, QA and safety invariants.
 
 ## Deployment
 
-- Push contents of `Zipverra-v2.2.0/` to the **root** of the existing GitHub repository, branch `main`. Do not place the source in a subdirectory.
-- Preserve existing five Vercel Production env vars: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
-- No database, new GitHub App permissions or external Vercel tokens are required beyond v2.0.0's existing permissions.
-- Run `npm ci` (where a lockfile is available) or `npm install`, `npm test` and `npm run build` in a networked CI environment. Test layouts at 320, 375, 390, 430, 768 and 1280 px, dark/light, and iPhone safe area.
+- Push the **contents of `Zipverra-v2.3.0/`** to the **repository root** on `main`, not the containing folder or ZIP itself.
+- Preserve these five Vercel Production environment variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
+- No additional database, API token, GitHub permission or package dependency is needed.
+- In CI: `npm install`, `npm test`, `npm run build`. Test Direct Push and PR on a disposable repository before production use.
+- Current local packaging environment could not install npm dependencies due to registry DNS `EAI_AGAIN`. Unit tests and static syntax checks passed; Next production build and live GitHub E2E are **not** verified here.
 
 ---
 
@@ -58,7 +51,7 @@ Zipverra Pro extends the existing five tabs, **Repos · Upload · Activity · Hi
 The following Production environment variables are still required: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`. **No additional Vercel environment variables, database or external tokens are required.**
 
 - GitHub App **Contents: Read and write**, **Metadata: Read-only**; **Pull requests: Read and write** to use PR workflows; **Workflows: Read and write** if ZIP modifies GitHub Actions.
-- Upload the **contents of `Zipverra-v2.2.0/`** into the repository root; do not upload the ZIP as a source file. Import the GitHub repository on Vercel, or let the existing Vercel project deploy the new commit.
+- Upload the **contents of `Zipverra-v2.3.0/`** into the repository root; do not upload the ZIP as a source file. Import the GitHub repository on Vercel, or let the existing Vercel project deploy the new commit.
 - Run `npm install`, `npm test` and `npm run build` in CI. Production build and live GitHub operations must be verified before critical use.
 - On iPhone use Safari → Share → Add to Home Screen. Continue to respect iOS safe areas and accessibility zoom controls.
 
@@ -74,7 +67,7 @@ The following Production environment variables are still required: `APP_URL`, `G
 
 ### Smoke tests after Vercel deployment
 
-1. Confirm footer and Settings show **v2.2.0** / Pro branding and account login works.
+1. Confirm footer and Settings show **v2.3.0** / Pro branding and account login works.
 2. Repos → Refresh status; confirm SHA/message against GitHub and no unauthorized repo is returned.
 3. Save a Push Profile, select a different repo, return and **Apply**. Verify chosen branch/strategy and that old ZIP preview is cleared.
 4. Push a test ZIP, verify SHA, check Activity local record; create a PR (not auto-merged) and check PR record.
