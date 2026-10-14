@@ -1,3 +1,31 @@
+# Zipverra Pro v3.0.1 — Source ZIP Download
+
+> Upgraded directly from **Zipverra Pro v3.0.0 Stable Release**. This maintenance release adds an authenticated, browser-native **download of the selected repository's `main` branch as ZIP**. The ZIP Push flow, Pull Requests, History, Quick Edit, Security Scan, and Safe Rollback are unchanged.
+
+## Download ZIP from an iPhone
+
+1. Sign in with the existing GitHub App and choose your repository from **Repos**.
+2. Zipverra automatically opens **Upload** after choosing a repo. Tap **Download Source ZIP → Tải ZIP** near the repository destination card. The same control is available inside **Repos**.
+3. GitHub prepares the ZIP for **`main`**, regardless of the Push branch currently selected. On iPhone, the browser may open a new tab and show the Downloads manager; use Safari/Files to keep the ZIP.
+4. This is the current source snapshot, not the `.git` history, pull requests or old commits. GitHub may include an enclosing repository folder in the archive.
+
+The download is authenticated by the current **GitHub App user session**. Private repos require the existing installation/Contents grant. The backend checks the user's repository access and `main` HEAD, then makes a **302 redirect** to GitHub's time-limited archive link; it does **not** proxy or buffer archive bytes through Vercel. GitHub says private archive URLs expire after approximately five minutes; choose **Tải ZIP** again if a previous download expires. No source bytes or GitHub credentials are written to browser storage.
+
+**Deliberate scope:** download only `main` (not arbitrary branches or commits); no background download in a suspended iPhone PWA; no guarantee that submodules or Git LFS objects appear as expanded source in GitHub's archive.
+
+## Deployment
+
+1. Extract **`Zipverra-v3.0.1/`** and push its **contents** to the root of the existing GitHub repo on `main`.
+2. Keep the existing five Vercel variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
+3. No additional GitHub App permissions or database needed for repos already selectable in Zipverra.
+4. Local `npm test` passed **233/233** and static checks passed. **Production `npm run build` could not be verified here** because the npm registry was unreachable (`EAI_AGAIN`); verify the Vercel build and a real iPhone download from a disposable repository.
+
+See [SOURCE_ZIP_DOWNLOAD_V301.md](./SOURCE_ZIP_DOWNLOAD_V301.md) for technical safeguards, tests and limitations. See [RELEASE_VALIDATION.md](./RELEASE_VALIDATION.md) for the full QA checklist.
+
+---
+
+## Historical release notes
+
 # Zipverra Pro v3.0.0 — Stable Release
 
 > Upgraded from the user-supplied **Zipverra Pro v2.9.0** source. Focus: stable mobile UX, compact repository status controls, safer accessibility presentation on iPhone, and preserved GitHub App / security / rollback workflow.

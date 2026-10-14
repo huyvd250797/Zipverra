@@ -1,8 +1,8 @@
-# Zipverra Pro — Roadmap after v3.0.0 Stable Release
+# Zipverra Pro — Roadmap after v3.0.1 Source ZIP Download
 
-**Current baseline:** v3.0.0 — Stable Release.
+**Current baseline:** v3.0.1 — Source ZIP Download (stable maintenance release).
 
-This release stabilizes the mobile Git workflow, trims UI noise in the repository selection experience, fixes the iPhone skip-link visual issue, and preserves the GitHub App / security / rollback safety model already built across previous versions.
+The v3.0.1 update adds an authorized main-branch ZIP download while preserving GitHub App authorization, mobile Push workflow, Pull Requests, History, and Safe Rollback.
 
 ## Next recommended versions
 

@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.1 — Source ZIP Download (2026-10-14)
+
+- Added a native one-tap **Download Source ZIP** action in Repositories and Upload for the selected GitHub repository.
+- Explicitly downloads **main** only; this does not change the selected Push/PR branch.
+- Added authenticated read-only GET `/api/github/source-zip` backed by GitHub App user session and repository grant checks.
+- Verified main exists before asking GitHub for its archive; the server follows no ZIP payload redirects.
+- Redirects the browser to GitHub's short-lived `codeload.github.com` archive link, avoiding Vercel body limits and mobile ZIP memory pressure.
+- Validates redirect host/path to prevent open redirects, applies `no-store` / no-referrer and shows a minimal safe error page.
+- Preserved all existing Push/PR/Quick Edit/History/Rollback/security flows; all 23 pre-existing GitHub API route files are unchanged.
+- Local regression suite **233/233 passed**, including 11 new archive download tests; production build and real iPhone/GitHub E2E require deploy validation.
+- No database, new environment variables or third-party dependencies.
+
 ## v3.0.0 — Stable Release (2026-10-14)
 
 - Promoted Zipverra Pro to a Stable Release baseline after preserving all previously implemented GitHub App, Security Validation, rollback and recovery protections.

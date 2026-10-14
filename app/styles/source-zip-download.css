@@ -1,0 +1,22 @@
+/* Zipverra Pro v3.0.1 — native GitHub ZIP download (no ZIP data inside JS). */
+.source-zip-download {display:flex;flex-wrap:wrap;align-items:center;gap:10px 13px;padding:13px 14px;margin:12px 0 15px;border:1px solid var(--pro-border-strong);border-radius:14px;background:var(--pro-surface-2);min-width:0;}
+.source-zip-download-detail {display:flex;align-items:center;gap:10px;flex:1 1 180px;min-width:0;}
+.source-zip-download-symbol {width:37px;height:37px;border-radius:11px;display:grid;place-items:center;background:var(--pro-accent-surface);color:var(--pro-accent);font-size:21px;font-weight:800;flex-shrink:0;}
+.source-zip-download-label {min-width:0;display:grid;gap:4px;}
+.source-zip-download-label strong {font-size:12.5px;color:var(--pro-text);line-height:1.2;}
+.source-zip-download-label small {color:var(--pro-muted);font-size:10.5px;line-height:1.4;}
+.source-zip-download-label small b {color:var(--pro-accent);font-weight:800;}
+.source-zip-download-action {display:inline-flex;flex-shrink:0;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:9px 13px;border:1px solid var(--pro-accent);background:var(--pro-accent-surface);color:var(--pro-accent);border-radius:11px;font-size:12px;font-weight:790;text-decoration:none;touch-action:manipulation;transition:background .15s ease,transform .15s ease;}
+.source-zip-download-action:hover {background:color-mix(in srgb,var(--pro-accent-surface) 75%,var(--pro-accent) 25%);}
+.source-zip-download-action:active {transform:scale(.98);}
+.source-zip-download-action.is-disabled {cursor:not-allowed;opacity:.55;border-color:var(--pro-border-strong);color:var(--pro-muted);}
+.source-zip-download-note {margin:0;flex-basis:100%;font-size:10.5px;line-height:1.6;color:var(--pro-muted);overflow-wrap:anywhere;}
+.source-zip-download--compact {padding:10px 11px;margin:9px 0 14px;}
+.source-zip-download--compact .source-zip-download-symbol {width:32px;height:32px;font-size:18px;}
+.source-zip-download--compact .source-zip-download-label strong {font-size:12px;}
+@media(max-width:370px) {
+  .source-zip-download {gap:9px;padding:11px;}
+  .source-zip-download-action {padding:9px 10px;font-size:11px;}
+  .source-zip-download-label small {font-size:10px;}
+}
+@media(prefers-reduced-motion:reduce) { .source-zip-download-action {transition:none!important;} .source-zip-download-action:active {transform:none!important;} }

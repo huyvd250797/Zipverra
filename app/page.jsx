@@ -23,6 +23,7 @@ import { createInteractionNotice, shouldAnnounceEvent } from '../lib/interaction
 import { shouldWarnWorkspaceExit } from '../lib/workspace-ux.js';
 import { WorkflowStrip, CurrentRepository, StatusIndicator, UXViewIntro, StatusEmpty } from './components/ProfessionalUI.jsx';
 import { WorkspaceLaunchpad, RepositoryEmpty, ReviewReadiness, ActivityEmpty, PushOutcome } from './components/PolishedWorkspace.jsx';
+import SourceZipDownload from './components/SourceZipDownload.jsx';
 import { reviewReadiness, themeChoice, resolveTheme } from '../lib/ux-polish.js';
 import MobileViewportGuard from './components/MobileViewportGuard.jsx';
 const HistoryPanel = dynamic(() => import('./components/HistoryPanel.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải HistoryPanel…"/> });
@@ -818,7 +819,7 @@ export default function Home() {
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar" role="banner">
       <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span><em> Pro</em></strong><small>MOBILE GIT WORKSPACE</small></div></div>
-      <div className="header-actions"><StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/><span className="version"><span className="live-dot"/> v3.0.0</span></div>
+      <div className="header-actions"><StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/><span className="version"><span className="live-dot"/> v3.0.1</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} repoTools={activeTab === 'repositories' && auth.authenticated ? <><span className="repo-connection-icon" role="status" aria-label={`GitHub đã kết nối${auth.user?.login ? `: @${auth.user.login}` : ""}`} title={auth.user?.login ? `@${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={14}/></span><button type="button" className={`repo-refresh-icon${loadingRepos ? ' is-loading' : ''}`} onClick={loadRepos} disabled={busy || loadingRepos} aria-label="Làm mới danh sách repository" title="Làm mới danh sách repository"><Icon name="refresh" size={15}/></button></> : null}/>
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
@@ -852,6 +853,7 @@ export default function Home() {
             <div className="field"><label htmlFor="repo-select">Chọn repository</label><select id="repo-select" disabled={busy || !auth.authenticated || !repos.length} value={displayedRepos.some((x) => x.full_name === `${owner}/${repo}`) ? `${owner}/${repo}` : ''} onChange={(e) => chooseRepo(e.target.value)}><option value="">{repos.length ? (displayedRepos.length ? 'Chọn repository được cấp quyền' : 'Không có repo phù hợp') : 'Chưa có repo được GitHub App cấp quyền'}</option>{displayedRepos.map((x) => <option key={x.full_name} value={x.full_name}>{x.full_name}{x.private ? ' 🔒' : ''}</option>)}</select>{chosenRepo && <button type="button" className="favorite-toggle" onClick={() => toggleFavorite(`${owner}/${repo}`)}>{favorites.includes(`${owner}/${repo}`) ? '★ Đã ghim repository' : '☆ Ghim repository này'}</button>}</div>
             <details className="repo-advanced"><summary>Tùy chọn nâng cao · Nhập repo thủ công</summary><div className="two-col"><div className="field"><label htmlFor="owner">Owner</label><input id="owner" value={owner} disabled={busy || !auth.authenticated} placeholder="huyvd250797" onChange={(e) => change(setOwner, e.target.value)}/></div><div className="field"><label htmlFor="repo">Repository</label><input id="repo" value={repo} disabled={busy || !auth.authenticated} placeholder="Finzaro" onChange={(e) => change(setRepo, e.target.value)}/></div></div><p className="hint">Chỉ có thể push lên repository đã được GitHub App cấp quyền.</p></details>
             <div className="field"><label htmlFor="branch">Branch đích <span className="tag">Mặc định: main</span></label><div className="input-icon"><Icon name="branch" size={17}/><input id="branch" value={branch} disabled={busy || !auth.authenticated} placeholder="main" onChange={(e) => change(setBranch, e.target.value)}/></div></div>
+            <SourceZipDownload owner={owner} repo={repo} selected={chosenRepo} online={online && pwa.reachable} busy={busy}/>
             <details className="pro-dash-details" onToggle={(event) => setDashboardOpen(event.currentTarget.open)}><summary>Zipverra Pro · Multi-repository dashboard</summary>
               {activeTab === 'repositories' && dashboardOpen && <ProDashboard authenticated={auth.authenticated} online={online} loading={dashboardLoading}
                 snapshot={proDashboard} repos={repos} profiles={proProfiles} recents={recents} favorites={favorites}
@@ -867,6 +869,7 @@ export default function Home() {
           <article className="panel upload-panel" data-mobile-view="home">
             <StepTitle n="02" title="Upload ZIP" desc="Giải nén trong Web Worker, không chặn thao tác điện thoại."/>
             <div className="source-repo-context">{chosenRepo ? <><Icon name="branch" size={16}/><strong>{owner}/{repo}</strong><span>· {branch}</span></> : <><Icon name="shield" size={16}/> Chưa chọn repository. <button type="button" onClick={() => goToTab('repositories')}>Chọn repo →</button></>}</div>
+            <SourceZipDownload owner={owner} repo={repo} selected={chosenRepo} online={online && pwa.reachable} busy={busy} compact/>
             <input ref={fileInput} id="file" className="visually-hidden" type="file" accept=".zip,application/zip,application/x-zip-compressed" disabled={busy || !chosenRepo} onChange={(e) => chooseFile(e.target.files?.[0])}/>
             <label htmlFor={chosenRepo ? 'file' : undefined} className={`drop-zone ${file ? 'picked' : ''} ${!chosenRepo ? 'locked' : ''}`}><span className="file-symbol"><Icon name={file ? 'file' : 'upload'} size={25}/></span><strong>{file ? file.name : chosenRepo ? 'Chạm để chọn file ZIP' : 'Chọn repo trước khi upload'}</strong><small>{file ? `${prettyBytes(file.size)} · Chạm để thay file` : 'Nguồn ZIP từ ChatGPT hoặc ứng dụng Files'}</small></label>
             {file && <div className="file-detail"><Icon name="check" size={15}/> {busy && phase === PUSH_STAGES.ANALYZING ? 'Đang phân tích ZIP...' : preview ? 'Đã phân tích · Xem Review bên dưới' : 'Đã chọn ZIP'} · Commit: <strong>{commitMessage}</strong></div>}
@@ -946,7 +949,7 @@ export default function Home() {
             <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
               profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
               onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.0.0</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.0.1</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -957,7 +960,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.0.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.0.1</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <nav className="mobile-bottom-nav" aria-label="Điều hướng Zipverra">{[{id:'repositories',label:'Repos',icon:'branch'},{id:'home',label:'Upload',icon:'upload'},{id:'activity',label:'Activity',icon:'activity'},{id:'history',label:'History',icon:'history'},{id:'settings',label:'Settings',icon:'settings'}].map((tab) => <button type="button" key={tab.id} className={`mobile-nav-item ${activeTab === tab.id ? 'active' : ''}`} aria-current={activeTab === tab.id ? 'page' : undefined} aria-label={`Mở ${tab.label}${tab.id === 'activity' && (pendingCommit || pendingPR) ? ' — có thao tác cần xác minh' : ''}`} onClick={() => goToTab(tab.id)}><span className="mobile-nav-icon"><Icon name={tab.icon} size={21}/></span><span>{tab.label}</span>{tab.id === 'activity' && (pendingCommit || pendingPR) && <i className="nav-alert" aria-label="Có push cần xác minh"/>}</button>)}</nav>
   </>;
