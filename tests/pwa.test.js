@@ -45,8 +45,10 @@ test('splash displays on first HTML paint and has a network failsafe', () => {
 
 test('hero title is updated to English on mobile and desktop', () => {
   const page = source('app/page.jsx');
-  assert.match(page, /Push to GitHub\.<br\/>\s*<span>From Your Phone\.<\/span>/);
-  assert.doesNotMatch(page, /Đẩy source lên GitHub/);
+  const launchpad = source('app/components/PolishedWorkspace.jsx');
+  assert.match(launchpad, /Push to GitHub\.<br\/>\s*<span>From Your Phone\.<\/span>/);
+  assert.match(page, /<WorkspaceLaunchpad/);
+  assert.doesNotMatch(launchpad, /Đẩy source lên GitHub/);
 });
 
 test('standalone iPhone layout offsets header from status bar and protects bottom home indicator', () => {

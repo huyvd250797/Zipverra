@@ -1,4 +1,27 @@
-# Zipverra Pro v2.6.0 — Release Validation
+# Zipverra Pro v2.8.0 — Release Validation
+
+Baseline: user-supplied v2.6.0. Direct version jump; v2.7.0 architectural work is not included.
+
+## Automated validation
+
+- **213/213 unit tests passed** (`node --test tests/*.test.js`), including 13 new UX Polish test cases.
+- **97 JS/JSX/MJS modules parsed, 166 relative imports resolved**, zero errors.
+- **6 CSS files parsed** without errors; ZIP CRC to be validated after packing.
+- `npm run build` (Next.js 16) **not verified** unless dependency installation succeeds.
+- Chromium static fixture (not Next.js) checked at **320/375/390/430/768/1280px**, Dark + Light, without horizontal overflow. Actual device and live GitHub E2E **not verified**.
+
+## Deployment checklist
+
+1. Push the **contents** of `Zipverra-v2.8.0/` to the existing GitHub repo root, branch `main`.
+2. Keep APP_URL, GITHUB_APP_CLIENT_ID, GITHUB_APP_CLIENT_SECRET, GITHUB_APP_SLUG, SESSION_SECRET.
+3. Inspect Vercel Build Logs. Do not infer success from ZIP/source tests.
+4. Check v2.8.0 in header, Settings, footer and `/api/version`. Reopen installed iPhone PWA and accept update only when no operation is pending.
+5. Test Launchpad, upload, Review gating, Push/PR, Recovery Center, Quick Edit, History and Rollback on a disposable repo.
+6. Test Dark, Light, System appearance, safe area and reduced motion on iPhone.
+
+
+## Archive: validation notes inherited from v2.6.0 (historical; not instructions for deploying v2.8.0)
+
 
 Baseline: user-supplied Zipverra Pro v2.5.0 full-source ZIP. Full source ZIP, not a patch.
 

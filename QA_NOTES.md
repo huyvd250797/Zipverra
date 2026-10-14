@@ -1,3 +1,14 @@
+# Zipverra Pro v2.8.0 — Advanced UX Polish QA
+
+Current source base: direct upgrade from v2.6.0. **v2.7.0 not included.**
+
+- 213/213 unit tests, 97 syntax-checked modules, 166 imports, 6 parsed CSS files.
+- Chromium fixture: no horizontal overflow in 320, 375, 390, 430, 768, 1280 px (Dark and Light). This does not validate the deployed Next.js application.
+- Live GitHub/Vercel E2E and production `next build` are not verified: npm registry DNS `EAI_AGAIN`.
+- Mandatory manual checks: launchpad, repo chooser, ZIP Review gating, Sync-delete confirmation, Critical scan blocking, Push/PR result links, clipboard SHA, System theme with OS appearance switching, activity recovery, unsaved Quick Edit navigation guard.
+
+## Historical QA notes from previous releases
+
 # Zipverra Pro v2.6.0 — PWA Reliability QA
 
 New release tests: **200/200 Node tests passed**; TypeScript parser checked **94 JS/JSX/MJS** and **159 relative imports**; PostCSS parsed **5 stylesheets**. Chromium checked the static update/recovery fixture at 320/375/390/430/768/1280 px without horizontal overflow. **npm registry DNS `EAI_AGAIN` prevents `next build` locally**. Real iPhone and GitHub E2E QA is still required. See `PWA_RELIABILITY_V260.md` and `RELEASE_VALIDATION.md`. Previous Workspace UX tests and constraints remain relevant.

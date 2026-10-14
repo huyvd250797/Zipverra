@@ -3,6 +3,7 @@ import './styles/pro-design-system.css';
 import './styles/pro-motion.css';
 import './styles/workspace-ux.css';
 import './styles/pwa-reliability.css';
+import './styles/advanced-ux-polish.css';
 
 export const metadata = {
   title: 'Zipverra Pro — GitHub Workspace',

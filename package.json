@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "2.6.0",
+  "version": "2.8.0",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v2.6.0: PWA lifecycle reliability, safe update, public-only offline shell, session revalidation, and GitHub Recovery Center",
+  "description": "Zipverra Pro v2.8.0: advanced mobile UX polish, simplified workspace launchpad, actionable review readiness, verified activity outcomes, system theme and accessibility",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

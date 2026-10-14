@@ -1,32 +1,21 @@
-# Zipverra Pro — UX/UI & Performance Roadmap after v2.6.0
+# Zipverra Pro — Roadmap after v2.8.0
 
-**Current baseline:** Zipverra Pro v2.6.0 — PWA Optimization & Reliability, upgraded from v2.5.0.
+**Current baseline:** v2.8.0 — Advanced UX Polish, upgraded directly from the user-supplied v2.6.0 source. **v2.7.0 — Performance & Code Architecture was intentionally skipped and is not claimed as implemented.**
 
-## v2.7.0 — Performance & Code Architecture (next)
+## v2.9.0 — Production Hardening (next)
 
-**Goal:** measure and remove real UI bottlenecks while keeping GitHub mutation safety.
+- Reproduce and eliminate all Next.js 16 production build errors in an environment with npm registry access.
+- Run an authenticated GitHub App integration test against a disposable repository: Direct Push, PR creation, PR merge, Quick Edit, History, Rollback, scan blocking and recovery.
+- Run browser E2E smoke checks for light/dark/system themes, VoiceOver landmarks, tab navigation, narrow iPhone viewports, file upload/review, keyboard and safe areas.
+- Measure p75 LCP/INP/CLS and perceived startup via field RUM or device testing, not just static CSS tests.
+- Audit webhook-independent PWA updates, CSP, dependency vulnerabilities, race conditions and scoped cache permissions.
+- Record pass/fail evidence in release validation before calling it verified production-ready.
 
-- Break large `app/page.jsx` orchestration into focused hooks and memoized feature components while preserving one source of truth for ZIP/Review/Activity state.
-- Audit effects, redundant fetches, cache deduplication and renders caused by high-frequency Web Worker/upload progress events.
-- Virtualize very large repository/file lists and optimize mobile code viewer only where profiling demonstrates benefit.
-- Instrument key user journeys (cold/warm startup, tab navigation, ZIP analyze, Review render, verify), collect LCP/INP/CLS, compare before/after at p75.
-- Review Next.js bundle sizes and dynamically import heavy optional UI, without introducing stale/auth-mixed data.
-- Confirm dependency-install, `npm test`, `npm run build` and iPhone PWA smoke tests in a networked CI/production environment.
+## v3.0.0 — Stable Release (after successful hardening)
 
-## v2.8.0 — Advanced UX Polish
+- Freeze features, stabilize UX, publish deployment and rollback/incident playbook.
+- Require green production build and functional E2E safety gate before release.
 
-- Accessibility pass: VoiceOver, keyboard, large text, motion preferences, light/dark contrast.
-- Consistent empty/error/loading/recovery states across Repos, Upload, Workspace, Activity, PR and History.
-- Safe-area/mobile gesture and responsive audit on real iPhones.
+## Deferred architectural work from v2.7.0
 
-## v2.9.0 — Production Hardening
-
-- Full GitHub App E2E across ZIP Push, PR, Quick Edit and Safe Rollback in a disposable repository.
-- Restore from interrupted sessions, stale HEAD/permission, server timeouts and iPhone backgrounding.
-- Security review of cookies, API cache headers, service worker lifecycle, ZIP secret scanning and recovery journals.
-
-## v3.0.0 — Zipverra Pro Stable Release
-
-- Stable release only after tests, production build, live GitHub E2E, iPhone PWA verification and rollback readiness pass.
-
-**Out of scope unless requested:** Vercel Deployment Tracking, paid tiers, unbounded files, automatic PR merge/force-push, unattended background GitHub commits.
+Large page.jsx decomposition, state isolation, render profiling, API deduplication and deep bundle optimization were **not** implemented by this UX-focused release. They remain candidates for v2.9.0 if profiling justifies the change.

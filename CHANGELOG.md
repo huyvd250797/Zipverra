@@ -1,5 +1,13 @@
 # Changelog
 
+## v2.8.0 — Advanced UX Polish (2026-10-14)
+
+- Direct upgrade from v2.6.0; v2.7.0 features were not included.
+- Added Workspace Launchpad, actionable empty states, Review Readiness and confirmed outcome card with copyable SHA.
+- Added Dark / Light / System appearance preference, responsive/keyboard/accessibility refinement.
+- Preserved all GitHub mutations, authorization checks, Security Scan, rollback and recovery protocols.
+- Bumped PWA offline public cache to v2.8.0; no new env vars.
+
 ## v2.6.0 — PWA Optimization & Reliability (2026-10-14)
 
 - Introduced an opt-in service worker with public offline shell/icons only; GitHub/auth/API/private HTML/source are never cached by the service worker.

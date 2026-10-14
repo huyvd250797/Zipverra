@@ -1,9 +1,23 @@
-# Zipverra Pro v2.6.0 — PWA Optimization & Reliability
+# Zipverra Pro v2.8.0 — Advanced UX Polish
+
+> Direct upgrade from the user-supplied v2.6.0 full source. Version 2.7.0 was intentionally skipped; its architecture refactor is **not** part of this release. No Vercel Deployment Tracking.
+
+## What's new in v2.8.0
+
+- Premium compact Repos Launchpad with primary ZIP Push button and contextual shortcuts.
+- Clear, accessible Review Readiness explaining why a commit is disabled or ready; explicit confirmations remain mandatory.
+- Actionable Activity empty state and GitHub-verified outcome card (commit SHA, Copy, commit/PR links).
+- System theme, mobile touch/focus improvements, skip navigation and responsive polish.
+- PWA cache/version updated, keeping privacy-first offline behavior.
+
+Read `ADVANCED_UX_V280.md` for UI acceptance and `ROADMAP_NEXT.md` for v2.9.0 Production Hardening.
+
+
 
 **Next.js 16 · React 19 · GitHub App · Mobile-first PWA · Vercel-targeted**  
 **Tagline:** Push to GitHub. From Your Phone.
 
-> **Source baseline:** Zipverra Pro v2.5.0 (user-provided full source). This release improves **PWA lifecycle, startup, safe update, offline fallback and recovery visibility**. GitHub mutation endpoints, ZIP/PR/Quick Edit/Rollback semantics and GitHub App authentication remain unchanged.
+> **Historical v2.6.0 notes:** Zipverra Pro v2.5.0 (user-provided full source). This release improves **PWA lifecycle, startup, safe update, offline fallback and recovery visibility**. GitHub mutation endpoints, ZIP/PR/Quick Edit/Rollback semantics and GitHub App authentication remain unchanged.
 
 ## What's new in v2.6.0 — PWA Optimization & Reliability
 
@@ -55,7 +69,7 @@ See [WORKFLOW_UX.md](./WORKFLOW_UX.md) for flow details, QA and safety invariant
 
 ## Deployment
 
-- Push the **contents of `Zipverra-v2.6.0/`** to the **repository root** on `main`, not the containing folder or ZIP itself.
+- Push the **contents of `Zipverra-v2.8.0/`** to the **repository root** on `main`, not the containing folder or ZIP itself.
 - Preserve these five Vercel Production environment variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
 - No additional database, API token, GitHub permission or package dependency is needed.
 - In CI: `npm install`, `npm test`, `npm run build`. Test Direct Push and PR on a disposable repository before production use.

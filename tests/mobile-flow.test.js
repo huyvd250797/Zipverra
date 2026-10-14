@@ -18,7 +18,9 @@ test('sync deletions need independent confirmation on top of usual preview conse
  const page = read('app/page.jsx');
  assert.match(page, /setSyncConfirmed\(false\)/);
  assert.match(page, /Tôi đồng ý xóa/);
- assert.match(page, /stats\.delete > 0 && !syncConfirmed/);
+ assert.match(page, /stats\?\.delete > 0 && !syncConfirmed/);
+ assert.match(page, /disabled=\{!canSubmitPush\}/);
+ assert.match(read('lib/ux-polish.js'), /syncDeleteCount > 0 && !syncConfirmed/);
  assert.match(page, /!confirmed/);
 });
 test('app keeps mobile safe area, dark/light preferences and reduced motion', () => {
