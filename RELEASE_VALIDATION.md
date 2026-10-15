@@ -1,3 +1,32 @@
+# Zipverra Pro v3.5.0 — Release Validation
+
+**Source baseline:** User-supplied Zipverra Pro v3.4.0 source ZIP. Scope: premium workflow UX, not GitHub mutation changes.
+
+## Local verification (2026-10-15)
+
+- **286/286 unit tests pass**, including new stepper, Review disclosure, explicit consent and Activity-state checks.
+- Chromium independent layout fixture: Dark/Light on 320/375/390/430/768/1280px; all twelve configurations without horizontal overflow. Mobile confirm region `position:sticky`; desktop static. This fixture is not live Next.js.
+- New pure `lib/premium-workflow.js` and presentation-only `app/components/PremiumWorkflow.jsx`; original GitHub API routes unmodified.
+- CSS design layer `app/styles/premium-workflow-v350.css` added after mobile v3.4.0 stylesheet; reduced-motion support.
+- `npm install` failed because npm registry DNS returned `EAI_AGAIN`; **production `next build` remains unverified**. Real GitHub App and Safari PWA end-to-end operations remain unverified.
+
+## Required release gate on Vercel and iPhone
+
+1. Confirm production `next build` and verify version `v3.5.0` in header, Settings, footer and `/api/version`.
+2. On an authorized test repo, select a ZIP with more than 10 changes; Review should summarize changes first, with file list collapsed. Open list, exclude a file and review diff.
+3. For 10 or fewer changes, the file list should start expanded; file inclusion remains controllable.
+4. Confirm Critical secret blocks Commit/PR, Sync deletion requires a separate checkbox, and user must still check the final commit acknowledgement.
+5. With a long Review page, Confirm & Push must remain accessible without obscuring security notices; verify position above mobile bottom navigation.
+6. Start Push, confirm automatic Activity navigation and accurate Validate → Upload → Commit → Verify/PR stages. Induced failures must remain failed/unconfirmed, not green success.
+7. Verify modal/bottom sheet scroll lock, repo quick picks, Download ZIP Save to Files, Quick Edit, History and Rollback are unaffected.
+8. Check reduced-motion, Dark/Light/System, iPhone safe area/keyboard and 320/375/390/430px layouts on real devices.
+
+Detailed design: [PREMIUM_WORKFLOW_V350.md](./PREMIUM_WORKFLOW_V350.md).
+
+---
+
+## Historical release validation
+
 # Zipverra Pro v3.4.0 — Release Validation
 
 **Source baseline:** User-supplied full v3.3.0 ZIP. This release changes mobile layouts and navigation only; no GitHub mutation endpoint changed.

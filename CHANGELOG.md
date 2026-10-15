@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.5.0 — Premium Workflow Experience (2026-10-15)
+
+- Corrected the five-step progress rail to align with milestone centers and actual state (no fabricated percentages).
+- Added a compact Review overview with selected changes, size, branch and strategy; removed a redundant destination pill row.
+- Placed long file selectors/diffs inside an expandable list, while keeping Critical security warnings, Sync deletion confirmation and Push consent visible.
+- Added thumb-friendly sticky confirmation on mobile, preserving all server-side safety gates and manual consent.
+- Added real-state Activity focus and suppressed empty waiting timeline when no operation exists; success requires GitHub verification.
+- Added six focused automated UX/security regression tests, plus responsive/reduced-motion presentation layer.
+- Preserved all 31 existing authenticated GitHub API routes byte-for-byte and kept the five-tab PWA navigation.
+- Local tests/static validation passed; production Next.js build and real iPhone/GitHub E2E still require CI/device verification.
+
+
 ## v3.4.0 — Mobile Layout & Navigation Redesign (2026-10-15)
 
 - Consolidated the old hero and repeated repository picker into a single destination hub with repository/branch buttons and direct actions.

@@ -1,3 +1,32 @@
+# Zipverra Pro v3.5.0 — Premium Workflow Experience
+
+**Source baseline:** Zipverra Pro v3.4.0 supplied full source. This v3.5.0 release refines the five-step ZIP-to-GitHub experience without changing GitHub API routes, permissions, signed security validation, safe rollback or recovery.
+
+## What's new in v3.5.0
+
+- **Milestone Stepper:** five milestones with precise progress-rail geometry; completed stages are distinct from pending stages. No optimistic completion.
+- **Review-first presentation:** summary of selected/total changes, selected bytes and branch before details; large file lists (more than 10 changes) start collapsed, but can be expanded to inspect, exclude and diff files.
+- **Security remains visible:** secret Critical blocking, Sync delete acknowledgement, readiness and mandatory Push consent are outside the collapsible file list.
+- **Accessible mobile confirmation:** review consent and Commit/PR button form a thumb-friendly sticky region above the mobile nav; no automatic Push.
+- **Live Activity focus:** read-only presentation of the true workflow phase and measured progress, explicitly distinguishing uncertain outcomes and PR still pending.
+- **Less idle clutter:** waiting timeline is hidden while Activity is idle; users can still start a new Upload.
+- **Reduced Motion:** animated stage decoration is disabled for users requesting reduced motion.
+
+## Deployment
+
+1. Extract the release ZIP and push the **contents of `Zipverra-v3.5.0/`** to the repository root on `main`.
+2. Keep existing Vercel environment variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
+3. Verify `npm install && npm test && npm run build` in networked CI/Vercel, then smoke-test Repo → Upload → Review → Confirm → Activity on an authorized disposable GitHub repository.
+4. Confirm iPhone standalone PWA sticky confirmation, Activity scroll to top, critical security blocking, Sync confirmation and live PR recovery.
+
+**Validation limit:** this environment cannot install Next.js due npm registry DNS `EAI_AGAIN`; `next build` and real iPhone/GitHub E2E have **not** been verified here. Static Chromium fixture checks do not replace production verification.
+
+Further detail: [PREMIUM_WORKFLOW_V350.md](./PREMIUM_WORKFLOW_V350.md), [RELEASE_VALIDATION.md](./RELEASE_VALIDATION.md), [ROADMAP_NEXT.md](./ROADMAP_NEXT.md).
+
+---
+
+## Previous v3.4.0 release information
+
 # Zipverra Pro v3.4.0 — Mobile Layout & Navigation Redesign
 
 **Baseline:** Zipverra Pro v3.3.0 supplied full source. This v3.4.0 focuses on one-handed mobile navigation, a unified repository destination hub, shorter Upload/Review, and a more prominent live Activity view. It does not change GitHub commit/PR/rollback APIs, credentials or security rules.

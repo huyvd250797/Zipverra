@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.4.0",
+  "version": "3.5.0",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.4.0: one-handed mobile navigation with consolidated repository hub, compact Upload and Activity layouts, preserving GitHub safety",
+  "description": "Zipverra Pro v3.5.0 — Premium Workflow Experience with guided Review, explicit Confirm, and live GitHub Activity; secure operations preserved",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

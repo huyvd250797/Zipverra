@@ -11,6 +11,7 @@ import './styles/repository-workflow.css';
 import './styles/premium-visual-v320.css';
 import './styles/unified-components-v330.css';
 import './styles/mobile-layout-v340.css';
+import './styles/premium-workflow-v350.css';
 
 export const metadata = {
   title: 'Zipverra Pro — GitHub Workspace',

@@ -1,6 +1,7 @@
 /** Zipverra Pro UI primitives — presentation only, no GitHub mutation side effects. */
 'use client';
 import ContextualHelp from './ContextualHelp.jsx';
+import { workflowPosition } from '../../lib/premium-workflow.js';
 
 const views = Object.freeze({
   repositories: { eyebrow: 'YOUR WORKSPACE', title: 'Repositories', description: 'Chọn nơi cập nhật source.', step: '01' },
@@ -33,13 +34,12 @@ export function WorkflowStrip({ currentStep = 0, onRepo, onUpload, onReview, onA
     { label: 'Confirm', compact: 'Confirm', description: 'Kiểm tra thay đổi trước khi gửi.' },
     { label: 'Activity', compact: 'Push', description: 'Theo dõi Push và xác minh kết quả.' },
   ];
-  const activeIndex = Math.min(Math.max(currentStep, 0), steps.length - 1);
-  const completion = Math.min(Math.max(currentStep, 0), steps.length) / steps.length;
+  const { active: activeIndex, complete, railPercent } = workflowPosition(currentStep);
   const handlers = [onRepo, onUpload, onReview, onReview, onActivity];
   const activeStep = currentStep >= steps.length ? {label: 'Completed', description: 'Đã push và xác minh commit. Sẵn sàng cho phiên bản tiếp theo.'} : steps[activeIndex];
-  return <section className="pro-stepper" aria-label="Quy trình cập nhật source">
+  return <section className={`pro-stepper${complete ? ' pro-stepper-complete' : ''}`} aria-label="Quy trình cập nhật source">
     <nav className="pro-stepper-nav pro-workflow" aria-label="Quy trình cập nhật source">
-      <div className="pro-stepper-rail" aria-hidden="true"><span style={{ width: `${Math.max(8, completion * 100)}%` }}/></div>
+      <div className="pro-stepper-rail" aria-hidden="true"><span style={{ width: `${railPercent}%` }}/></div>
       <ol className="pro-stepper-list">
         {steps.map((step,index) => {
           const state = index < currentStep ? 'done' : index === activeIndex ? 'current' : 'upcoming';
