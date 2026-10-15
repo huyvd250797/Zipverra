@@ -8,6 +8,7 @@ import './styles/production-hardening.css';
 import './styles/source-zip-download.css';
 import './styles/compact-ui.css';
 import './styles/repository-workflow.css';
+import './styles/premium-visual-v320.css';
 
 export const metadata = {
   title: 'Zipverra Pro — GitHub Workspace',
@@ -23,7 +24,7 @@ export const viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
-  themeColor: '#080c17',
+  themeColor: '#0B111B',
 };
 
 export default function RootLayout({ children }) {

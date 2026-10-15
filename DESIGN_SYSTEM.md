@@ -1,3 +1,14 @@
+# Zipverra Pro v3.2.0 — Premium Visual Identity & Color System
+
+**Single token source:** `app/styles/pro-design-system.css` (Graphite Navy + Emerald dark/light palette).
+**Last presentation override:** `app/styles/premium-visual-v320.css` (consistent surfaces/contrast, iPhone landmark focus fix, premium motion and Reduced Motion behavior).
+
+See [`PREMIUM_VISUAL_V320.md`](./PREMIUM_VISUAL_V320.md) for the current palette, accessibility rules and visual acceptance checklist.
+
+---
+
+## Historical Design System notes
+
 # Zipverra Pro v2.5.0 — Workspace UX & Navigation
 
 ## Source of truth

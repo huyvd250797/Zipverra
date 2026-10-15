@@ -1,3 +1,28 @@
+# Zipverra Pro v3.2.0 — Premium Visual Identity & Color System
+
+**Baseline:** User-supplied Zipverra Pro v3.1.0 full source. This release is presentation-focused and preserves existing GitHub workflows.
+
+## What's new in v3.2.0
+
+- **iPhone focus rectangle fixed:** the `main` landmark no longer receives a massive emerald outline on tab/step navigation; real interactive controls still retain accessible keyboard focus rings.
+- **Professional Graphite Navy + Emerald:** unified dark/light/system-aware colors for the app header, cards, typography, primary actions, workflow steps and dialogs.
+- **Reduced visual noise:** softened card borders, shadows and oversized mint highlights.
+- **Motion polish:** lightweight screen transitions, sheet/modal entry, tactile controls and verified progress animation; respects Reduce Motion.
+- **Existing functionality unchanged:** ZIP upload/download, GitHub App auth, Security Scan, Pull Requests, Quick Edit, History, rollback, resume and PWA recovery.
+
+## Deploying v3.2.0
+
+1. Extract the full ZIP and push **contents of `Zipverra-v3.2.0/`** to the GitHub repository root on `main`.
+2. Keep the existing Vercel environment variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
+3. Check Vercel Build Logs, then verify Dark/Light/System, keyboard focus, the former emerald rectangle issue, modal scroll lock and a test ZIP Push on iPhone.
+4. See [`PREMIUM_VISUAL_V320.md`](./PREMIUM_VISUAL_V320.md), [`RELEASE_VALIDATION.md`](./RELEASE_VALIDATION.md) and [`ROADMAP_NEXT.md`](./ROADMAP_NEXT.md).
+
+**Validation scope:** local tests and standalone Chromium layout verification do not replace a production Next.js build or real GitHub/iPhone end-to-end tests.
+
+---
+
+## Historical release notes
+
 # Zipverra Pro v3.1.0 — Repository Workflow Clarity
 
 **Source baseline:** Full Zipverra Pro v3.0.5 supplied by the user.

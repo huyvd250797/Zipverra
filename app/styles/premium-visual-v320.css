@@ -1,0 +1,187 @@
+/* Zipverra Pro v3.2.0 — Graphite Navy × Emerald. Purely presentational.
+   Loaded LAST, so the existing GitHub state and modal scroll-lock logic are untouched.
+   IMPORTANT: #zipverra-main is a programmatically focusable landmark, not a control. */
+:root {
+  --zip-canvas: #0B111B;
+  --zip-card: #172432;
+  --zip-elevated: #213141;
+  --zip-stroke: #344756;
+  --zip-emerald: #2ABF93;
+  --zip-soft-stroke: color-mix(in srgb,var(--pro-border) 72%,transparent);
+  --zip-elevation: 0 9px 26px rgba(0,0,0,.12);
+  --zip-ease: cubic-bezier(.2,.8,.2,1);
+  --zip-quick: 145ms;
+  --zip-screen: 220ms;
+  --zip-sheet: 260ms;
+}
+html[data-theme="light"] {
+  --zip-canvas: #F5F7F9;
+  --zip-card: #FFFFFF;
+  --zip-elevated: #EDF2F5;
+  --zip-stroke: #D7E1E7;
+  --zip-emerald: #087D65;
+  --zip-elevation: 0 8px 22px rgba(19,39,53,.06);
+}
+html {background:var(--pro-bg);color-scheme:dark;}
+html[data-theme="light"] {color-scheme:light;}
+body {background:var(--pro-bg);color:var(--pro-text);}
+
+/* Fix for the photographed full-width green rectangle: global [tabindex] focus
+   styling used to include main[tabindex="-1"] when Safari moved focus to the
+   landmark. Keep actual interactive controls' keyboard focus rings intact. */
+main#zipverra-main:focus,
+main#zipverra-main:focus-visible,
+.pro-shell main[tabindex="-1"]:focus-visible,
+.pro-shell [data-mobile-view][tabindex="-1"]:focus-visible {
+  outline:none!important;
+  box-shadow:none!important;
+}
+/* Deliberate smaller focus rings only on interactive elements. */
+.pro-shell :is(button,a,input,select,textarea,summary):focus-visible,
+.zip-modal :is(button,a,input,select,textarea,summary):focus-visible {
+  outline:2px solid var(--pro-focus)!important;
+  outline-offset:3px!important;
+}
+
+/* Soft surface hierarchy, no neon borders or stacked heavy drop shadows. */
+.pro-shell .topbar {border-bottom-color:var(--zip-soft-stroke);}
+.pro-shell .glow {opacity:.06;filter:blur(105px);}
+.pro-shell .glow.one {background:#1E7088;}
+.pro-shell .glow.two {background:#1C846F;}
+.pro-shell .brand-symbol {background:var(--pro-accent-surface);color:var(--pro-accent);border-color:var(--zip-soft-stroke);box-shadow:none;}
+.pro-shell .brand strong span {color:var(--pro-accent);}
+.pro-shell .brand strong,.pro-shell .brand em {text-shadow:none;}
+.pro-shell .version {background:var(--pro-surface);color:var(--pro-muted);border-color:var(--zip-soft-stroke);}
+.pro-shell .pro-view-intro.mobile-context {border-color:var(--zip-soft-stroke);}
+.pro-shell .panel,.pro-shell .polish-launchpad,.pro-shell .mobile-quick-card,
+.pro-shell .pro-selected-repo,.pro-shell .pro-dashboard,.pro-shell .pro-profiles,
+.pro-shell .pro-journal,.pro-shell .settings-section {
+  background:var(--pro-surface);
+  border-color:var(--zip-soft-stroke);
+  box-shadow:var(--zip-elevation);
+}
+.pro-shell .polish-launchpad {background:var(--pro-surface);}
+.pro-shell .polish-launchpad::after {background:radial-gradient(circle,color-mix(in srgb,var(--pro-accent) 7%,transparent),transparent 69%);}
+.pro-shell .polish-main-action {background:var(--pro-accent-surface);border-color:var(--zip-soft-stroke);}
+.pro-shell .polish-main-action:not(:disabled):hover {background:color-mix(in srgb,var(--pro-accent-surface) 88%,var(--pro-accent) 12%);border-color:var(--pro-border-strong);}
+.pro-shell .polish-main-icon {background:var(--pro-accent);color:var(--pro-accent-ink);}
+.pro-shell .polish-shortcuts button,.pro-shell .zip-picker-trigger,
+.pro-shell .zip-picker-actions button,.pro-shell .source-zip-download {
+  background:var(--pro-surface-2);
+  border-color:var(--zip-soft-stroke);
+}
+.pro-shell .mobile-quick-card .mobile-quick-label {color:var(--pro-muted);}
+.pro-shell .source-repo-context {background:var(--pro-accent-surface);border-color:var(--zip-soft-stroke);}
+.pro-shell .drop-zone {background:var(--pro-surface-2);border-color:var(--pro-border-strong);}
+.pro-shell .drop-zone:not(.locked):hover,.pro-shell .drop-zone.picked {background:var(--pro-accent-surface);border-color:var(--pro-accent);}
+.pro-shell .button.primary,.pro-shell .push-button {box-shadow:none;}
+.pro-shell .button.primary {background:var(--pro-accent);border-color:var(--pro-accent);color:var(--pro-accent-ink);}
+.pro-shell .button.primary:hover:not(:disabled) {background:var(--pro-accent-hover);border-color:var(--pro-accent-hover);}
+.pro-shell .button.secondary {background:var(--pro-surface-2);border-color:var(--zip-soft-stroke);}
+.pro-shell .button.secondary:hover:not(:disabled) {background:var(--pro-surface-raised);}
+.pro-shell .diff-filter,.pro-shell .workspace-view-tabs button {border-color:var(--zip-soft-stroke);}
+.pro-shell .polish-readiness,.pro-shell .polish-outcome {border-color:var(--zip-soft-stroke);}
+.pro-shell .polish-readiness--danger {border-color:color-mix(in srgb,var(--pro-error) 50%,var(--pro-border));}
+.pro-shell .polish-readiness--warning {border-color:color-mix(in srgb,var(--pro-warning) 45%,var(--pro-border));}
+.pro-shell .polish-outcome {background:var(--pro-accent-surface);}
+.pro-shell .pro-stepper-rail {background:var(--pro-border);}
+.pro-shell .pro-stepper-rail>span,.pro-shell .progress-fill,
+.pro-shell .transfer-meter>span {background:var(--pro-accent);box-shadow:none;}
+.pro-workflow .pro-workflow-count {box-shadow:none;}
+.pro-workflow .current .pro-workflow-count {box-shadow:0 0 0 3px color-mix(in srgb,var(--pro-accent) 15%,transparent);}
+.pro-shell .mobile-bottom-nav {box-shadow:0 -7px 22px rgba(0,0,0,.075);border-color:var(--zip-soft-stroke);}
+.pro-shell .mobile-nav-item.active {border-color:var(--zip-soft-stroke);}
+.pro-shell .mobile-nav-item.active:before {background:var(--pro-accent);}
+.pro-shell .repo-refresh-icon,.pro-shell .header-connected-mark {color:var(--pro-accent);}
+.pro-shell .compact-help-trigger::before {background:var(--pro-surface-2);border-color:var(--pro-border);}
+
+/* Modal and bottom-sheet colors are shared with the main surface system.
+   Do not modify fixed-position scroll isolation, stacking, backdrop touch
+   containment, or body position (managed by v3.1.0 JS scroll lock). */
+.zip-modal,.compact-help-dialog {background:var(--pro-surface-raised);color:var(--pro-text);border-color:var(--zip-soft-stroke);box-shadow:0 22px 55px rgba(0,0,0,.28);}
+.zip-modal-header,.compact-help-head {border-color:var(--zip-soft-stroke);}
+.zip-modal-close,.compact-help-close {background:var(--pro-surface-2);color:var(--pro-text);border-color:var(--zip-soft-stroke);}
+.zip-modal::backdrop,.compact-help-dialog::backdrop {background:rgba(5,12,20,.66);backdrop-filter:blur(5px);}
+.zip-repo-search input,.zip-branch-manual input {background:var(--pro-input);border-color:var(--pro-border-strong);}
+.zip-repo-option.selected,.zip-branch-option.selected {background:var(--pro-accent-surface);border-color:var(--zip-soft-stroke);}
+
+/* A compact, measured motion language. No continuously glowing loops. */
+@keyframes zip-premium-rise {
+  from {opacity:0;transform:translate3d(0,9px,0);}
+  to {opacity:1;transform:translate3d(0,0,0);}
+}
+@keyframes zip-premium-sheet {
+  from {opacity:0;transform:translate3d(0,20px,0) scale(.994);}
+  to {opacity:1;transform:translate3d(0,0,0) scale(1);}
+}
+@keyframes zip-premium-dialog {
+  from {opacity:0;transform:scale(.98);}
+  to {opacity:1;transform:scale(1);}
+}
+@keyframes zip-premium-backdrop {
+  from {opacity:0;}
+  to {opacity:1;}
+}
+/* Only the incoming active view animates; do not remount or clear the ZIP. */
+@media (max-width:760px) {
+  .pro-shell .pro-view-intro {animation:zip-premium-rise var(--zip-screen) var(--zip-ease) both;}
+  .pro-shell main[data-active-view="repositories"] .content-grid [data-mobile-view="repositories"],
+  .pro-shell main[data-active-view="home"] .content-grid [data-mobile-view="home"],
+  .pro-shell main[data-active-view="activity"] .content-grid [data-mobile-view="activity"],
+  .pro-shell main[data-active-view="history"] .content-grid [data-mobile-view="history"],
+  .pro-shell main[data-active-view="settings"] .content-grid [data-mobile-view="settings"] {
+    animation:zip-premium-rise var(--zip-screen) var(--zip-ease) both;
+  }
+}
+.zip-modal[open].zip-modal--sheet {animation:zip-premium-sheet var(--zip-sheet) var(--zip-ease) both;}
+.zip-modal[open]:not(.zip-modal--sheet),.compact-help-dialog[open] {animation:zip-premium-dialog var(--zip-screen) var(--zip-ease) both;}
+.zip-modal[open]::backdrop,.compact-help-dialog[open]::backdrop {animation:zip-premium-backdrop var(--zip-screen) ease both;}
+.pro-shell :is(.button,.zip-picker-trigger,.zip-picker-actions button,.polish-main-action,
+ .source-zip-download-action,.compact-help-trigger) {
+  transition:background-color var(--zip-quick) ease,
+    border-color var(--zip-quick) ease,color var(--zip-quick) ease,
+    transform var(--zip-quick) var(--zip-ease),box-shadow var(--zip-quick) ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.pro-shell :is(.zip-picker-trigger,.zip-picker-actions button,.polish-main-action):active:not(:disabled) {
+  transform:scale(.988);
+}
+/* Only one brief emphasis for a newly active step. */
+.pro-workflow .current .pro-workflow-count {transition:transform var(--zip-screen) var(--zip-ease),background-color var(--zip-screen) ease,border-color var(--zip-screen) ease;}
+.pro-shell .progress-fill,.pro-shell .transfer-meter>span {transition:width 300ms var(--zip-ease);}
+
+@media (prefers-reduced-motion:reduce) {
+  .pro-shell .pro-view-intro,
+  .pro-shell main[data-active-view] .content-grid [data-mobile-view],
+  .zip-modal[open],.compact-help-dialog[open],
+  .zip-modal[open]::backdrop,.compact-help-dialog[open]::backdrop {
+    animation:none!important;
+  }
+  .pro-shell :is(.button,.zip-picker-trigger,.zip-picker-actions button,.polish-main-action,
+    .source-zip-download-action,.compact-help-trigger,.progress-fill,.transfer-meter>span),
+  .pro-workflow .current .pro-workflow-count {transition:none!important;}
+}
+
+/* The legacy light selectors had greater specificity than the semantic
+   components above. Explicitly normalize them so light mode never gets a
+   dark secondary CTA, pale label on Emerald, or a mint-only repository card. */
+html[data-theme="light"] body {background:var(--pro-bg);color:var(--pro-text);}
+html[data-theme="light"] .pro-shell .button.primary {
+  background:#087D65;border-color:#087D65;color:#FFFFFF;
+}
+html[data-theme="light"] .pro-shell .button.primary:hover:not(:disabled) {
+  background:#066B55;border-color:#066B55;color:#FFFFFF;
+}
+html[data-theme="light"] .pro-shell .button.secondary,
+html[data-theme="light"] .pro-shell .zip-picker-actions button {
+  background:var(--pro-surface-2);border-color:var(--zip-soft-stroke);color:var(--pro-text);
+}
+html[data-theme="light"] .pro-shell .mobile-quick-card,
+html[data-theme="light"] .pro-shell .pro-selected-repo,
+html[data-theme="light"] .pro-shell .source-zip-download {
+  background:var(--pro-surface);border-color:var(--zip-soft-stroke);color:var(--pro-text);
+}
+html[data-theme="light"] .pro-shell .pro-workflow-step.upcoming .pro-workflow-count {
+  color:var(--pro-muted);border-color:var(--pro-border);
+}
+html[data-theme="light"] .pro-shell .compact-help-trigger {color:var(--pro-text);}

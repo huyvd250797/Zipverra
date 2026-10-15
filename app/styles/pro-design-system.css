@@ -3,24 +3,24 @@
    change the existing mobile view/data-mobile-view state machine. */
 :root {
   color-scheme: dark;
-  --pro-bg: #080f19;
-  --pro-surface: #111e2d;
-  --pro-surface-2: #172739;
-  --pro-surface-raised: #1b2d40;
-  --pro-input: #0d1928;
-  --pro-border: #294053;
-  --pro-border-strong: #3a566b;
-  --pro-text: #f3f8ff;
-  --pro-muted: #a2b6c9;
-  --pro-subtle: #7f96aa;
-  --pro-accent: #56e3b9;
-  --pro-accent-hover: #83f4d0;
-  --pro-accent-ink: #062a25;
-  --pro-accent-surface: #14362f;
-  --pro-warning: #f2c888;
-  --pro-error: #ffb5bf;
-  --pro-focus: #74efcb;
-  --pro-shadow: 0 12px 36px rgba(0,0,0,.17);
+  --pro-bg: #0B111B;
+  --pro-surface: #172432;
+  --pro-surface-2: #1B2B3A;
+  --pro-surface-raised: #213141;
+  --pro-input: #101D2A;
+  --pro-border: #344756;
+  --pro-border-strong: #466071;
+  --pro-text: #F3F7FA;
+  --pro-muted: #A9BBC9;
+  --pro-subtle: #93A8BA;
+  --pro-accent: #2ABF93;
+  --pro-accent-hover: #41CCA3;
+  --pro-accent-ink: #072D24;
+  --pro-accent-surface: #15372F;
+  --pro-warning: #F1C57D;
+  --pro-error: #FF9CA6;
+  --pro-focus: #68D7B5;
+  --pro-shadow: 0 8px 28px rgba(0,0,0,.11);
   --pro-radius-sm: 10px;
   --pro-radius-md: 14px;
   --pro-radius-lg: 20px;
@@ -38,23 +38,23 @@
 }
 html[data-theme="light"] {
   color-scheme: light;
-  --pro-bg: #f4f7fa;
-  --pro-surface: #fff;
-  --pro-surface-2: #f1f6f9;
-  --pro-surface-raised: #e7f1f4;
-  --pro-input: #fff;
-  --pro-border: #d5e1e8;
-  --pro-border-strong: #a9c1cf;
-  --pro-text: #182d3e;
-  --pro-muted: #486176;
-  --pro-subtle: #597284;
-  --pro-accent: #087f65;
-  --pro-accent-hover: #076950;
+  --pro-bg: #F5F7F9;
+  --pro-surface: #FFFFFF;
+  --pro-surface-2: #EDF2F5;
+  --pro-surface-raised: #E7EEF2;
+  --pro-input: #FFFFFF;
+  --pro-border: #D7E1E7;
+  --pro-border-strong: #B8CAD4;
+  --pro-text: #172735;
+  --pro-muted: #526B7D;
+  --pro-subtle: #617C8F;
+  --pro-accent: #087D65;
+  --pro-accent-hover: #066B55;
   --pro-accent-ink: #fff;
-  --pro-accent-surface: #e1f5ee;
-  --pro-warning: #98601b;
-  --pro-error: #a8314b;
-  --pro-focus: #087f65;
+  --pro-accent-surface: #E2F3EC;
+  --pro-warning: #935C19;
+  --pro-error: #B43F52;
+  --pro-focus: #087D65;
   --pro-shadow: 0 11px 32px rgba(23,50,75,.08);
 }
 /* Physical safe areas are controlled by the existing PWA layout. */
@@ -194,7 +194,7 @@ body { background: var(--pro-bg); color: var(--pro-text); }
 .pro-view-tools {display:flex;align-items:center;gap:7px;}
 .pro-pending-marker {width:22px;height:22px;border-radius:50%;background:#7c4e21;color:#ffe4b8;display:grid;place-items:center;font-size:12px;font-weight:800;}
 /* Unified focus visibility, including keyboard access on desktop and external keyboards on iPad. */
-:where(button,a,input,select,textarea,summary,[tabindex]):focus-visible {outline:3px solid var(--pro-focus)!important;outline-offset:3px!important;}
+:where(button,a,input,select,textarea,summary,[tabindex]:not([tabindex="-1"])):focus-visible {outline:3px solid var(--pro-focus)!important;outline-offset:3px!important;}
 :where(.panel,.pro-dashboard,.pro-profiles,.pro-journal,.mobile-quick-card,.pro-selected-repo) {min-width:0;}
 @media (max-width:760px) {
   .pro-shell {padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));}

@@ -1,3 +1,24 @@
+# Zipverra Pro v3.2.0 — Release Validation
+
+**Baseline:** User-supplied v3.1.0 full source. Scope: color system, visual polish, reduced-motion UI, and oversized landmark focus outline fix.
+
+**Local validation:** 265/265 automated tests passed. Static checks: 119 JS/JSX/MJS modules, 202 relative imports and 11 stylesheets. Chromium standalone fixture: Dark/Light at 320, 375, 390, 430, 768, 1280px; no horizontal overflow, the landmark outline stays hidden and real keyboard controls remain visibly focusable. `npm install` fails with `EAI_AGAIN`, therefore local production build remains unverified.
+
+## Required preproduction checks
+
+1. Confirm `npm install && npm test && npm run build` succeeds in networked CI/Vercel. Do not mark a build successful based only on syntax/tests.
+2. From a long Upload/Review page on iPhone PWA, navigate tabs, return and focus the main content. **No full-width green rectangle** should appear around the entire workflow.
+3. Keyboard/VoiceOver: ensure actual buttons/inputs still show focus and the skip navigation shortcut remains functional.
+4. Confirm dark/light/system theme backgrounds, button text contrast, card hierarchy and contrast of warnings at 320, 375, 390, 430, 768 and 1280px.
+5. Open/close long Repo/Branch/Help sheets: freeze background, scroll only inside, close to exact original scroll position.
+6. Test progress, Activity scroll-to-top, ZIP Download → Save to Files, Direct Push, PR, Quick Edit and History/Rollback on a disposable authorized repository.
+7. Verify existing five GitHub App variables; v3.2.0 requires no new provider or environment variables.
+8. Confirm PWA version is 3.2.0 and public Service Worker namespace updated; do not cache private GitHub data.
+
+See [PREMIUM_VISUAL_V320.md](./PREMIUM_VISUAL_V320.md) for exact color and motion design specifications.
+
+---
+
 # Zipverra Pro v3.1.0 — Release Validation
 
 **Baseline:** User-supplied full v3.0.5 source.

@@ -1,25 +1,40 @@
-# Zipverra Pro — Roadmap after v3.1.0
+# Zipverra Pro — UX/UI Roadmap after v3.2.0
 
-**Current baseline:** v3.1.0 — Repository Workflow Clarity.
+**Current baseline:** v3.2.0 — Premium Visual Identity & Color System.
 
-## Next: v3.2.0 — Measured Performance Architecture
+## Next: v3.3.0 — Unified Component Design System
 
-- Isolate state and rendering in heavy Activity, Review, Workspace and History screens.
-- Profile and reduce unnecessary re-renders during ZIP processing and file upload.
-- Lazy-load advanced panels and audit actual initial JavaScript bundle size.
-- Measure cold/warm startup, page responsiveness, list render time and memory on iPhone.
-- Apply safe caching only to non-sensitive, account-isolated metadata. Never cache tokens/private GitHub responses in the service worker.
-- Preserve all direct Push, PR, Quick Edit, History, Rollback and Security Scan safeguards.
+- Consolidate buttons, cards, inputs, badges, progress, skeleton, toast and dialogs into shared reusable component primitives.
+- Remove competing legacy CSS selectors gradually with actual before/after visual QA.
+- Establish consistent border/radius/spacing/font/icon specifications on five mobile tabs.
+- Preserve one contextual Help (?) icon per screen and all critical warnings outside Help.
+- Keep GitHub mutations and modal body-scroll isolation unchanged.
 
-## Following: v3.3.0 — Large Source Delivery Reliability+
+## Following: v3.4.0 — Mobile Layout & Navigation Redesign
 
-- Strengthen resume diagnostics, upload checkpoints and source validation for large repositories.
-- Improve memory bounds and error handling on unstable cellular networks.
-- Assess a dedicated large-binary transport beyond Vercel Function payload constraints rather than claiming unlimited upload support.
+- Reduce nested cards and scroll length on Repos/Upload/Review without hiding important controls.
+- Improve responsive iPhone, iPad, desktop layouts and modal keyboard interaction.
+- Retain 5-tab navigation and all Push/PR/Download workflows.
 
-## Later: v3.4.0 — Mobile Quality & Accessibility Audit
+## v3.5.0 — Premium Workflow Experience
 
-- End-to-end iPhone PWA testing, Safari modal/bottom-sheet behavior, VoiceOver, keyboard, safe areas and Reduced Motion.
-- Verify deployed Next.js build, update lifecycle and GitHub App E2E on disposable repositories.
+- Refine Review information hierarchy and prominent confirmed Push actions.
+- Clarify in-progress, verified, failed and uncertain Activity states.
+- Keep measured progress and explicit security/delete confirmations.
 
-Avoid force-push, automatic retries of ambiguous Git mutations and iOS background upload claims.
+## v3.6.0 — Modal, Bottom Sheet & Motion Refinement
+
+- Complete iOS sheet interactions, keyboard avoidance, internal scrolling and accessibility.
+- Verify Reduced Motion and no page position drift on close.
+
+## v3.7.0 — Performance & Accessibility Polish
+
+- Profile actual rendering and startup on mobile, improve legacy component boundaries.
+- Run VoiceOver, contrast, larger text, tap-target and Web Vitals QA.
+
+## v3.8.0 — Visual QA & Stable UI Release
+
+- CI/Vercel build, regression/e2e, iPhone Safari/PWA and responsive theme sign-off.
+- Preserve existing GitHub App authorization, Safe Rollback, Security Scan and PR flows.
+
+**Deferred:** very-large-file transfer improvements; no force-push, auto-retry of ambiguous Git writes, or unsupported iOS background-upload claims.

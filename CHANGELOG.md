@@ -1,5 +1,16 @@
 # Changelog
 
+## v3.2.0 — Premium Visual Identity & Color System (2026-10-15)
+
+- Fixed iPhone Upload / Review showing a full-width emerald focus rectangle caused by `[tabindex="-1"]` on main being caught by a global focus-visible selector.
+- Preserved accessible keyboard focus indicators for genuinely interactive controls and kept skip navigation.
+- Implemented semantic Graphite Navy + Emerald dark/light palette, reduced competing card borders, shadows and glows.
+- Normalized legacy light-theme overrides for background, repository cards and primary/secondary button contrast.
+- Added understated screen, modal/bottom-sheet and touch transitions, honoring Reduced Motion; no changes to scroll-lock behavior.
+- Added automated visual-regression logic checks and kept GitHub API mutation routes unchanged.
+- Production build and live iPhone/GitHub tests remain release validation gates where local npm registry access is unavailable.
+
+
 ## v3.1.0 — Repository Workflow Clarity (2026-10-14)
 
 - Consolidated repository picking into one searchable bottom sheet using only GitHub App-authorized repositories; prioritizes favorites and recent repos.
