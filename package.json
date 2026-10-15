@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.2.0: premium Graphite Navy and Emerald design system, focus outline fix, accessible micro-interactions and GitHub workflow safety",
+  "description": "Zipverra Pro v3.3.0: unified component design system with account-scoped frequent and recent repo quick picks, preserving GitHub safety",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

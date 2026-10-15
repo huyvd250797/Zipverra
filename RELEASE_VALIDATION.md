@@ -1,3 +1,28 @@
+# Zipverra Pro v3.3.0 — Release Validation
+
+**Source baseline:** user-provided v3.2.0. Changes affect UI components and local non-sensitive repository suggestions only; no GitHub mutation endpoint changes.
+
+## Local verification
+
+- Unit tests: `npm test`. Includes repository suggestion ranking, account scope, revoked permissions, modal scroll locking and security/Push/PR/rollback regressions.
+- Syntax checks: parse all JS/JSX/MJS modules, verify relative imports, parse all CSS files, compare API routes with baseline.
+- Browser fixture: verify Dark/Light colors and horizontal overflow at 320, 375, 390, 430, 768 and 1280 px, and ensure quick picks appear at top of a freshly opened sheet.
+
+## Production acceptance — still required
+
+1. `npm install && npm test && npm run build` in a networked Vercel/CI environment. Do not claim production build success without logs.
+2. iPhone standalone PWA: open Repo bottom sheet from deep scroll. The background must stay fixed; quick sections visible at the top. Scroll inside and close; background returns to its former position.
+3. Verify Frequent, Recent and Pinned suggestions correctly reflect existing use, never list revoked/private unauthorized repos, and do not leak between signed-in accounts.
+4. Search for a repository: quick sections disappear, full filtered list appears. Close and reopen: search is cleared, modal starts at top.
+5. Switch repo with a pending ZIP/Review: the existing explicit confirmation must still appear.
+6. Verify Dark/Light/System appearance, reduced motion, keyboard focus, VoiceOver and 44 px touch targets.
+7. Run GitHub App E2E in a disposable authorized repo: Direct Push, PR, ZIP Download, Quick Edit, History and Rollback.
+8. No new Vercel env vars or GitHub App permissions are needed. PWA cache/version must read v3.3.0.
+
+For implementation details see [`UNIFIED_COMPONENTS_V330.md`](./UNIFIED_COMPONENTS_V330.md).
+
+---
+
 # Zipverra Pro v3.2.0 — Release Validation
 
 **Baseline:** User-supplied v3.1.0 full source. Scope: color system, visual polish, reduced-motion UI, and oversized landmark focus outline fix.

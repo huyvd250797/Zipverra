@@ -1,0 +1,86 @@
+/* Zipverra Pro v3.3.0 — One visual language across all five tabs.
+ * This is a presentation-only layer; Github mutations and modal scroll locks
+ * remain owned by their existing JS modules. */
+:root {
+  --zip-ui-radius-sm:10px;
+  --zip-ui-radius-md:14px;
+  --zip-ui-radius-lg:18px;
+  --zip-ui-control-height:44px;
+  --zip-ui-stroke:color-mix(in srgb,var(--pro-border) 82%,transparent);
+  --zip-ui-fill:var(--pro-surface-2);
+  --zip-ui-soft:var(--pro-accent-surface);
+  --zip-ui-motion:175ms cubic-bezier(.2,.8,.2,1);
+}
+/* Shared primitives; all dynamic data remains pure React text nodes. */
+.zip-ui-button,.zip-ui-icon-button {
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:var(--zip-ui-control-height);
+  padding:9px 13px;border:1px solid var(--zip-ui-stroke);border-radius:var(--zip-ui-radius-md);
+  background:var(--zip-ui-fill);color:var(--pro-text);font:inherit;font-size:12px;font-weight:750;
+  cursor:pointer;transition:color var(--zip-ui-motion),border-color var(--zip-ui-motion),background-color var(--zip-ui-motion),transform var(--zip-ui-motion);
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+.zip-ui-button--primary {background:var(--pro-accent);border-color:var(--pro-accent);color:var(--pro-accent-ink);}
+.zip-ui-button--ghost {background:transparent;border-color:transparent;}
+.zip-ui-button--danger {background:color-mix(in srgb,var(--pro-error) 11%,var(--pro-surface));border-color:color-mix(in srgb,var(--pro-error) 25%,var(--pro-border));color:var(--pro-error);}
+.zip-ui-button:disabled,.zip-ui-icon-button:disabled {opacity:.48;cursor:not-allowed;}
+.zip-ui-button:active:not(:disabled),.zip-ui-icon-button:active:not(:disabled){transform:scale(.985);}
+.zip-ui-icon-button{width:44px;min-width:44px;padding:0;flex:none;font-size:22px;line-height:1;}
+.zip-ui-card {min-width:0;border:1px solid var(--zip-ui-stroke);border-radius:var(--zip-ui-radius-lg);background:var(--pro-surface-2);padding:12px;}
+.zip-ui-input-label {display:grid;min-width:0;gap:6px;}
+.zip-ui-input-caption {font-size:11px;font-weight:700;color:var(--pro-muted);}
+.zip-ui-input {box-sizing:border-box;width:100%;height:44px;border:1px solid var(--pro-border-strong);border-radius:var(--zip-ui-radius-md);background:var(--pro-input);color:var(--pro-text);padding:0 12px;font:inherit;font-size:14px;outline:none;}
+.zip-ui-input::placeholder {color:var(--pro-subtle);opacity:1;}
+.zip-ui-badge {display:inline-flex;align-items:center;white-space:nowrap;gap:4px;border-radius:999px;padding:4px 8px;background:var(--pro-surface-2);color:var(--pro-muted);font-size:10px;font-weight:720;border:1px solid var(--zip-ui-stroke);}
+.zip-ui-badge--success {background:var(--pro-accent-surface);color:var(--pro-accent);}
+.zip-ui-badge--warning {color:var(--pro-warning);}
+.zip-ui-badge--danger {color:var(--pro-error);}
+.zip-ui-progress {width:100%;height:6px;background:var(--pro-border);border-radius:999px;overflow:hidden;}
+.zip-ui-progress>span {display:block;height:100%;background:var(--pro-accent);border-radius:inherit;transition:width 250ms ease;}
+/* Normalize inherited legacy buttons, cards, controls, badges and activity UI. */
+.pro-shell :is(.button,.zip-picker-trigger,.zip-picker-actions button,.theme-options button,.source-zip-download-action,.polish-shortcuts button) {
+  border-radius:var(--zip-ui-radius-md);transition:background-color var(--zip-ui-motion),color var(--zip-ui-motion),border-color var(--zip-ui-motion),transform var(--zip-ui-motion);
+}
+.pro-shell :is(.panel,.polish-launchpad,.mobile-quick-card,.settings-section,.pro-dashboard,.pro-journal-panel,.pro-profiles) {
+  border-color:var(--zip-ui-stroke);border-radius:var(--zip-ui-radius-lg);
+}
+.pro-shell :is(.pill,.tag,.stage-chip,.network-chip,.auth-chip) {border-radius:999px;}
+.pro-shell :is(.field input,.field select,.field textarea,.zip-picker-trigger) {border-color:var(--pro-border-strong);}
+.pro-shell :is(.progress-fill,.transfer-meter>span,.pro-stepper-rail>span){background:var(--pro-accent);box-shadow:none;}
+.pro-shell .pro-toast {border-radius:var(--zip-ui-radius-lg);box-shadow:var(--pro-shadow);}
+.pro-shell .mobile-bottom-nav {border-color:var(--zip-ui-stroke);}
+.pro-shell .mobile-nav-item.active {border-radius:var(--zip-ui-radius-md);}
+/* Repository picker: quick access is visually distinct, but compact. */
+.zip-modal .zip-repo-quick-picks {display:grid;gap:10px;padding:11px 12px;margin-bottom:13px;background:color-mix(in srgb,var(--pro-surface-2) 78%,var(--pro-surface));border-color:var(--zip-ui-stroke);}
+.zip-modal .zip-quick-section {display:grid;gap:6px;min-width:0;}
+.zip-modal .zip-quick-heading {font-size:10px;letter-spacing:.5px;font-weight:800;color:var(--pro-muted);margin:0;}
+.zip-modal .zip-quick-chips {display:flex;flex-wrap:nowrap;gap:7px;overflow-x:auto;overflow-y:hidden;max-width:100%;scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;}
+.zip-modal .zip-quick-chips::-webkit-scrollbar {display:none;}
+.zip-modal .zip-quick-chips>div {min-width:0;flex:0 0 auto;}
+.zip-modal .zip-quick-chip {display:inline-flex;align-items:center;gap:7px;height:38px;max-width:210px;padding:0 11px;border-radius:12px;border:1px solid var(--zip-ui-stroke);background:var(--pro-surface);color:var(--pro-text);font:inherit;font-size:12px;font-weight:720;text-align:left;white-space:nowrap;touch-action:manipulation;cursor:pointer;}
+.zip-modal .zip-quick-chip-name {display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0;max-width:180px;}
+.zip-modal .zip-quick-chip.selected {background:var(--pro-accent-surface);border-color:var(--pro-accent);color:var(--pro-accent);}
+.zip-modal .zip-quick-chip:disabled {opacity:.55;cursor:not-allowed;}
+.zip-modal .zip-repo-results-heading {display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 7px;}
+.zip-modal .zip-repo-results-heading strong {font-size:11px;font-weight:790;color:var(--pro-muted);}
+.zip-modal .zip-repo-results-heading .zip-ui-badge {padding:3px 8px;font-size:10px;}
+.zip-modal .zip-repo-results {gap:3px;}
+.zip-modal .zip-repo-option,.zip-modal .zip-branch-option {border-color:transparent;border-radius:var(--zip-ui-radius-md);}
+.zip-modal .zip-repo-option.selected,.zip-modal .zip-branch-option.selected {border-color:var(--zip-ui-stroke);background:var(--pro-accent-surface);}
+.zip-modal .zip-modal-header {border-color:var(--zip-ui-stroke);}
+.zip-modal .zip-modal-close {border-radius:var(--zip-ui-radius-md);}
+.zip-modal .zip-repo-search .zip-ui-input {height:44px;background:var(--pro-input);}
+.zip-modal .zip-branch-manual .zip-ui-button {padding:0 15px;min-width:65px;}
+/* Keep overlays constrained to their own scroll region from v3.1.0. */
+.zip-modal .zip-modal-scroll {overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y;}
+.zip-ui-button:focus-visible,.zip-ui-icon-button:focus-visible,.zip-ui-input:focus-visible,.zip-quick-chip:focus-visible {
+  outline:2px solid var(--pro-focus);outline-offset:2px;
+}
+@media (max-width:375px) {
+  .zip-modal .zip-repo-quick-picks {padding:10px;gap:9px;}
+  .zip-modal .zip-quick-chip {max-width:155px;font-size:11px;}
+  .zip-modal .zip-quick-chip-name {max-width:132px;}
+}
+@media (prefers-reduced-motion:reduce) {
+  .zip-ui-button,.zip-ui-icon-button,.zip-ui-progress>span,.zip-quick-chip,
+  .pro-shell :is(.button,.zip-picker-trigger,.zip-picker-actions button,.theme-options button,.source-zip-download-action,.polish-shortcuts button){transition:none!important;animation:none!important;}
+}

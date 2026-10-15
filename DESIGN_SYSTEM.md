@@ -1,3 +1,18 @@
+# Zipverra Pro v3.3.0 — Unified Component Design System
+
+**Color tokens:** `app/styles/pro-design-system.css` (Graphite Navy + Emerald dark/light).
+**Premium override:** `app/styles/premium-visual-v320.css`.
+**Unified component layer (loaded last):** `app/styles/unified-components-v330.css`.
+**Reusable JSX primitives:** `app/components/UnifiedUI.jsx`.
+
+The unified CSS layer improves buttons, cards, inputs, status badges, progress, toasts, navigation and dialogs without rewriting protected GitHub workflows. All newly introduced components have semantic labels and reduced-motion rules.
+
+Repo picker component: `app/components/RepositoryWorkflowSheets.jsx`. Quick suggestions come from `lib/repository-suggestions.js` and may only display repositories present in the latest authorized `repos` list. Counts and recents are local, scoped by GitHub login and include no secret/token/source data.
+
+See [`UNIFIED_COMPONENTS_V330.md`](./UNIFIED_COMPONENTS_V330.md) for mobile acceptance cases.
+
+---
+
 # Zipverra Pro v3.2.0 — Premium Visual Identity & Color System
 
 **Single token source:** `app/styles/pro-design-system.css` (Graphite Navy + Emerald dark/light palette).

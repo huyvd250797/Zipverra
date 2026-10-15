@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.3.0 — Unified Component Design System (2026-10-15)
+
+- Added a compact, account-scoped **Frequent / Recent / Pinned** quick-picker section at the top of the repository modal; search automatically hides suggestions.
+- Frequency ranking uses bounded local selection counts; for established users it can be seeded by already-stored account-specific Activity metadata. Every suggestion is rechecked against the current GitHub App-authorized repository list.
+- Added shared React presentation primitives (buttons, icon button, card, input, badge and progress) with consistent sizing, radii, colors and accessible focus.
+- Harmonized pre-existing component CSS across Repos, Upload, Activity, History and Settings while preserving the Graphite Navy/Emerald palette, reduced motion and compact Help UI.
+- Kept modal/background scroll isolation and reset the modal's own scroll position to show suggestions immediately.
+- Preserved all existing GitHub write and read routes, token handling, security scan, PR and rollback protections. No new Vercel variables or database.
+- Production build and live iPhone/GitHub tests must be verified on a networked environment.
+
 ## v3.2.0 — Premium Visual Identity & Color System (2026-10-15)
 
 - Fixed iPhone Upload / Review showing a full-width emerald focus rectangle caused by `[tabindex="-1"]` on main being caught by a global focus-visible selector.

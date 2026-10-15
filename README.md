@@ -1,23 +1,24 @@
-# Zipverra Pro v3.2.0 — Premium Visual Identity & Color System
+# Zipverra Pro v3.3.0 — Unified Component Design System
 
-**Baseline:** User-supplied Zipverra Pro v3.1.0 full source. This release is presentation-focused and preserves existing GitHub workflows.
+**Baseline:** The full user-provided Zipverra Pro v3.2.0 source. Version 3.3.0 introduces consistent UI components and fast repository selection. It does not alter GitHub mutation APIs.
 
-## What's new in v3.2.0
+## Highlights
 
-- **iPhone focus rectangle fixed:** the `main` landmark no longer receives a massive emerald outline on tab/step navigation; real interactive controls still retain accessible keyboard focus rings.
-- **Professional Graphite Navy + Emerald:** unified dark/light/system-aware colors for the app header, cards, typography, primary actions, workflow steps and dialogs.
-- **Reduced visual noise:** softened card borders, shadows and oversized mint highlights.
-- **Motion polish:** lightweight screen transitions, sheet/modal entry, tactile controls and verified progress animation; respects Reduce Motion.
-- **Existing functionality unchanged:** ZIP upload/download, GitHub App auth, Security Scan, Pull Requests, Quick Edit, History, rollback, resume and PWA recovery.
+- **Repository quick picks:** opening the Repository bottom sheet shows **Dùng nhiều**, **Gần đây**, and **Đã ghim** where relevant, each capped at three quick chips above the search box. Searching hides suggestions to prioritize matches.
+- **Frequency-based ranking:** each genuinely selected, GitHub-App-authorized repo increments a bounded local counter. On first upgrade, existing per-account Activity metadata can seed initial popularity suggestions.
+- **Account-scoped local data:** usage, recent choices and favorites are saved under the current GitHub user, with a one-time migration of v3.2's legacy device preferences. No secrets, tokens or source are stored. Revoked repositories are filtered from every list using the current server-authorized repository catalog.
+- **Shared UI primitives:** `UiButton`, `UiIconButton`, `UiCard`, `UiInput`, `UiBadge` and `UiProgress` in `app/components/UnifiedUI.jsx`; consistent radii, borders, focus and touch sizes in `app/styles/unified-components-v330.css`. Older JSX is preserved where refactoring might endanger GitHub workflows; styling is centralized progressively.
+- **Safe modal UX:** Repo/Branch/Help keep the existing iOS background scroll lock. The modal's own scroll position resets to the top on each open, so quick picks appear immediately. Keyboard focus / reduced-motion remains supported.
+- **Unchanged critical workflows:** ZIP Upload/Download, Direct Push, PR, Security Scan, Quick Edit, History, Safe Rollback, Recovery Center, PWA updates.
 
-## Deploying v3.2.0
+## Deploying v3.3.0
 
-1. Extract the full ZIP and push **contents of `Zipverra-v3.2.0/`** to the GitHub repository root on `main`.
-2. Keep the existing Vercel environment variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
-3. Check Vercel Build Logs, then verify Dark/Light/System, keyboard focus, the former emerald rectangle issue, modal scroll lock and a test ZIP Push on iPhone.
-4. See [`PREMIUM_VISUAL_V320.md`](./PREMIUM_VISUAL_V320.md), [`RELEASE_VALIDATION.md`](./RELEASE_VALIDATION.md) and [`ROADMAP_NEXT.md`](./ROADMAP_NEXT.md).
+1. Unzip the archive and push **contents of `Zipverra-v3.3.0/`** to the root of the Zipverra GitHub repository (`main`).
+2. Keep the same Vercel environment variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
+3. Confirm the Vercel build succeeds and the PWA displays v3.3.0. Open the Repo picker: use existing Recent/Pinned chips immediately; Frequent will be populated from selection/activity history as applicable.
+4. Test sheet background scroll isolation, themes, quick picks, search, Push/PR/Download on an authorized disposable repository. See [`RELEASE_VALIDATION.md`](./RELEASE_VALIDATION.md) and [`UNIFIED_COMPONENTS_V330.md`](./UNIFIED_COMPONENTS_V330.md).
 
-**Validation scope:** local tests and standalone Chromium layout verification do not replace a production Next.js build or real GitHub/iPhone end-to-end tests.
+**Validation note:** Passing local regression/static checks does **not** substitute for a production `next build`, real GitHub E2E, or a physical iPhone PWA test.
 
 ---
 

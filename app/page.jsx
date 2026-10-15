@@ -14,6 +14,7 @@ import { deriveWorkflowStep, shouldPublishProgress, checkZipCandidate } from '..
 import { PUSH_STAGES, JOURNAL_KEY, withSafeRetry, validJournal } from '../lib/reliability.js';
 import { scheduleTabViewport } from '../lib/tab-scroll.js';
 import { MOBILE_TABS, RECENTS_KEY, THEME_KEY, filterChanges, updateRecentRepositories, getPushTimeline } from '../lib/mobile-ui.js';
+import { REPO_USAGE_KEY, normalizeRepositoryUsage, recordRepositorySelection, usageFromActivity } from '../lib/repository-suggestions.js';
 import { FAVORITES_KEY, analyzeSource, selectChanges, toggleExcluded, filterReview, sortedRepositories, updateFavorites, isTextPreviewable, decodePreview, makeLineDiff, transferEstimate } from '../lib/smart-push.js';
 import SplashScreen from './components/SplashScreen.jsx';
 import { FeedbackToast, LoadingSkeleton } from './components/InteractionFeedback.jsx';
@@ -34,7 +35,7 @@ const ProDashboard = dynamic(() => import('./components/ProDashboard.jsx'), { ss
 const PushProfiles = dynamic(() => import('./components/PushProfiles.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải PushProfiles…"/> });
 const ActivityJournal = dynamic(() => import('./components/ActivityJournal.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải ActivityJournal…"/> });
 import { PRO_PROFILES_KEY, PRO_ACTIVITY_KEY, PRO_DASHBOARD_KEY, accountStorageKey,
-  normalizeProfiles, upsertProfile, removeProfile, addActivity, normalizeActivity, proSnapshot, dashboardRepos } from '../lib/pro-workspace.js';
+  normalizeProfiles, upsertProfile, removeProfile, addActivity, normalizeActivity, proSnapshot, dashboardRepos, validRepoName } from '../lib/pro-workspace.js';
 
 async function requestOnce(endpoint, data) {
   let response;
@@ -168,6 +169,7 @@ export default function Home() {
   const [loadingRepos, setLoadingRepos] = useState(false);
   const [recents, setRecents] = useState([]);
   const [favorites, setFavorites] = useState([]);
+  const [repositoryUsage, setRepositoryUsage] = useState([]);
   const [excludedPaths, setExcludedPaths] = useState([]);
   const [reviewSearch, setReviewSearch] = useState('');
   const [visibleLimit, setVisibleLimit] = useState(100);
@@ -210,10 +212,6 @@ export default function Home() {
     try {
       const oldTheme = window.localStorage.getItem(THEME_KEY);
       if (oldTheme === 'dark' || oldTheme === 'light' || oldTheme === 'system') setTheme(themeChoice(oldTheme));
-      const oldRecents = JSON.parse(window.localStorage.getItem(RECENTS_KEY) || '[]');
-      if (Array.isArray(oldRecents)) setRecents(oldRecents.filter((v) => typeof v === 'string').slice(0, 5));
-      const oldFavorites = JSON.parse(window.localStorage.getItem(FAVORITES_KEY) || '[]');
-      if (Array.isArray(oldFavorites)) setFavorites(oldFavorites.filter((v) => typeof v === 'string').slice(0, 8));
     } catch { /* private browsing may block local storage */ }
   }, []);
   useEffect(() => {
@@ -254,16 +252,24 @@ export default function Home() {
     try { window.localStorage.removeItem(UPLOAD_CHECKPOINT_KEY); } catch { /* no persistent storage available */ }
   }
   function toggleFavorite(value) {
-    setFavorites((current) => {
+    if (!auth.authenticated || !auth.user?.login) return;
+    setFavorites(current => {
       const next = updateFavorites(current, value);
-      try { window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(next)); } catch { /* optional preference */ }
+      try { window.localStorage.setItem(accountStorageKey(FAVORITES_KEY, auth.user), JSON.stringify(next)); } catch { /* optional preference */ }
       return next;
     });
   }
   function saveRecent(value) {
-    setRecents((current) => {
+    if (!auth.authenticated || !auth.user?.login) return;
+    setRecents(current => {
       const next = updateRecentRepositories(current, value);
-      try { window.localStorage.setItem(RECENTS_KEY, JSON.stringify(next)); } catch { /* optional metadata */ }
+      try { window.localStorage.setItem(accountStorageKey(RECENTS_KEY, auth.user), JSON.stringify(next)); } catch { /* optional metadata */ }
+      return next;
+    });
+    // Increment only on actual user-initiated selections, not initial load or refresh.
+    setRepositoryUsage(current => {
+      const next = recordRepositorySelection(current, value, repos);
+      try { window.localStorage.setItem(accountStorageKey(REPO_USAGE_KEY, auth.user), JSON.stringify(next)); } catch { /* optional metadata */ }
       return next;
     });
   }
@@ -273,13 +279,40 @@ export default function Home() {
     // Account-scoped local metadata, never a credential store. Do not show another account's cache.
     proProfilesRef.current=[];proActivityRef.current=[];
     setProProfiles([]); setProActivity([]); setProDashboard(null); setDashboardError('');
+    // Never show another GitHub account's local repo history or usage counts.
+    setRecents([]); setFavorites([]); setRepositoryUsage([]);
     if (!auth.authenticated || !auth.user?.login) return;
     try {
+      const recentKey = accountStorageKey(RECENTS_KEY, auth.user);
+      const favoriteKey = accountStorageKey(FAVORITES_KEY, auth.user);
+      const usageKey = accountStorageKey(REPO_USAGE_KEY, auth.user);
+      // One-time migration from v3.2.0's unscoped local preferences to the
+      // current account, then remove those keys so later accounts never inherit them.
+      const oldRecent = localStorage.getItem(RECENTS_KEY);
+      const oldPinned = localStorage.getItem(FAVORITES_KEY);
+      const recentRaw = localStorage.getItem(recentKey) ?? oldRecent ?? '[]';
+      const favoriteRaw = localStorage.getItem(favoriteKey) ?? oldPinned ?? '[]';
+      const storedRecents = JSON.parse(recentRaw);
+      const storedFavorites = JSON.parse(favoriteRaw);
+      const recentList = Array.isArray(storedRecents) ? storedRecents.filter(validRepoName).slice(0, 5) : [];
+      const favoriteList = Array.isArray(storedFavorites) ? storedFavorites.filter(validRepoName).slice(0, 8) : [];
+      setRecents(recentList); setFavorites(favoriteList);
+      if (oldRecent !== null) { if (!localStorage.getItem(recentKey)) localStorage.setItem(recentKey,JSON.stringify(recentList)); localStorage.removeItem(RECENTS_KEY); }
+      if (oldPinned !== null) { if (!localStorage.getItem(favoriteKey)) localStorage.setItem(favoriteKey,JSON.stringify(favoriteList)); localStorage.removeItem(FAVORITES_KEY); }
+      if (usageKey) setRepositoryUsage(normalizeRepositoryUsage(JSON.parse(localStorage.getItem(usageKey) || '[]')));
       const profileKey=accountStorageKey(PRO_PROFILES_KEY,auth.user);
       const activityKey=accountStorageKey(PRO_ACTIVITY_KEY,auth.user);
       const dashboardKey=accountStorageKey(PRO_DASHBOARD_KEY,auth.user);
       if (profileKey) {const value=normalizeProfiles(JSON.parse(localStorage.getItem(profileKey)||'[]'));proProfilesRef.current=value;setProProfiles(value);}
-      if (activityKey) {const value=normalizeActivity(JSON.parse(localStorage.getItem(activityKey)||'[]'));proActivityRef.current=value;setProActivity(value);}
+      if (activityKey) {
+        const value=normalizeActivity(JSON.parse(localStorage.getItem(activityKey)||'[]'));
+        proActivityRef.current=value;setProActivity(value);
+        if (usageKey && localStorage.getItem(usageKey) === null) {
+          const seeded = usageFromActivity(value);
+          setRepositoryUsage(seeded);
+          if (seeded.length) localStorage.setItem(usageKey,JSON.stringify(seeded));
+        }
+      }
       if (dashboardKey) setProDashboard(proSnapshot(JSON.parse(localStorage.getItem(dashboardKey)||'null')));
     } catch { /* invalid local cache must not break the PWA */ }
   }, [auth.authenticated,auth.user?.login]);
@@ -830,7 +863,7 @@ export default function Home() {
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar" role="banner">
       <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span><em> Pro</em></strong><small>MOBILE GIT WORKSPACE</small></div></div>
-      <div className="header-actions">{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.2.0</span></div>
+      <div className="header-actions">{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.3.0</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} repoTools={activeTab === 'repositories' && auth.authenticated ? <button type="button" className={`repo-refresh-icon${loadingRepos ? ' is-loading' : ''}`} onClick={loadRepos} disabled={busy || loadingRepos} aria-label="Làm mới danh sách repository" title="Làm mới danh sách repository"><Icon name="refresh" size={17}/></button> : null}/>
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
@@ -972,7 +1005,7 @@ export default function Home() {
             <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
               profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
               onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.2.0</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.3.0</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -983,10 +1016,10 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.2.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.3.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <RepositoryPickerSheet open={repoSheetOpen} onClose={() => setRepoSheetOpen(false)}
-    repos={repos} selected={chosenRepo ? `${owner}/${repo}` : ''} favorites={favorites} recents={recents}
+    repos={repos} selected={chosenRepo ? `${owner}/${repo}` : ''} favorites={favorites} recents={recents} usage={repositoryUsage}
     disabled={busy || Boolean(pendingCommit || pendingPR)} onChoose={chooseRepo}/>
   <BranchPickerSheet open={branchSheetOpen} onClose={() => setBranchSheetOpen(false)}
     owner={owner} repo={repo} current={branch} online={online && pwa.reachable}

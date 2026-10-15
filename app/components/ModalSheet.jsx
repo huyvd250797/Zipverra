@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { lockModalScroll } from '../../lib/modal-scroll-lock.js';
+import { UiIconButton } from './UnifiedUI.jsx';
 
 /** Accessible native top-layer dialog with iPhone-specific background scroll lock. */
 export default function ModalSheet({ open, onClose, title, children, variant = 'sheet' }) {
@@ -19,6 +20,9 @@ export default function ModalSheet({ open, onClose, title, children, variant = '
     };
     dialog.addEventListener('close', closeHandler);
     try {
+      // Reopening a picker always starts at quick suggestions, not its old scroll position.
+      const scrollRegion = dialog.querySelector('[data-modal-scroll-region]');
+      if (scrollRegion) scrollRegion.scrollTop = 0;
       unlock = lockModalScroll(document, window, dialog.querySelector('[data-modal-scroll-region]'));
       dialog.showModal();
     } catch {
@@ -39,7 +43,7 @@ export default function ModalSheet({ open, onClose, title, children, variant = '
     <div className="zip-modal-panel">
       <header className="zip-modal-header">
         <strong>{title}</strong>
-        <button type="button" className="zip-modal-close" onClick={onClose} aria-label={`Đóng ${title}`} title="Đóng">×</button>
+        <UiIconButton className="zip-modal-close" onClick={onClose} label={`Đóng ${title}`} aria-label={`Đóng ${title}`}>×</UiIconButton>
       </header>
       <div className="zip-modal-scroll" data-modal-scroll-region>{children}</div>
     </div>
