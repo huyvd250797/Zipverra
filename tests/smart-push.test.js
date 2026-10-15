@@ -42,10 +42,10 @@ test('detect source framework by manifests and files; warn on config and sync',(
  assert.equal(result.hasBlockingWarning,false);
 });
 
-test('heuristic known sensitive credentials blocks the preview before push',()=>{
+test('sensitive filename is advisory with explicit consent gate instead of blanket analyzer block',()=>{
  const check=analyzeSource({files:[f('src/private.pem','PRIVATE DATA')],changes:[]});
- assert.equal(check.hasBlockingWarning,true);
- assert.equal(check.warnings.some(x=>x.code==='SECRET_FILE'),true);
+ assert.equal(check.hasBlockingWarning,false);
+ assert.equal(check.warnings.some(x=>x.code==='SECRET_FILE' && x.severity === 'warning'),true);
 });
 
 test('favorites are validated, sorted first and can be removed',()=>{

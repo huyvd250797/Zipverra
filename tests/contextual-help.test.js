@@ -57,7 +57,7 @@ test('help sheet can be closed, is labelled, keyboard focusable and prevents scr
 test('security critical, sync deletion warning and explicit confirmation remain visible', () => {
   const main = read('app/page.jsx');
   const ui = read('app/components/PolishedWorkspace.jsx');
-  assert.match(main, /securityReport\?\.blocked/);
+  assert.match(main, /\(requiresConsent && !sensitiveConsent\)/);
   assert.match(main, /mode === 'sync'/);
   assert.match(main, /Sync có thể xóa file hiện có trên GitHub/);
   assert.match(main, /!confirmed \|\| \(mode === 'sync'/);

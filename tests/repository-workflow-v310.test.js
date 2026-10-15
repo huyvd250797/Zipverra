@@ -104,7 +104,7 @@ test('modal and help share the same lock without hiding security warnings',()=>{
   assert.match(page,/<BranchPickerSheet open=\{branchSheetOpen\}/);
   assert.match(css,/overscroll-behavior:contain/);
   assert.match(css,/-webkit-overflow-scrolling:touch/);
-  assert.match(page,/securityReport\?\.blocked/);
+  assert.match(page,/\(requiresConsent && !sensitiveConsent\)/);
   assert.match(page,/Sync có thể xóa file hiện có trên GitHub/);
 });
 

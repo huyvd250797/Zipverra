@@ -8,7 +8,7 @@ import { manifestFingerprint, validatedCheckpoint, makeCheckpoint, uploadBlobsIn
 import { calculateChanges, countChanges } from '../lib/operations.js';
 import { zipCommitMessage } from '../lib/paths.js';
 import { makeReleaseBranch } from '../lib/branch-names.js';
-import { scanSelectedChanges, reportSelectedSecurity } from '../lib/source-security.js';
+import { scanSelectedChanges, reportSelectedSecurity, needsSensitiveConsent } from '../lib/source-security.js';
 import { LIMITS } from '../lib/constants.js';
 import { deriveWorkflowStep, shouldPublishProgress, checkZipCandidate } from '../lib/workflow-ux.js';
 import { PUSH_STAGES, JOURNAL_KEY, withSafeRetry, validJournal } from '../lib/reliability.js';
@@ -30,6 +30,7 @@ import SourceZipDownload from './components/SourceZipDownload.jsx';
 import { RepositoryPickerSheet, BranchPickerSheet } from './components/RepositoryWorkflowSheets.jsx';
 import { reviewReadiness, themeChoice, resolveTheme } from '../lib/ux-polish.js';
 import MobileViewportGuard from './components/MobileViewportGuard.jsx';
+import ModalSheet from './components/ModalSheet.jsx';
 const HistoryPanel = dynamic(() => import('./components/HistoryPanel.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải HistoryPanel…"/> });
 const WorkspacePanel = dynamic(() => import('./components/WorkspacePanel.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải WorkspacePanel…"/> });
 const BranchPrPanel = dynamic(() => import('./components/BranchPrPanel.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải BranchPrPanel…"/> });
@@ -193,6 +194,10 @@ export default function Home() {
   const [preview, setPreview] = useState(null);
   const [fileDetailsOpen, setFileDetailsOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+  // One-time, in-memory consent for the currently selected ZIP changes. Never
+  // persisted to localStorage, and cleared whenever source/selection changes.
+  const [sensitiveConsent, setSensitiveConsent] = useState(false);
+  const [securityDialogOpen, setSecurityDialogOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
   const [progress, setProgress] = useState(0);
@@ -487,6 +492,8 @@ export default function Home() {
   const stats = preview ? countChanges(selectedChanges) : null;
   const totalStats = preview ? countChanges(preview.changes) : null;
   const securityReport = useMemo(() => preview ? reportSelectedSecurity(preview.archive.security, selectedChanges) : null, [preview,selectedChanges]);
+  const sensitiveFindings = useMemo(() => securityReport?.findings?.filter(f => f.severity === 'critical' || f.code === 'POSSIBLE_CREDENTIAL') || [], [securityReport]);
+  const requiresConsent = needsSensitiveConsent(sensitiveFindings);
   const shownChanges = useMemo(() => preview ? filterReview(preview.changes, changeFilter, reviewSearch) : [], [preview, changeFilter, reviewSearch]);
   const selectedBytes = useMemo(() => selectedChanges.filter(c => c.kind !== 'delete').reduce((sum, c) => sum + (c.bytes || 0), 0), [selectedChanges]);
   const baseTimeline = getPushTimeline(phase, { preview: Boolean(preview), result: Boolean(result), pending: Boolean(pendingCommit) });
@@ -500,11 +507,12 @@ export default function Home() {
   const activityFocus = activityPresentation({ phase, busy, pendingCommit, pendingPR, result, progress });
   const pushReadiness = useMemo(() => reviewReadiness({
     hasPreview: Boolean(preview), selectedCount: selectedChanges.length,
-    critical: securityReport?.blocked ? Math.max(1, securityReport?.critical || 0) : (securityReport?.critical || 0), authenticated: auth.authenticated,
+    critical: securityReport?.critical || 0, sensitiveFindings: sensitiveFindings.length,
+    sensitiveConsent, authenticated: auth.authenticated,
     online: online && pwa.reachable, busy, pending: Boolean(pendingCommit || pendingPR),
     confirmed, syncDeleteCount: mode === 'sync' ? (stats?.delete || 0) : 0,
     syncConfirmed,
-  }), [preview, selectedChanges.length, securityReport?.critical, securityReport?.blocked, auth.authenticated,
+  }), [preview, selectedChanges.length, securityReport?.critical, sensitiveFindings.length, sensitiveConsent, auth.authenticated,
     online, pwa.reachable, busy, pendingCommit, pendingPR, confirmed, mode, stats?.delete, syncConfirmed]);
   const canSubmitPush = pushReadiness.ready;
   const copyCommitSha = useCallback(async (sha) => {
@@ -516,7 +524,7 @@ export default function Home() {
     setPreview(null);
     setFileDetailsOpen(false);
     setConfirmed(false);
-    setSyncConfirmed(false);
+    setSyncConfirmed(false); setSensitiveConsent(false); setSecurityDialogOpen(false);
     setChangeFilter('all');
     setExcludedPaths([]); setReviewSearch(''); setVisibleLimit(100); setDiffViewer(null); diffRequestRef.current += 1;
     setTransfer(null);
@@ -624,12 +632,14 @@ export default function Home() {
       setFileDetailsOpen(reviewDisclosureDefaultOpen(changes.length));
       saveRecent(`${input.owner}/${input.repo}`);
       setChangeFilter('all'); setReviewSearch(''); setVisibleLimit(100); setExcludedPaths([]); setDiffViewer(null); diffRequestRef.current += 1;
-      setConfirmed(false); setSyncConfirmed(false);
+      setConfirmed(false); setSyncConfirmed(false); setSensitiveConsent(false);
+      const selectedReport=reportSelectedSecurity(archive.security,changes);
+      setSecurityDialogOpen(needsSensitiveConsent(selectedReport.findings));
       setStatus(changes.length ? `Đã phân tích: ${changes.length} thay đổi cần xử lý.` : 'ZIP và repository đã đồng bộ, không có gì cần push.');
       setProgress(100);
       setPhase(PUSH_STAGES.IDLE);
       notify(changes.length ? 'review-ready' : 'no-changes');
-    } catch (e) { setError(e.message); setErrorHint(e.hint || ''); setPreview(null); setStatus(''); setPhase(PUSH_STAGES.FAILED); notify('action-failed'); }
+    } catch (e) { setError(e.message); setErrorHint(e.hint || ''); setPreview(null); setSecurityDialogOpen(false); setStatus(''); setPhase(PUSH_STAGES.FAILED); notify('action-failed'); }
     finally { analyzingRef.current = false; setBusy(false); }
   }
   function finishVerified(outcome) {
@@ -645,7 +655,7 @@ export default function Home() {
     clearUploadCheckpoint();
     setPreview(null);
     setConfirmed(false);
-    setSyncConfirmed(false);
+    setSyncConfirmed(false); setSensitiveConsent(false); setSecurityDialogOpen(false);
     setChangeFilter('all'); setExcludedPaths([]); setDiffViewer(null);
     setError(''); setErrorHint('');
   }
@@ -657,7 +667,7 @@ export default function Home() {
     }
     const prData = { ...data.prRequest, expectedSourceHead: outcome.sha };
     clearPending(); setPendingCommit(null); clearUploadCheckpoint();
-    setPreview(null); setConfirmed(false); setSyncConfirmed(false);
+    setPreview(null); setConfirmed(false); setSyncConfirmed(false); setSensitiveConsent(false); setSecurityDialogOpen(false);
     setResult({ ...outcome, branchOnly: true, sourceBranch: prData.sourceBranch });
     logLocalAction({kind:'push',state:'success',repo:`${prData.owner}/${prData.repo}`,sha:outcome.sha,message:'Release branch verified'});
     setProgress(100); setPhase(PUSH_STAGES.SUCCEEDED); setActiveTab('activity');
@@ -763,18 +773,20 @@ export default function Home() {
 
   function updateSelection(path) {
     setExcludedPaths(current => toggleExcluded(preview?.changes || [], current, path));
-    setConfirmed(false); setSyncConfirmed(false);
+    setConfirmed(false); setSyncConfirmed(false); setSensitiveConsent(false); setSecurityDialogOpen(false);
   }
   function bulkSelection(keep) {
     if (!preview) return;
     setExcludedPaths(keep ? [] : preview.changes.map(change => change.path));
-    setConfirmed(false); setSyncConfirmed(false);
+    setConfirmed(false); setSyncConfirmed(false); setSensitiveConsent(false); setSecurityDialogOpen(false);
   }
   async function inspectChange(change) {
     if (!preview || busy) return;
     const requestId = ++diffRequestRef.current;
     setDiffViewer({ path:change.path, loading:true, message:'Đang tải nội dung để so sánh…' });
     try {
+      // Never display credential-like source in a client-side diff, including on iPhone.
+      if (sensitiveFindings.some(f => f.path === change.path)) throw new Error('Ẩn Diff cho file nghi ngờ chứa thông tin bí mật. Hãy kiểm tra source gốc trước khi xác nhận.');
       const localFile = preview.archive.files.find(f => f.path === change.path);
       let after = '';
       if (change.kind !== 'delete') {
@@ -796,7 +808,7 @@ export default function Home() {
   }
 
   async function push() {
-    if (!preview || !selectedChanges.length || securityReport?.blocked || !confirmed || (mode === 'sync' && stats?.delete > 0 && !syncConfirmed) || busy || pendingCommit || pendingPR || !canSubmitPush) return;
+    if (!preview || !selectedChanges.length || (requiresConsent && !sensitiveConsent) || !confirmed || (mode === 'sync' && stats?.delete > 0 && !syncConfirmed) || busy || pendingCommit || pendingPR || !canSubmitPush) return;
     setBusy(true); setResult(null); setError(''); setErrorHint(''); setProgress(0); setTransfer(null);
     setPhase(PUSH_STAGES.UPLOADING);
     let commitPayload = null;
@@ -840,7 +852,7 @@ export default function Home() {
         concurrency: 2,
         batchSize: 12,
         upload: async (source) => {
-          const res = await api('blob', { owner: input.owner, repo: input.repo, path: source.path, content: encodeBase64(source.data) },
+          const res = await api('blob', { owner: input.owner, repo: input.repo, path: source.path, content: encodeBase64(source.data), allowSensitiveUpload: requiresConsent && sensitiveConsent },
             (attempt) => setStatus(`GitHub chậm với ${source.path}. Retry an toàn (${attempt}/2)...`));
           return {sha:res.sha,proof:res.proof};
         },
@@ -859,7 +871,8 @@ export default function Home() {
       });
       if (reused) setStatus(`Đã tái sử dụng ${reused} Git blob từ lần upload trước; bắt đầu commit...`);
       const entries = selectedChanges.map((c) => ({ path: c.path, mode: c.mode, sha: c.kind === 'delete' ? null : blobShas.get(c.path), ...(c.kind !== 'delete' ? {proof: attestations.get(c.path)} : {}) }));
-      commitPayload = { ...commitInput, expectedHead: expectedCommitHead, message: commitMessage, entries, ...(prRequest ? { prRequest } : {}) };
+      commitPayload = { ...commitInput, expectedHead: expectedCommitHead, message: commitMessage, entries,
+        allowSensitiveCommit: requiresConsent && sensitiveConsent, ...(prRequest ? { prRequest } : {}) };
       rememberPending(commitPayload);
       setPendingCommit(commitPayload);
       setPhase(PUSH_STAGES.COMMITTING);
@@ -896,7 +909,7 @@ export default function Home() {
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar" role="banner">
       <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span><em> Pro</em></strong><small>MOBILE GIT WORKSPACE</small></div></div>
-      <div className="header-actions">{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.8.0</span></div>
+      <div className="header-actions">{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.8.2</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} repoTools={activeTab === 'repositories' && auth.authenticated ? <button type="button" className={`repo-refresh-icon${loadingRepos ? ' is-loading' : ''}`} onClick={loadRepos} disabled={busy || loadingRepos} aria-label="Làm mới danh sách repository" title="Làm mới danh sách repository"><Icon name="refresh" size={17}/></button> : null}/>
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
@@ -968,12 +981,17 @@ export default function Home() {
             {!preview ? busy && (phase === PUSH_STAGES.ANALYZING || phase === PUSH_STAGES.PREFLIGHT) ? <LoadingSkeleton kind="panel" label="Đang phân tích ZIP và kiểm tra GitHub…"/> : <StatusEmpty icon="scan" title="Sẵn sàng phân tích source" description="Sau khi chọn ZIP, Zipverra tự phân tích và đưa bạn tới Review. Push chỉ thực hiện khi bạn xác nhận."/> : <>
               <ReviewSummary selected={selectedChanges.length} total={preview.changes.length} bytes={prettyBytes(selectedBytes)} strategy={releaseStrategy} target={preview.input.branch}/>
               <div className="stat-grid"><div><strong className="good">+{stats.add}</strong><span>Thêm</span></div><div><strong className="warn">~{stats.modify}</strong><span>Sửa</span></div><div><strong className="bad">−{stats.delete}</strong><span>Xóa</span></div></div>
-              <ReviewRiskSnapshot report={securityReport} insights={preview.insights}/>
+              <ReviewRiskSnapshot report={securityReport} insights={preview.insights} approved={sensitiveConsent}/>
+              {requiresConsent && <div className={`security-consent-card${sensitiveConsent ? ' security-consent-card--approved' : ''}`} role="status">
+                <strong>{sensitiveConsent ? 'Đã chấp nhận rủi ro · Có thể tiếp tục Push/PR' : 'Security Scan: Cần quyết định Có / Không'}</strong>
+                <p>{sensitiveConsent ? 'Bạn vẫn cần tick xác nhận Commit & Push như bình thường.' : 'Source có thể chứa token, khóa API hoặc thông tin đăng nhập. Bạn muốn tiếp tục không?'}</p>
+                <button type="button" className="button secondary full" disabled={busy} onClick={() => setSecurityDialogOpen(true)}>{sensitiveConsent ? 'Xem lại / Thay đổi quyết định' : 'Có / Không · Quyết định tiếp tục'}</button>
+              </div>}
               {stats.delete > 0 && <div className="warning-banner"><strong>Cảnh báo Sync</strong><p>Chế độ Sync sẽ xóa {stats.delete} file đang có trên GitHub. Các file này có thể bao gồm cấu hình deploy.</p><label className="confirm-row sync-confirm"><input type="checkbox" checked={syncConfirmed} disabled={busy} onChange={(e) => setSyncConfirmed(e.target.checked)}/><span>Tôi đồng ý xóa {stats.delete} file trong repository.</span></label></div>}
               <span id="push-readiness-help" className="visually-hidden">Trạng thái trước khi Push: {pushReadiness.title}. {pushReadiness.detail}</span>
               {!['CONFIRM', 'READY'].includes(pushReadiness.code) && <ReviewReadiness state={pushReadiness} selectedCount={selectedChanges.length} totalCount={preview.changes.length} strategy={releaseStrategy}/>}
               <section ref={decisionRef} tabIndex={-1} className="premium-review-confirm" aria-label="Xác nhận và Push"><div className="premium-decision-heading"><strong>{releaseStrategy === 'pr' ? 'Xác nhận tạo Pull Request' : 'Sẵn sàng Commit & Push'}</strong><small>{selectedChanges.length} thay đổi · {preview.input.owner}/{preview.input.repo} · {preview.input.branch}</small></div>
-                <label className="confirm-row"><input type="checkbox" checked={confirmed} disabled={busy || !selectedChanges.length || Boolean(securityReport?.blocked)} onChange={(e) => setConfirmed(e.target.checked)}/><span>Tôi đã xem tổng quan, hiểu các cảnh báo và đồng ý {releaseStrategy === 'pr' ? 'tạo Pull Request' : 'cập nhật branch'} <b>{preview.input.branch}</b>.</span></label>
+                <label className="confirm-row"><input type="checkbox" checked={confirmed} disabled={busy || !selectedChanges.length || (requiresConsent && !sensitiveConsent)} onChange={(e) => setConfirmed(e.target.checked)}/><span>Tôi đã xem tổng quan, hiểu các cảnh báo và đồng ý {releaseStrategy === 'pr' ? 'tạo Pull Request' : 'cập nhật branch'} <b>{preview.input.branch}</b>.</span></label>
                 <button className="button primary full push-button" disabled={!canSubmitPush} aria-describedby="push-readiness-help" onClick={push}><Icon name="upload" size={18}/> {busy ? 'Đang xử lý...' : releaseStrategy === 'pr' ? `Push & Create PR (${selectedChanges.length} file)` : `Commit & Push (${selectedChanges.length} file)`}</button>
               </section>
               <p className="premium-review-skip-note">Muốn kiểm tra hoặc bỏ chọn file? Mở danh sách chi tiết bên dưới.</p>
@@ -994,11 +1012,11 @@ export default function Home() {
               <details className="premium-review-diagnostics" defaultOpen={Boolean(securityReport?.blocked)} key={`${preview.remote.head}-${securityReport?.blocked ? 'blocked' : 'clean'}`}>
                 <summary><span>Security Scan & ZIP Analyzer · Chi tiết</span><span className="premium-files-chevron" aria-hidden="true">⌄</span></summary>
               <details className="smart-insights workflow-insights" defaultOpen={preview.insights.warnings.some(w => w.code !== 'SECRET_FILE' && w.severity !== 'info')}><summary className="insight-header"><span className="insight-mark">✦</span><div><strong>Smart ZIP Analyzer</strong><small>{preview.insights.framework.type} · {preview.insights.binaryCount} file nhị phân</small></div></summary>{preview.insights.warnings.filter(w=>w.code!=='SECRET_FILE').length ? <div className="insight-warnings">{preview.insights.warnings.filter(w=>w.code!=='SECRET_FILE').map(w => <div className={`insight-notice insight-${w.severity}`} key={w.code}><strong>{w.title}</strong><span>{w.description}</span></div>)}</div> : <p className="insight-clean">Không phát hiện cảnh báo cấu trúc phổ biến. Vẫn cần review source trước khi push.</p>}</details>
-              <div className={`security-review ${securityReport?.blocked?'security-review--blocked':''}`} role="status" aria-label="Security review">
+              <div className={`security-review ${securityReport?.blocked && !sensitiveConsent?'security-review--blocked':''}`} role="status" aria-label="Security review">
                 <div className="security-review-title"><Icon name="shield" size={20}/><div><strong>Security & Smart Source Validation</strong><small>{securityReport?.scanned||0} thay đổi được kiểm tra · Không hiển thị nội dung secrets</small></div></div>
                 <div className="security-review-stats"><span className="risk-critical">Critical: {securityReport?.critical||0}</span><span className="risk-warning">Warning: {securityReport?.warning||0}</span><span className="risk-info">Info: {securityReport?.info||0}</span></div>
                 {securityReport?.findings?.length ? <div className="security-findings">{securityReport.findings.slice(0,20).map((finding,i)=><div key={`${finding.path}-${finding.code}-${i}`} className={`security-finding risk-${finding.severity}`}><strong>{finding.title} <small>· {finding.severity.toUpperCase()}</small></strong><span className="security-finding-path">{finding.path}{finding.line>0?`:${finding.line}`:''}</span><small>{finding.action}</small></div>)}{securityReport.findings.length>20&&<small>Hiển thị 20/{securityReport.findings.length} cảnh báo. Kiểm tra source để xử lý toàn bộ.</small>}</div> : <p className="insight-clean">Không phát hiện credential theo các quy tắc hiện có. Đây không phải bảo đảm source hoàn toàn an toàn.</p>}
-                {securityReport?.blocked&&<div className="security-block-note" role="alert">Đã khóa Push/PR: loại bỏ hoặc bỏ chọn file Critical, sau đó xác nhận lại bản review. Server sẽ kiểm tra lại trước khi ghi lên GitHub.</div>}
+                {requiresConsent&&<div className="security-block-note" role="alert">{sensitiveConsent ? 'Bạn đã chấp nhận rủi ro của các file đã chọn. Server sẽ kiểm tra và yêu cầu bằng chứng xác nhận ở bước Commit.' : 'Đang chờ quyết định Có / Không. Nếu không muốn đưa bí mật lên GitHub, hãy bỏ chọn các file liên quan rồi xác nhận lại.'}</div>}
               </div>
               </details>
             </>}
@@ -1033,7 +1051,7 @@ export default function Home() {
             <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
               profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
               onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.8.0</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.8.2</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -1044,8 +1062,18 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.8.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.8.2</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
+  <ModalSheet open={Boolean(preview && securityDialogOpen && requiresConsent)} onClose={() => setSecurityDialogOpen(false)} title="Cảnh báo thông tin nhạy cảm" variant="sheet">
+    <div className="sensitive-consent-modal" role="alert">
+      <div className="sensitive-consent-alert"><Icon name="shield" size={26}/><div><strong>Security Scan phát hiện rủi ro · Không tự động Push</strong><p>Phát hiện {securityReport?.critical || 0} Critical / {sensitiveFindings.length} cảnh báo nhạy cảm trong {new Set(sensitiveFindings.map(f => f.path)).size} file được chọn.</p></div></div>
+      <p>Nếu repository công khai, token hoặc mật khẩu thật có thể bị lộ ngay khi Push hoặc tạo Pull Request. Nên bỏ các file này khỏi ZIP và thu hồi/đổi khóa nếu đã lộ.</p>
+      <div className="sensitive-consent-paths" aria-label="Danh sách file cảnh báo">{[...new Set(sensitiveFindings.map(f => f.path))].slice(0,5).map(p => <code key={p}>{p}</code>)}{new Set(sensitiveFindings.map(f => f.path)).size > 5 && <small>Và các file khác trong Security Scan.</small>}</div>
+      <p><strong>Bạn có muốn tiếp tục với những file này không?</strong></p>
+      <div className="sensitive-consent-actions"><button className="button secondary full" type="button" onClick={() => { setSensitiveConsent(false); setConfirmed(false); setSecurityDialogOpen(false); }}>Không, kiểm tra lại</button><button className="button primary full" type="button" onClick={() => { setSensitiveConsent(true); setConfirmed(false); setSecurityDialogOpen(false); }}>Có, tôi hiểu rủi ro · Tiếp tục</button></div>
+      <small>Chọn Có cho phép tiếp tục với cảnh báo Security Scan của đúng danh sách file đang chọn. Bạn vẫn phải tick xác nhận Commit/PR. Không thể bỏ qua quyền GitHub, GitHub Push Protection, kiểm tra ZIP hoặc các lỗi kỹ thuật.</small>
+    </div>
+  </ModalSheet>
   <RepositoryPickerSheet open={repoSheetOpen} onClose={() => setRepoSheetOpen(false)}
     repos={repos} selected={chosenRepo ? `${owner}/${repo}` : ''} favorites={favorites} recents={recents} usage={repositoryUsage}
     disabled={busy || Boolean(pendingCommit || pendingPR)} onChoose={chooseRepo}/>

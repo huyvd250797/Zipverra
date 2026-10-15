@@ -1,5 +1,5 @@
 /* Zipverra Pro v2.6: public-asset-only offline shell. Never cache GitHub/auth/API responses. */
-const CACHE_NAME = 'zipverra-public-v3.8.0';
+const CACHE_NAME = 'zipverra-public-v3.8.2';
 const ALLOWED_ASSETS = ['/offline.html', '/icon.svg', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
 const STATIC_SET = new Set(ALLOWED_ASSETS);
 self.addEventListener('install', event => {

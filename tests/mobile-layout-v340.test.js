@@ -9,12 +9,12 @@ const page=read('app/page.jsx');
 const hub=read('app/components/PolishedWorkspace.jsx');
 const css=read('app/styles/mobile-layout-v340.css');
 
-test('v3.8.0 ships its mobile layout layer last and PWA version matches',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.8.0');
+test('v3.8.2 ships its mobile layout layer last and PWA version matches',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.8.2');
   const layout=read('app/layout.jsx');
   assert.match(layout,/import '\.\/styles\/mobile-layout-v340\.css'/);
   assert.ok(layout.indexOf('unified-components-v330.css')<layout.indexOf('mobile-layout-v340.css'));
-  assert.match(read('lib/pwa-reliability.js'),/APP_VERSION = '3\.8\.0'/);
+  assert.match(read('lib/pwa-reliability.js'),/APP_VERSION = '3\.8\.2'/);
   for(const name of ['icon-192.png','icon-512.png','apple-touch-icon.png'])assert.ok(existsSync(join(root,'public',name)),name);
 });
 test('Repos uses one authorized repo and branch hub, not duplicated pickers',()=>{
@@ -36,7 +36,7 @@ test('Repos owns a single persistent Source ZIP Download, separate from Upload',
   assert.match(page,/className=\{`drop-zone/);
 });
 test('Upload preserves reviewed diff, critical security, Sync and explicit commit confirmation',()=>{
-  for (const token of ['securityReport?.blocked','syncConfirmed','confirmed','canSubmitPush','pendingCommit','pendingPR','onClick={push}','<ReviewReadiness'])assert.ok(page.includes(token),token);
+  for (const token of ['requiresConsent && !sensitiveConsent','syncConfirmed','confirmed','canSubmitPush','pendingCommit','pendingPR','onClick={push}','<ReviewReadiness'])assert.ok(page.includes(token),token);
   assert.match(page,/onClick=\{goToReview\}/);
   assert.match(page,/data-mobile-view="activity"/);
   assert.match(page,/onClick=\{startNextVersion\}/);

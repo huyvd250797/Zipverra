@@ -11,8 +11,8 @@ const layout = read('app/layout.jsx');
 const safe = { hasPreview:true, selectedCount:20, critical:0, authenticated:true,
   online:true, busy:false, pending:false, confirmed:false, syncDeleteCount:0, syncConfirmed:false };
 
-test('v3.8.0 includes modal-motion override after all prior UI layers',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.8.0');
+test('v3.8.2 includes modal-motion override after all prior UI layers',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.8.2');
   assert.match(layout,/import '\.\/styles\/modal-motion-v360\.css'/);
   assert.ok(layout.indexOf('premium-workflow-v350.css') < layout.indexOf('modal-motion-v360.css'));
 });
@@ -37,10 +37,11 @@ test('all selected changes can be confirmed without opening file list, but never
 });
 test('Critical risk blocks quick commit even after consent and highlights file path',()=>{
   assert.equal(reviewReadiness({...safe,critical:1,confirmed:true}).code,'SECURITY');
+  assert.equal(reviewReadiness({...safe,critical:1,confirmed:true,sensitiveConsent:true}).ready,true);
   const component=read('app/components/PremiumWorkflow.jsx');
   assert.match(component,/premium-risk-\$\{tone\}/);
   assert.match(component,/criticalPaths\.join/);
-  assert.match(page,/disabled=\{busy \|\| !selectedChanges\.length \|\| Boolean\(securityReport\?\.blocked\)\}/);
+  assert.match(page,/disabled=\{busy \|\| !selectedChanges\.length \|\| \(requiresConsent && !sensitiveConsent\)\}/);
 });
 test('Sync deletion requires its own checkbox before quick push',()=>{
   assert.equal(reviewReadiness({...safe,confirmed:true,syncDeleteCount:3}).code,'SYNC');

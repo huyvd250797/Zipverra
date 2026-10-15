@@ -12,18 +12,19 @@ export const ReviewSummary = memo(function ReviewSummary({ selected, total, byte
 
 /** Compact, redacted safety headline shown before confirmation.
  * Full findings remain available below without forcing file-list scrolling. */
-export const ReviewRiskSnapshot = memo(function ReviewRiskSnapshot({ report, insights }) {
+export const ReviewRiskSnapshot = memo(function ReviewRiskSnapshot({ report, insights, approved = false }) {
   if (!report) return null;
   const critical = Math.max(0, report.critical || 0);
   const warning = Math.max(0, report.warning || 0);
   const structural = (insights?.warnings || []).filter(item => item.severity !== 'info' && item.code !== 'SECRET_FILE');
-  const tone = critical || report.blocked ? 'critical' : warning || structural.length ? 'warning' : 'clear';
+  const needsApproval = (critical > 0 || report.blocked) && !approved;
+  const tone = needsApproval ? 'critical' : critical || warning || structural.length ? 'warning' : 'clear';
   const criticalPaths = [...new Set((report.findings || []).filter(item => item.severity === 'critical').map(item => item.path).filter(Boolean))].slice(0, 2);
   return <section className={`premium-risk-snapshot premium-risk-${tone}`} aria-label="Tổng quan bảo mật" role="status">
     <span className="premium-risk-icon" aria-hidden="true">{tone === 'critical' ? '!' : tone === 'warning' ? '!' : '✓'}</span>
     <div className="premium-risk-content">
-      <strong>{tone === 'critical' ? `Đã chặn Push · ${critical} Critical` : tone === 'warning' ? `${warning + structural.length} cảnh báo cần lưu ý` : 'Không phát hiện Critical'}</strong>
-      <small>{tone === 'critical' ? 'Loại bỏ hoặc bỏ chọn file Critical trước khi Push.' : tone === 'warning' ? 'Mở chi tiết bảo mật khi cần kiểm tra thêm.' : 'Quét theo các quy tắc hiện có, không bảo đảm tuyệt đối.'}</small>
+      <strong>{critical > 0 ? (approved ? `Đã đồng ý tiếp tục · ${critical} Critical` : `Cần xác nhận để tiếp tục · ${critical} Critical`) : tone === 'warning' ? `${warning + structural.length} cảnh báo cần lưu ý` : 'Không phát hiện Critical'}</strong>
+      <small>{critical > 0 ? (approved ? 'Đã cho phép tiếp tục Review. Chỉ Commit/PR sau khi xác nhận riêng; hãy thu hồi credential thật nếu đã lộ.' : 'Security Scan chỉ cảnh báo; nhấn “Xem cảnh báo · Có / Không” để quyết định.') : tone === 'warning' ? 'Mở chi tiết bảo mật khi cần kiểm tra thêm.' : 'Quét theo các quy tắc hiện có, không bảo đảm tuyệt đối.'}</small>
       {criticalPaths.length > 0 && <span className="premium-risk-paths">{criticalPaths.join(' · ')}</span>}
     </div>
   </section>;

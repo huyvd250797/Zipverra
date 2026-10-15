@@ -1,5 +1,21 @@
 # Changelog
 
+## v3.8.2 — Security Warning Confirmation Hotfix (15/10/2026)
+- Critical/credential trong ZIP Review được xử lý nhất quán bằng modal **Có / Không**; chỉ khi chọn Có mới cho phép tiếp tục Commit & Push/PR sau bước xác nhận thông thường.
+- Sau khi đồng ý, cảnh báo Critical không còn trình bày như lỗi chặn vĩnh viễn; Smart ZIP Analyzer chuyển `SECRET_FILE` sang cảnh báo thay vì block cứng.
+- Sửa fixture trong `tests/source-security.test.js`: tạo mẫu private key giả tại runtime, tránh bị v3.8.0 chặn khi chính ZIP Zipverra được upload để nâng cấp.
+- Backend giữ security scan, kiểm tra signed blob proofs và xác nhận; không bỏ qua đường dẫn ZIP nguy hiểm, GitHub permissions/branch protection, Push Protection và điều kiện xác minh.
+- Đồng bộ PWA cache/version v3.8.2; tổng 310 automated tests.
+- Giữ Feature Freeze; đây là hotfix không bổ sung module.
+
+## v3.8.1 — Sensitive File Consent Hotfix (15/10/2026)
+- ZIP không dừng chỉ vì file nhạy cảm như `.npmrc`, `.env.*`, `.pem` hoặc token nghi vấn. An toàn đường dẫn và giới hạn ZIP vẫn áp dụng.
+- Security Scan cảnh báo bằng modal Có/Không; chọn Có chỉ mở khóa Review, không tự ghi GitHub. Nếu chọn Không, vẫn có thể bỏ chọn file và tiếp tục.
+- Mọi lần Push/PR với file nhạy cảm yêu cầu xác nhận; backend tự quét lại trước khi tạo Git blob, proof được HMAC ký và ràng buộc vào file/user/repo, Commit đòi xác nhận cùng proof.
+- Xác nhận bị xóa khi đổi ZIP, repository, branch, chế độ hoặc lựa chọn file; không lưu lâu dài.
+- Quick Edit và Rollback vẫn giữ chính sách không cho file nhạy cảm; `.git` và đường dẫn ZIP nguy hiểm không thể override.
+- Đây là maintenance hotfix trên baseline v3.8.0; không bổ sung module mới.
+
 ## v3.8.0 — Visual QA & Stable UI Release (2026-10-15)
 
 - Added a bounded independent scroll region for 10–2,500 changed files, preventing expanded Review from pushing Commit & Push screens below the viewport.

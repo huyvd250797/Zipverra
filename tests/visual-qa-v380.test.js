@@ -8,11 +8,11 @@ const page = read('app/page.jsx');
 const css = read('app/styles/visual-qa-v380.css');
 const layout = read('app/layout.jsx');
 
-test('v3.8.0 consistent runtime, service worker cache, footer and stylesheet order',()=>{
-  assert.equal(JSON.parse(read('package.json')).version, '3.8.0');
-  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.8\.0'/);
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.8\.0/);
-  assert.match(page, /Zipverra · v3\.8\.0/);
+test('v3.8.2 consistent runtime, service worker cache, footer and stylesheet order',()=>{
+  assert.equal(JSON.parse(read('package.json')).version, '3.8.2');
+  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.8\.2'/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.8\.2/);
+  assert.match(page, /Zipverra · v3\.8\.2/);
   assert.ok(layout.indexOf('modal-motion-v360.css') < layout.indexOf('visual-qa-v380.css'));
 });
 
@@ -40,8 +40,8 @@ test('return actions use gated original consent instead of duplicating commit co
 test('changing selection always invalidates both confirmations and blocks unsafe actions',()=>{
   assert.match(page, /function updateSelection\(path\)[\s\S]*?setConfirmed\(false\); setSyncConfirmed\(false\);/);
   assert.match(page, /function bulkSelection\(keep\)[\s\S]*?setConfirmed\(false\); setSyncConfirmed\(false\);/);
-  assert.match(page, /setConfirmed\(false\); setSyncConfirmed\(false\);\s*setStatus\(changes\.length/);
-  assert.match(page, /securityReport\?\.critical, securityReport\?\.blocked/);
+  assert.match(page, /setConfirmed\(false\); setSyncConfirmed\(false\); setSensitiveConsent\(false\);[\s\S]*?setStatus\(changes\.length/);
+  assert.match(page, /securityReport\?\.critical, sensitiveFindings\.length/);
   const args = {hasPreview:true,selectedCount:2000,critical:0,authenticated:true,online:true,busy:false,pending:false,confirmed:true,syncDeleteCount:2,syncConfirmed:true};
   assert.equal(reviewReadiness(args).ready,true);
   for(const changes of [{confirmed:false},{syncConfirmed:false},{critical:1},{pending:true},{online:false}]){

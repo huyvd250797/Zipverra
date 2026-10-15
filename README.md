@@ -1,6 +1,22 @@
-# Zipverra Pro v3.8.0 — Visual QA & Stable UI Release
+# Zipverra Pro v3.8.2 — Security Warning Confirmation Hotfix
 
-**Source baseline:** Full Zipverra Pro v3.6.0 ZIP provided by the user. Upgrade preserves the existing GitHub App OAuth, Direct Push, Pull Request, Workspace, History, Rollback, Recovery, security scanner, and five-tab mobile workflow.
+**Source baseline:** Zipverra Pro v3.8.0 — Visual QA & Stable UI Release. Maintenance hotfix preserves the existing GitHub App OAuth, Direct Push, Pull Request, Workspace, History, Rollback, Recovery, security scanner, and five-tab mobile workflow.
+
+## Maintenance hotfix v3.8.2
+
+- **Không còn tự chặn source ở Review chỉ vì Security Scan phát hiện Critical:** app mở hộp thoại Có/Không; chọn Có và tick xác nhận Review thì Direct Push hoặc PR được phép tiếp tục, backend vẫn quét lại và xác minh cờ đồng ý. Không tự Push khi chỉ chọn Có.
+- **Rà soát giao diện:** trạng thái đã đồng ý được thể hiện là cảnh báo cần lưu ý (không còn viền đỏ kiểu “bị chặn”); tiêu đề, hướng dẫn và Smart ZIP Analyzer thống nhất với quy trình xác nhận.
+- **Bootstrap từ v3.8.0:** chuỗi mô phỏng PRIVATE KEY trong file test được ghép tại runtime, không còn bị scanner cũ nhận nhầm khi upload source Zipverra để tự cập nhật. Không bỏ bài test phát hiện private key.
+- **Giữ giới hạn:** Không có quyền vượt GitHub Push Protection, branch protection, quyền GitHub App, cấu trúc ZIP nguy hiểm, file vượt hạn mức hoặc lỗi cấu trúc. Quick Edit và Rollback vẫn có chính sách độc lập.
+- **Maintenance only:** không nâng cấp module mới, không thay đổi database, thông tin bí mật, GitHub App OAuth hoặc API commit.
+
+## Previous v3.8.1 security consent implementation
+
+- ZIP import now **analyzes** `.npmrc`, `.env*`, private-key filenames and detected embedded credentials rather than aborting immediately at the path check. Unsafe ZIP paths, traversal, `.git`, size limits, malformed input and unsupported Git modes remain blocked.
+- If the selected changes include high-confidence secrets or likely hard-coded credentials, the app opens a redacted Yes/No warning dialog. **No** keeps the Push gate closed; **Yes** allows the normal manual Review, checkbox, Commit & Push / Create PR workflow. Consent is **not** an automatic GitHub mutation.
+- Server re-scans every upload and refuses sensitive blobs without `allowSensitiveUpload`. Signed, short-lived HMAC attestation is scoped to user, repository, path, SHA and the sensitive risk flag. Commit requires corresponding `allowSensitiveCommit` and valid proof. Deletion-only Sync does not expose a secret and needs no override.
+- Consent is in memory only. Changing ZIP, repository, branch, settings or selected files invalidates it. The built-in diff hides contents for flagged files.
+- **Security caveat:** a real secret sent to GitHub may be permanently accessible from Git history even if later deleted. Prefer removing it from ZIP, moving it to secure environment settings and rotating affected credentials. GitHub's own Push Protection may still refuse secret uploads regardless of app consent.
 
 ## New in v3.8.0
 
@@ -12,16 +28,16 @@
 
 ## Deployment to GitHub + Vercel
 
-1. Extract the archive and push the **contents of `Zipverra-v3.8.0/`** into the root of the existing application repository; do not push the outer folder as a nested app.
+1. Extract the archive and push the **contents of `Zipverra-v3.8.2/`** into the root of the existing application repository; do not push the outer folder as a nested app.
 2. Keep your existing Vercel variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`. Update `APP_URL` only if the deployed domain has changed.
 3. Build on Vercel or another networked CI with `npm install --no-audit --no-fund`, `npm test`, `npm run build` using Node 22. Existing GitHub Actions workflow runs tests/build on push and PR.
-4. Verify `/api/version` displays `3.8.0`, and refresh the app to apply the public PWA service-worker cache version. Old public cache entries are removed after activation; private API/auth responses are never cached.
-5. Test on an authorized throwaway repository: select ZIP with hundreds of files, check the quick confirmation flow without opening details, expand and scroll the file list, return to confirmation, then separately verify Sync delete acknowledgement, Critical block, and PR behavior. Test rollback/Recovery after interrupted operations before using production repositories.
+4. Verify `/api/version` displays `3.8.2`, and refresh the app to apply the public PWA service-worker cache version. Old public cache entries are removed after activation; private API/auth responses are never cached.
+5. Test on an authorized throwaway repository: select ZIP with hundreds of files, check the quick confirmation flow without opening details, expand and scroll the file list, return to confirmation, then separately verify Sync delete acknowledgement, Critical consent dialog (No/Yes) and PR behavior. Test rollback/Recovery after interrupted operations before using production repositories.
 6. Test actual iPhone Safari and installed standalone PWA keyboard, modal focus and scroll, dynamic safe area, dark/light, reduced motion, and Wi-Fi interruption before labeling production validated.
 
 ## Validation boundaries
 
-**Local:** 301 Node unit/regression tests passed. Source and CSS checks and static Chromium viewport QA (when available) are documented in `VISUAL_QA_V380.md`. The environment could not finish fetching npm dependencies, so a production `next build`, authenticated GitHub E2E and real iPhone Safari/PWA verification have **not** been completed locally. A successful ZIP package by itself does not certify a Vercel deployment.
+**Local:** 310 Node unit/regression tests passed for v3.8.2. Source and CSS checks and static Chromium viewport QA (when available) are documented in `VISUAL_QA_V380.md`. The environment could not finish fetching npm dependencies, so a production `next build`, authenticated GitHub E2E and real iPhone Safari/PWA verification have **not** been completed locally. A successful ZIP package by itself does not certify a Vercel deployment.
 
 Read `VISUAL_QA_V380.md`, `RELEASE_VALIDATION.md` and `ROADMAP_NEXT.md` before production rollout.
 

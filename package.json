@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.8.0",
+  "version": "3.8.2",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.8.0 — Visual QA & Stable UI Release: decision-first review, bounded file list, mobile accessibility and safe GitHub workflow",
+  "description": "Zipverra Pro v3.8.2 — Security Warning Override Hotfix: explicit confirmation for source risks in Push/PR",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

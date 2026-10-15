@@ -8,11 +8,11 @@ const ready = { hasPreview:true, selectedCount:3, critical:0, authenticated:true
   pending:false, confirmed:true, syncDeleteCount:0, syncConfirmed:false };
 
 test('v3.0 stable release keeps full PWA version and stylesheet', () => {
-  assert.equal(JSON.parse(read('package.json')).version,'3.8.0');
-  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.8\.0'/);
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.8\.0/);
+  assert.equal(JSON.parse(read('package.json')).version,'3.8.2');
+  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.8\.2'/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.8\.2/);
   assert.match(read('app/layout.jsx'), /advanced-ux-polish\.css/);
-  assert.match(read('app/page.jsx'), /v3\.8\.0/);
+  assert.match(read('app/page.jsx'), /v3\.8\.2/);
 });
 
 test('readiness cannot approve a missing preview, missing changes or unconfirmed review', () => {
@@ -27,7 +27,8 @@ test('Critical secrets block UI even when user checked confirmation', () => {
   const finding = reviewReadiness({...ready,critical:2});
   assert.equal(finding.code,'SECURITY');
   assert.equal(finding.ready,false);
-  assert.equal(finding.tone,'danger');
+  assert.equal(finding.tone,'warning');
+  assert.equal(reviewReadiness({...ready,critical:2,sensitiveConsent:true}).ready,true);
   assert.doesNotMatch(JSON.stringify(finding),/ghp_|sk-proj-|secret_value/);
 });
 
@@ -85,7 +86,7 @@ test('Readiness is visible and remains behind user checkbox and server-backed Pu
   assert.match(main,/disabled=\{!canSubmitPush\}/);
   assert.match(main,/!confirmed \|\| \(mode === 'sync' && stats\?\.delete > 0 && !syncConfirmed\)/);
   assert.match(main,/requestOnce\('commit', commitPayload\)/);
-  assert.match(main,/securityReport\?\.blocked/);
+  assert.match(main,/\(requiresConsent && !sensitiveConsent\)/);
 });
 
 test('Outcome uses only verified GitHub result and provides safe copy SHA / external links', () => {

@@ -22,7 +22,9 @@ const contents=(path,content)=>scanSourceFile(path,bytes(content));
 const issueCodes=(findings)=>findings.map(x=>x.code);
 
 test('redacted detection of known high-confidence secrets and private key without showing values',()=>{
- const snippets=[`const p = '${TOKEN}'`, `export const key = '${AWS}'`, '-----BEGIN PRIVATE KEY-----\nMII...'];
+ // Assemble at runtime: legacy Zipverra versions must not falsely flag the TEST SOURCE itself.
+ const fakePrivateKeyHeader = '-----BEGIN' + ' PRIVATE KEY-----';
+ const snippets=[`const p = '${TOKEN}'`, `export const key = '${AWS}'`, fakePrivateKeyHeader + '\nMII...'];
  for(const content of snippets){
   const findings=contents(FILE,content);
   assert.ok(findings.some(x=>x.severity==='critical'));
@@ -87,13 +89,20 @@ test('Critical is blocked by the SERVER before any GitHub API request, noncritic
  const old=globalThis.fetch;
  globalThis.fetch=async(_url,opts)=>{calls++;post=JSON.parse(opts.body);const src=Buffer.from(post.content,'base64');return {ok:true,status:201,text:async()=>JSON.stringify({sha:gitSha(src)})};};
  try {
-  await assert.rejects(()=>secureBlobUpload('token',{owner:OWNER,repo:REPO,path:FILE,content:Buffer.from(TOKEN).toString('base64')},ID,ENV),e=>e.code==='SECURITY_CRITICAL_BLOCKED' && e.stage==='SECURITY_SCAN');
+  await assert.rejects(()=>secureBlobUpload('token',{owner:OWNER,repo:REPO,path:FILE,content:Buffer.from(TOKEN).toString('base64')},ID,ENV),e=>e.code==='SECURITY_CONSENT_REQUIRED' && e.stage==='SECURITY_SCAN');
   assert.equal(calls,0);
+  const acknowledged=await secureBlobUpload('token',{owner:OWNER,repo:REPO,path:FILE,content:Buffer.from(TOKEN).toString('base64'),allowSensitiveUpload:true},ID,ENV);
+  assert.equal(calls,1);
+  assert.equal(acknowledged.security.sensitive,true);
+  assert.throws(()=>verifyBlobAttestation(acknowledged.proof,{owner:OWNER,repo:REPO,path:FILE,sha:acknowledged.sha},ID,ENV),e=>e.code==='SECURITY_CONSENT_REQUIRED');
+  assert.equal(verifyBlobAttestation(acknowledged.proof,{owner:OWNER,repo:REPO,path:FILE,sha:acknowledged.sha},ID,ENV,Date.now(),true),true);
   const text='export const ready = true';
   const result=await secureBlobUpload('token',{owner:OWNER,repo:REPO,path:FILE,content:Buffer.from(text).toString('base64')},ID,ENV);
-  assert.equal(calls,1);assert.equal(result.sha,gitSha(Buffer.from(text)));
+  assert.equal(calls,2);assert.equal(result.sha,gitSha(Buffer.from(text)));
   assert.equal(verifyBlobAttestation(result.proof,{owner:OWNER,repo:REPO,path:FILE,sha:result.sha},ID,ENV),true);
   assert.equal(result.security.warning,0);
+  assert.throws(()=>assertSecureCommitEntries({owner:OWNER,repo:REPO,entries:[{path:FILE,mode:'100644',sha:acknowledged.sha,proof:acknowledged.proof}]},ID,ENV),e=>e.code==='SECURITY_CONSENT_REQUIRED');
+  assert.equal(assertSecureCommitEntries({owner:OWNER,repo:REPO,allowSensitiveCommit:true,entries:[{path:FILE,mode:'100644',sha:acknowledged.sha,proof:acknowledged.proof}]},ID,ENV),true);
   assert.ok(!('token' in result));
  }finally{globalThis.fetch=old;}
 });
@@ -124,9 +133,56 @@ test('Quick Edit security review is enforced by backend even for direct save or 
 test('new UI displays redacted security report and gates BOTH direct push and Pull Request',()=>{
  const page=readFileSync(new URL('../app/page.jsx',import.meta.url),'utf8');
  assert.match(page,/Security & Smart Source Validation/);
- assert.match(page,/securityReport\?\.blocked/);
+ assert.match(page,/\(requiresConsent && !sensitiveConsent\)/);
  assert.match(page,/attestations\.get/);
  assert.match(page,/validatedCheckpoint\(loadUploadCheckpoint\(\), fingerprint, selectedChanges, Date\.now\(\), true\)/);
  assert.match(page,/goToTab\('activity'\)/);
  assert.doesNotMatch(page,/Vercel Deployment Tracking/);
+});
+
+
+test('v3.8.2 sensitive file ZIP consent allows .npmrc but never unsafe ZIP traversal', async()=>{
+  const { assertSafeContentPath } = await import('../lib/paths.js');
+  const { calculateChanges } = await import('../lib/operations.js');
+  const { assertVerificationPayload } = await import('../lib/verification.js');
+  const credential=f('.npmrc','//registry.npmjs.org/:_authToken=private-token-value-12345');
+  assert.throws(()=>assertSafeContentPath(credential.path),/bị chặn/);
+  assert.equal(assertSafeContentPath(credential.path,{allowSensitive:true}),'.npmrc');
+  assert.throws(()=>assertSafeContentPath('../.npmrc',{allowSensitive:true}),/không an toàn/);
+  assert.throws(()=>assertSafeContentPath('.git/config',{allowSensitive:true}),/\.git/);
+  assert.equal(calculateChanges([credential],[],'merge')[0].path,'.npmrc');
+  const payload={owner:OWNER,repo:REPO,branch:'main',expectedHead:'b'.repeat(40),message:'test',entries:[{path:'.npmrc',sha:'a'.repeat(40),mode:'100644'}]};
+  assert.throws(()=>assertVerificationPayload(payload),/bị chặn/);
+  assert.doesNotThrow(()=>assertVerificationPayload({...payload,allowSensitiveCommit:true}));
+  let count=0;const fetcher=globalThis.fetch;
+  globalThis.fetch=async (url,options)=>{count++; return {ok:true,status:201,text:async()=>JSON.stringify({sha:gitSha(Buffer.from(JSON.parse(options.body).content,'base64'))})};};
+  try{
+    await assert.rejects(()=>secureBlobUpload('token',{owner:OWNER,repo:REPO,path:'.npmrc',content:Buffer.from(credential.data).toString('base64')},ID,ENV),e=>e.code==='SECURITY_CONSENT_REQUIRED');
+    assert.equal(count,0);
+    const uploaded=await secureBlobUpload('token',{owner:OWNER,repo:REPO,path:'.npmrc',content:Buffer.from(credential.data).toString('base64'),allowSensitiveUpload:true},ID,ENV);
+    assert.equal(count,1);assert.equal(uploaded.security.sensitive,true);
+    const committed={owner:OWNER,repo:REPO,allowSensitiveCommit:true,entries:[{path:'.npmrc',sha:uploaded.sha,mode:'100644',proof:uploaded.proof}]};
+    assert.equal(assertSecureCommitEntries(committed,ID,ENV),true);
+    assert.throws(()=>assertSecureCommitEntries({...committed,allowSensitiveCommit:false},ID,ENV));
+  }finally{globalThis.fetch=fetcher;}
+});
+
+
+test('v3.8.2 Sync can delete stale secret file without granting upload consent', async()=>{
+  const { assertVerificationPayload }=await import('../lib/verification.js');
+  const deletion={owner:OWNER,repo:REPO,branch:'main',expectedHead:'b'.repeat(40),message:'remove stale credentials',entries:[{path:'.npmrc',sha:null,mode:'100644'}]};
+  assert.doesNotThrow(()=>assertVerificationPayload(deletion));
+  assert.equal(assertSecureCommitEntries(deletion,ID,ENV),true);
+});
+
+test('v3.8.2 sensitive user decision is explicit, ephemeral and required on both upload and commit',()=>{
+ const page=readFileSync(new URL('../app/page.jsx',import.meta.url),'utf8');
+ assert.match(page,/setSensitiveConsent\(false\); setSecurityDialogOpen\(false\)/);
+ assert.match(page,/setSecurityDialogOpen\(needsSensitiveConsent\(selectedReport\.findings\)\)/);
+ assert.match(page,/Có, tôi hiểu rủi ro · Tiếp tục/);
+ assert.match(page,/Không, kiểm tra lại/);
+ assert.match(page,/allowSensitiveUpload: requiresConsent && sensitiveConsent/);
+ assert.match(page,/allowSensitiveCommit: requiresConsent && sensitiveConsent/);
+ assert.match(page,/requiresConsent && !sensitiveConsent/);
+ assert.match(page,/Ẩn Diff cho file nghi ngờ chứa thông tin bí mật/);
 });
