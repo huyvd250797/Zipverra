@@ -1,25 +1,28 @@
-# Zipverra Pro v3.3.0 — Release Validation
+# Zipverra Pro v3.4.0 — Release Validation
 
-**Source baseline:** user-provided v3.2.0. Changes affect UI components and local non-sensitive repository suggestions only; no GitHub mutation endpoint changes.
+**Source baseline:** User-supplied full v3.3.0 ZIP. This release changes mobile layouts and navigation only; no GitHub mutation endpoint changed.
 
-## Local verification
+## Local verification results (2026-10-15)
 
-- Unit tests: `npm test`. Includes repository suggestion ranking, account scope, revoked permissions, modal scroll locking and security/Push/PR/rollback regressions.
-- Syntax checks: parse all JS/JSX/MJS modules, verify relative imports, parse all CSS files, compare API routes with baseline.
-- Browser fixture: verify Dark/Light colors and horizontal overflow at 320, 375, 390, 430, 768 and 1280 px, and ensure quick picks appear at top of a freshly opened sheet.
+- **280/280 unit tests pass**, including six new v3.4.0 layout/navigation tests.
+- **123 JS/JSX/MJS modules** parsed without syntax errors, **222 relative imports** resolved, **13 CSS files** parsed successfully.
+- **31/31 API route files unchanged byte-for-byte** from v3.3.0, including authenticated Push/PR/Quick Edit/History/Rollback and ZIP download.
+- **Chromium independent layout fixture:** Dark/Light at 320/375/390/430/768/1280px. All 12 viewport/theme combinations had no horizontal overflow. This is a static layout fixture, not the live Next.js application.
+- **PWA raster assets restored:** `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` are present and referenced by the existing manifest.
+- `npm install` **failed** with `EAI_AGAIN` reaching registry.npmjs.org; a production `next build` could not be executed here. Do not consider Vercel production deploy verified until CI/Vercel logs confirm success.
 
-## Production acceptance — still required
+## Required production acceptance
 
-1. `npm install && npm test && npm run build` in a networked Vercel/CI environment. Do not claim production build success without logs.
-2. iPhone standalone PWA: open Repo bottom sheet from deep scroll. The background must stay fixed; quick sections visible at the top. Scroll inside and close; background returns to its former position.
-3. Verify Frequent, Recent and Pinned suggestions correctly reflect existing use, never list revoked/private unauthorized repos, and do not leak between signed-in accounts.
-4. Search for a repository: quick sections disappear, full filtered list appears. Close and reopen: search is cleared, modal starts at top.
-5. Switch repo with a pending ZIP/Review: the existing explicit confirmation must still appear.
-6. Verify Dark/Light/System appearance, reduced motion, keyboard focus, VoiceOver and 44 px touch targets.
-7. Run GitHub App E2E in a disposable authorized repo: Direct Push, PR, ZIP Download, Quick Edit, History and Rollback.
-8. No new Vercel env vars or GitHub App permissions are needed. PWA cache/version must read v3.3.0.
+1. Confirm Vercel build succeeds, then open iPhone Safari / standalone PWA and verify repo/branch chooser, Push, Workspace, History and ZIP Download appear near the top of Repos.
+2. Switch to Upload with a selected repository. The destination must appear once; ZIP file selection must be obvious; empty Review should not occupy another large mobile card.
+3. Select ZIP, complete Analyze / Review, confirm Push and ensure Activity opens at top with live flow above Recovery Center / Recent Actions.
+4. Switch tabs during a source ZIP preparation. It should not be cancelled just by hiding Repos (same component stays mounted in tab shell).
+5. Modal / bottom sheet remains scroll-isolated from background; closes back to original scroll position; frequent/recent/pinned quick picks remain authorized and visible.
+6. Test Sync deletion confirmation, critical-secret blocking, PR preparation/merge, Quick Edit, History and Rollback on a disposable repository.
+7. Confirm Dark/Light/System theme, VoiceOver, 44px touch targets and Reduced Motion on physical iOS devices.
+8. Confirm all five existing GitHub App Vercel variables. No new permissions or backend services required.
 
-For implementation details see [`UNIFIED_COMPONENTS_V330.md`](./UNIFIED_COMPONENTS_V330.md).
+See [`MOBILE_LAYOUT_V340.md`](./MOBILE_LAYOUT_V340.md) for the v3.4.0 design scope.
 
 ---
 

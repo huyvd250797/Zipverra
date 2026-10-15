@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.4.0 — Mobile Layout & Navigation Redesign (2026-10-15)
+
+- Consolidated the old hero and repeated repository picker into a single destination hub with repository/branch buttons and direct actions.
+- Preserved frequent/recent/pinned quick selections within the authorized repository bottom sheet.
+- Kept ZIP Download on Repos only; the in-app Save to Files workflow remains mounted while switching between tabs.
+- Removed repeated destination and Source Download blocks from Upload; shortened mobile Upload/Review and Activity layouts without changing functional validation.
+- Maintained five-tab, one-handed navigation, iPhone safe area, overlay background scroll lock, and reduced motion support.
+- Added raster icon assets referenced by PWA manifest (missing in source v3.3.0).
+- Left GitHub API routes unchanged. Build and live-device E2E must still be verified on Vercel/iPhone.
+
 ## v3.3.0 — Unified Component Design System (2026-10-15)
 
 - Added a compact, account-scoped **Frequent / Recent / Pinned** quick-picker section at the top of the repository modal; search automatically hides suggestions.

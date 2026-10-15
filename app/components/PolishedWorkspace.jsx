@@ -4,20 +4,27 @@ import { memo } from 'react';
 import { selectedRepoLabel } from '../../lib/ux-polish.js';
 
 /** A compact mobile-first launchpad. It does not read or mutate any GitHub data. */
-export const WorkspaceLaunchpad = memo(function WorkspaceLaunchpad({ owner, repo, branch, selected, disabled, onUpload, onWorkspace, onActivity }) {
+export const WorkspaceLaunchpad = memo(function WorkspaceLaunchpad({ owner, repo, branch, selected, disabled, onChooseRepo, onChooseBranch, onUpload, onWorkspace, onHistory }) {
   const destination = selectedRepoLabel(owner, repo);
-  return <section className="polish-launchpad" aria-label="Truy cập nhanh Zipverra">
-    <div className="polish-launchpad-copy"><h1>Push ZIP</h1></div>
-    <div className="polish-launchpad-actions">
-      <button type="button" className="polish-main-action" onClick={onUpload} disabled={!selected || disabled}>
-        <span className="polish-main-icon" aria-hidden="true">↥</span>
-        <span><strong>Push ZIP</strong><small>{selected ? `${destination} · ${branch || 'main'}` : 'Chọn repository'}</small></span>
-        <span className="polish-action-arrow" aria-hidden="true">→</span>
+  return <section className="zip-mobile-hub" aria-label="Repository và thao tác nhanh">
+    <div className="zip-hub-selectors" role="group" aria-label="Đích cập nhật source">
+      <button type="button" className="zip-hub-repo" onClick={onChooseRepo} disabled={disabled}
+        aria-label={selected ? `Thay đổi repository ${destination}` : 'Chọn repository'}>
+        <span className="zip-hub-selector-icon" aria-hidden="true">⌘</span>
+        <span className="zip-hub-repo-copy"><small>REPOSITORY</small><strong>{selected ? destination : 'Chọn repository'}</strong></span>
+        <span className="zip-hub-chevron" aria-hidden="true">⌄</span>
       </button>
-      <div className="polish-shortcuts" role="group" aria-label="Công cụ nhanh">
-        <button type="button" onClick={onWorkspace} disabled={!selected || disabled}><span aria-hidden="true">⌘</span> Workspace</button>
-        <button type="button" onClick={onActivity}><span aria-hidden="true">↗</span> Activity</button>
-      </div>
+      {selected && <button type="button" className="zip-hub-branch" onClick={onChooseBranch} disabled={disabled}
+        aria-label={`Thay đổi branch ${branch || 'main'}`}>
+        <small>BRANCH</small><strong>{branch || 'main'}</strong><span aria-hidden="true">⌄</span>
+      </button>}
+    </div>
+    <button type="button" className="zip-hub-primary" disabled={!selected || disabled} onClick={onUpload}>
+      <span aria-hidden="true">↥</span><strong>Push ZIP</strong><span aria-hidden="true">→</span>
+    </button>
+    <div className="zip-hub-shortcuts" role="group" aria-label="Thao tác nhanh">
+      <button type="button" onClick={onWorkspace} disabled={!selected || disabled}><span aria-hidden="true">⌘</span> Workspace</button>
+      <button type="button" onClick={onHistory} disabled={!selected || disabled}><span aria-hidden="true">◷</span> History</button>
     </div>
   </section>;
 });

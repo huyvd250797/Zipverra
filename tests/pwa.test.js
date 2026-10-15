@@ -46,7 +46,9 @@ test('splash displays on first HTML paint and has a network failsafe', () => {
 test('compact launchpad retains the primary ZIP push action without a large marketing hero', () => {
   const page = source('app/page.jsx');
   const launchpad = source('app/components/PolishedWorkspace.jsx');
-  assert.match(launchpad, /<h1>Push ZIP<\/h1>/);
+  assert.match(launchpad, /className="zip-mobile-hub"/);
+  assert.match(launchpad, /<strong>Push ZIP<\/strong>/);
+  assert.match(launchpad, /onChooseRepo/);
   assert.match(page, /<WorkspaceLaunchpad/);
   assert.doesNotMatch(launchpad, /Đẩy source lên GitHub/);
 });

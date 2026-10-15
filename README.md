@@ -1,22 +1,25 @@
-# Zipverra Pro v3.3.0 — Unified Component Design System
+# Zipverra Pro v3.4.0 — Mobile Layout & Navigation Redesign
 
-**Baseline:** The full user-provided Zipverra Pro v3.2.0 source. Version 3.3.0 introduces consistent UI components and fast repository selection. It does not alter GitHub mutation APIs.
+**Baseline:** Zipverra Pro v3.3.0 supplied full source. This v3.4.0 focuses on one-handed mobile navigation, a unified repository destination hub, shorter Upload/Review, and a more prominent live Activity view. It does not change GitHub commit/PR/rollback APIs, credentials or security rules.
 
-## Highlights
+## What changed in v3.4.0
 
-- **Repository quick picks:** opening the Repository bottom sheet shows **Dùng nhiều**, **Gần đây**, and **Đã ghim** where relevant, each capped at three quick chips above the search box. Searching hides suggestions to prioritize matches.
-- **Frequency-based ranking:** each genuinely selected, GitHub-App-authorized repo increments a bounded local counter. On first upgrade, existing per-account Activity metadata can seed initial popularity suggestions.
-- **Account-scoped local data:** usage, recent choices and favorites are saved under the current GitHub user, with a one-time migration of v3.2's legacy device preferences. No secrets, tokens or source are stored. Revoked repositories are filtered from every list using the current server-authorized repository catalog.
-- **Shared UI primitives:** `UiButton`, `UiIconButton`, `UiCard`, `UiInput`, `UiBadge` and `UiProgress` in `app/components/UnifiedUI.jsx`; consistent radii, borders, focus and touch sizes in `app/styles/unified-components-v330.css`. Older JSX is preserved where refactoring might endanger GitHub workflows; styling is centralized progressively.
-- **Safe modal UX:** Repo/Branch/Help keep the existing iOS background scroll lock. The modal's own scroll position resets to the top on each open, so quick picks appear immediately. Keyboard focus / reduced-motion remains supported.
-- **Unchanged critical workflows:** ZIP Upload/Download, Direct Push, PR, Security Scan, Quick Edit, History, Safe Rollback, Recovery Center, PWA updates.
+- **Repos:** one unified destination hub for repository + branch selection and Push ZIP, Workspace and History actions. Removed duplicate hero, picker controls and redundant navigation CTAs. Frequent/Recent/Pinned picks are preserved in the modal.
+- **Download:** one Source ZIP Download surface on Repos, not duplicated on Upload. Download preparation survives switching tabs (component remains mounted in the existing tab shell).
+- **Upload:** existing connected stepper preserved, destination summarized once, ZIP picker moved up, large blank Review placeholder hidden on mobile until needed.
+- **Activity:** simplified heading and spacing while keeping live stages, verified SHA, warnings, Recovery Center and Recent Actions.
+- **Navigation:** all five tabs preserved, safe-area and bottom navigation improved at 320–430px.
+- **PWA assets:** added raster icon files referenced by existing manifest (missing from incoming archive).
+- **Accessibility:** keyboard focus for controls retained, modal scroll lock and explicit security/Sync/Push confirmations preserved.
 
-## Deploying v3.3.0
+**Note:** There is no new database, GitHub App permission, environment variable or automatic GitHub mutation.
 
-1. Unzip the archive and push **contents of `Zipverra-v3.3.0/`** to the root of the Zipverra GitHub repository (`main`).
+## Deploying v3.4.0
+
+1. Unzip the archive and push **contents of `Zipverra-v3.4.0/`** to the root of the Zipverra GitHub repository (`main`).
 2. Keep the same Vercel environment variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
-3. Confirm the Vercel build succeeds and the PWA displays v3.3.0. Open the Repo picker: use existing Recent/Pinned chips immediately; Frequent will be populated from selection/activity history as applicable.
-4. Test sheet background scroll isolation, themes, quick picks, search, Push/PR/Download on an authorized disposable repository. See [`RELEASE_VALIDATION.md`](./RELEASE_VALIDATION.md) and [`UNIFIED_COMPONENTS_V330.md`](./UNIFIED_COMPONENTS_V330.md).
+3. Confirm the Vercel build succeeds and the PWA displays v3.4.0. Open the Repo picker: use existing Recent/Pinned chips immediately; Frequent will be populated from selection/activity history as applicable.
+4. Test sheet background scroll isolation, themes, quick picks, search, Push/PR/Download on an authorized disposable repository. See [`RELEASE_VALIDATION.md`](./RELEASE_VALIDATION.md) and [`MOBILE_LAYOUT_V340.md`](./MOBILE_LAYOUT_V340.md).
 
 **Validation note:** Passing local regression/static checks does **not** substitute for a production `next build`, real GitHub E2E, or a physical iPhone PWA test.
 

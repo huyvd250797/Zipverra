@@ -139,7 +139,8 @@ test('workspace UI keeps original 5 tabs and preserves ZIP Push workflow',async(
  const page=readFileSync(new URL('../app/page.jsx',import.meta.url),'utf8');
  const panel=readFileSync(new URL('../app/components/WorkspacePanel.jsx',import.meta.url),'utf8');
  const menu=readFileSync(new URL('../lib/mobile-ui.js',import.meta.url),'utf8');
- assert.match(page,/Repository Explorer · Quick Edit/);
+ assert.match(page,/<WorkspaceLaunchpad/);
+ assert.match(page,/onWorkspace=\{\(\) => \{ setWorkspaceOpen\(true\)/);
  assert.match(page,/workspaceOpen && <WorkspacePanel/);
  assert.match(menu,/\['home', 'repositories', 'activity', 'history', 'settings'\]/);
  assert.match(page,/Commit & Push/);
