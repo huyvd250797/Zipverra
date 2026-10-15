@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.6.0 — Modal, Bottom Sheet & Motion Refinement (2026-10-15)
+
+- Placed redacted Review risk summary and explicit Commit & Push / Create PR confirmation **before** the optional changed-file list; users no longer need to scroll past hundreds of file rows after ZIP analysis.
+- Kept Sync deletion acknowledgement, Critical blocking, pending GitHub verification and explicit per-push consent ahead of the button; file selection and diff preview remain accessible below.
+- Collapsed detailed ZIP Analyzer/Security Scan under a clearly labeled disclosure; Critical file paths and blocking reason remain visible above confirmation.
+- Removed large sticky commit panel that could obscure long file lists on mobile.
+- Refined native modal and bottom-sheet handling: Safari visualViewport keyboard-safe geometry, background scroll lock, Escape/backdrop close and opener focus restoration, while retaining a scrollable sheet area.
+- Added new regression tests for quick confirmation, backend-safe UI gating and keyboard viewport calculations, with Chromium independent layout and scroll-lock checks.
+- Preserved all existing GitHub REST API routes byte-for-byte, without new credentials, services or databases.
+- Next.js production build and live GitHub/iPhone PWA tests remain required before treating the release as production-validated.
+
+
 ## v3.5.0 — Premium Workflow Experience (2026-10-15)
 
 - Corrected the five-step progress rail to align with milestone centers and actual state (no fabricated percentages).

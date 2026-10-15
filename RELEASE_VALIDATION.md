@@ -1,3 +1,32 @@
+# Zipverra Pro v3.6.0 — Release Validation
+
+**Baseline:** Full v3.5.0 source from the user; UI-only upgrade.
+
+## Completed in packaging environment
+
+- 296/296 Node regression tests pass, including 10 v3.6.0 tests for quick Review, Critical/Sync/pending checks and modal viewport/scroll behavior.
+- Chromium independent layout fixture passed 320, 375, 390, 430, 768 and 1280 px in Dark and Light modes; no horizontal overflow, and Commit & Push is above the optional file list.
+- Chromium native dialog scroll fixture passed 320, 390 and 768 px; scroll is isolated inside the modal and previous page position restored.
+- 31/31 GitHub API routes verified unchanged byte-for-byte against the supplied v3.5.0 source ZIP.
+- **Not verified:** local `next build` (npm DNS `EAI_AGAIN`); live iPhone Safari/PWA keyboard and real authenticated GitHub E2E.
+
+## Required release gate after deploying
+
+1. Confirm Vercel Production Build succeeds and UI displays version `v3.6.0`.
+2. With a >100 file ZIP, confirm summary / security headline / checkbox / Commit & Push appear first. Do not open file list; verify commit only on explicit user action.
+3. Open file list, exclude a file, confirm previous acknowledgement resets. No excluded file may be committed, even in Sync mode.
+4. Test Critical credential blocking and Sync file deletion acknowledgement; ensure these cannot be hidden by collapsed details.
+5. Test Direct Push and PR mode against a disposable repo and validate Activity SHA / PR state before claiming success.
+6. On iPhone Safari and standalone PWA: open Repo, Branch and Help sheet after scrolling; test keyboard, in-sheet scrolling, Escape/outside/X close, and preserved scroll and focus.
+7. Test Dark / Light / System themes, Reduced Motion, VoiceOver and safe-area keyboard overlap.
+
+See [MODAL_WORKFLOW_V360.md](./MODAL_WORKFLOW_V360.md).
+
+---
+
+## Historical release validation
+
+## v3.5.0 (historical)
 # Zipverra Pro v3.5.0 — Release Validation
 
 **Source baseline:** User-supplied Zipverra Pro v3.4.0 source ZIP. Scope: premium workflow UX, not GitHub mutation changes.
@@ -23,9 +52,7 @@
 
 Detailed design: [PREMIUM_WORKFLOW_V350.md](./PREMIUM_WORKFLOW_V350.md).
 
----
 
-## Historical release validation
 
 # Zipverra Pro v3.4.0 — Release Validation
 

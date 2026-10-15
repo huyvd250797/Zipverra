@@ -1,0 +1,52 @@
+/* Zipverra Pro v3.6.0 — premium decision-first Review and Safari-safe sheets. */
+.pro-shell .premium-risk-snapshot {display:flex;align-items:flex-start;gap:10px;padding:11px 13px;margin:11px 0;border:1px solid var(--zip-ui-stroke);border-radius:14px;background:var(--pro-surface-2);min-width:0;}
+.pro-shell .premium-risk-icon {width:27px;height:27px;flex:none;display:grid;place-items:center;border-radius:50%;font-size:14px;font-weight:850;color:var(--pro-accent);background:var(--pro-accent-surface);}
+.pro-shell .premium-risk-content {display:grid;gap:3px;min-width:0;}
+.pro-shell .premium-risk-content strong {font-size:12px;line-height:1.35;color:var(--pro-text);}
+.pro-shell .premium-risk-content small {color:var(--pro-muted);font-size:11px;line-height:1.45;}
+.pro-shell .premium-risk-paths {font-size:10px;line-height:1.4;color:var(--pro-error);overflow-wrap:anywhere;}
+.pro-shell .premium-risk-warning {border-color:color-mix(in srgb,var(--pro-warning) 40%,var(--zip-ui-stroke));}
+.pro-shell .premium-risk-warning .premium-risk-icon {color:var(--pro-warning);background:color-mix(in srgb,var(--pro-warning) 13%,transparent);}
+.pro-shell .premium-risk-critical {border-color:color-mix(in srgb,var(--pro-error) 48%,var(--zip-ui-stroke));}
+.pro-shell .premium-risk-critical .premium-risk-icon {color:var(--pro-error);background:color-mix(in srgb,var(--pro-error) 13%,transparent);}
+.pro-shell .premium-review-confirm {position:relative;z-index:auto;display:grid;gap:11px;margin:11px 0 0;padding:15px;border:1px solid color-mix(in srgb,var(--pro-accent) 35%,var(--zip-ui-stroke));border-radius:16px;background:var(--pro-surface);box-shadow:none;}
+.pro-shell .premium-decision-heading {display:grid;gap:4px;min-width:0;}
+.pro-shell .premium-decision-heading strong {font-size:14px;color:var(--pro-text);}
+.pro-shell .premium-decision-heading small {font-size:11px;color:var(--pro-muted);overflow-wrap:anywhere;}
+.pro-shell .premium-review-confirm .confirm-row {padding:0;margin:0;line-height:1.45;}
+.pro-shell .premium-review-confirm .push-button {min-height:50px;box-shadow:none;}
+.pro-shell .premium-review-skip-note {margin:9px 1px 13px;color:var(--pro-muted);font-size:11px;line-height:1.45;}
+.pro-shell .premium-review-diagnostics {border:1px solid var(--zip-ui-stroke);border-radius:15px;margin:11px 0;background:var(--pro-surface-2);overflow:hidden;}
+.pro-shell .premium-review-diagnostics > summary {display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px;min-height:48px;cursor:pointer;list-style:none;color:var(--pro-text);font-weight:750;font-size:12px;}
+.pro-shell .premium-review-diagnostics > summary::-webkit-details-marker {display:none;}
+.pro-shell .premium-review-diagnostics[open] > summary {border-bottom:1px solid var(--zip-ui-stroke);}
+.pro-shell .premium-review-diagnostics[open] > summary .premium-files-chevron {transform:rotate(180deg);}
+.pro-shell .premium-review-diagnostics > :not(summary) {margin:12px;}
+.pro-shell .premium-review-diagnostics .security-review {padding:11px;}
+.pro-shell .preview-panel {scroll-margin-top:12px;}
+/* Important confirmation and deletion warnings remain outside expandable file lists. */
+@media (max-width:760px) {
+  .pro-shell .premium-review-confirm {position:relative;bottom:auto;z-index:auto;margin:11px 0 0;padding:13px;box-shadow:none;}
+  .pro-shell .premium-review-overview {margin-bottom:9px;}
+  .pro-shell .premium-review-files {margin:11px 0;}
+  .pro-shell .preview-panel .stat-grid {margin-block:9px;}
+}
+/* Viewport-safe bottom sheets. Keyboard height is calculated from visualViewport,
+   unlike fixed viewport units that can hide inputs below the Safari keyboard. */
+.zip-modal {--zip-visible-height:100dvh;--zip-keyboard-inset:0px;}
+.zip-modal--sheet {max-height:min(82dvh,calc(var(--zip-visible-height) - 16px),730px);}
+.zip-modal--sheet .zip-modal-panel {max-height:min(82dvh,calc(var(--zip-visible-height) - 16px),730px);}
+.zip-modal--help {max-height:min(82dvh,calc(var(--zip-visible-height) - 16px),700px);}
+.zip-modal--help .zip-modal-panel {max-height:min(82dvh,calc(var(--zip-visible-height) - 16px),700px);}
+.zip-modal-scroll {scrollbar-gutter:stable;overscroll-behavior:contain;}
+@media(max-width:760px) {
+  .zip-modal--sheet {inset:auto 0 var(--zip-keyboard-inset) 0;max-height:min(88dvh,calc(var(--zip-visible-height) - 12px),820px);border-radius:22px 22px 0 0;padding-bottom:0;}
+  .zip-modal--sheet .zip-modal-panel {max-height:min(88dvh,calc(var(--zip-visible-height) - 12px),820px);}
+  .zip-modal--sheet .zip-modal-scroll {padding-bottom:max(20px,env(safe-area-inset-bottom,0px));}
+  .zip-modal--help {max-height:min(82dvh,calc(var(--zip-visible-height) - 16px),700px);}
+  .zip-modal--help .zip-modal-panel {max-height:min(82dvh,calc(var(--zip-visible-height) - 16px),700px);}
+}
+@media(prefers-reduced-motion:reduce) {
+  .pro-shell .premium-review-diagnostics .premium-files-chevron {transition:none!important;}
+  .zip-modal,.zip-modal::backdrop {animation:none!important;transition:none!important;}
+}

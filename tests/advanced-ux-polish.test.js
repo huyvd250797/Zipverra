@@ -8,11 +8,11 @@ const ready = { hasPreview:true, selectedCount:3, critical:0, authenticated:true
   pending:false, confirmed:true, syncDeleteCount:0, syncConfirmed:false };
 
 test('v3.0 stable release keeps full PWA version and stylesheet', () => {
-  assert.equal(JSON.parse(read('package.json')).version,'3.5.0');
-  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.5\.0'/);
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.5\.0/);
+  assert.equal(JSON.parse(read('package.json')).version,'3.6.0');
+  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.6\.0'/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.6\.0/);
   assert.match(read('app/layout.jsx'), /advanced-ux-polish\.css/);
-  assert.match(read('app/page.jsx'), /v3\.5\.0/);
+  assert.match(read('app/page.jsx'), /v3\.6\.0/);
 });
 
 test('readiness cannot approve a missing preview, missing changes or unconfirmed review', () => {

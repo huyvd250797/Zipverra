@@ -76,7 +76,7 @@ test('Pro dashboard is authenticated through handle and has no direct GitHub cre
  const route=readFileSync(new URL('app/api/github/dashboard/route.js',root),'utf8');
  assert.match(route,/handle\(request/);assert.match(route,/loadProDashboard\(token, repositories\)/);
  const main=readFileSync(new URL('app/page.jsx',root),'utf8');
- for(const label of ['ProDashboard','PushProfiles','ActivityJournal','refreshDashboard','accountStorageKey','v3.5.0'])assert.ok(main.includes(label),label);
+ for(const label of ['ProDashboard','PushProfiles','ActivityJournal','refreshDashboard','accountStorageKey','v3.6.0'])assert.ok(main.includes(label),label);
  assert.doesNotMatch(main,/GITHUB_APP_CLIENT_SECRET\s*=/);
 });
 

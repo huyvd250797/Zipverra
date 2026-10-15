@@ -1,29 +1,30 @@
-# Zipverra Pro v3.5.0 — Premium Workflow Experience
+# Zipverra Pro v3.6.0 — Modal, Bottom Sheet & Motion Refinement
 
-**Source baseline:** Zipverra Pro v3.4.0 supplied full source. This v3.5.0 release refines the five-step ZIP-to-GitHub experience without changing GitHub API routes, permissions, signed security validation, safe rollback or recovery.
+**Source baseline:** Full Zipverra Pro v3.5.0 ZIP provided by the user. This is a UI/UX release, preserving all existing authenticated GitHub routes and the upload/commit/PR/security protection model.
 
-## What's new in v3.5.0
+## New in v3.6.0
 
-- **Milestone Stepper:** five milestones with precise progress-rail geometry; completed stages are distinct from pending stages. No optimistic completion.
-- **Review-first presentation:** summary of selected/total changes, selected bytes and branch before details; large file lists (more than 10 changes) start collapsed, but can be expanded to inspect, exclude and diff files.
-- **Security remains visible:** secret Critical blocking, Sync delete acknowledgement, readiness and mandatory Push consent are outside the collapsible file list.
-- **Accessible mobile confirmation:** review consent and Commit/PR button form a thumb-friendly sticky region above the mobile nav; no automatic Push.
-- **Live Activity focus:** read-only presentation of the true workflow phase and measured progress, explicitly distinguishing uncertain outcomes and PR still pending.
-- **Less idle clutter:** waiting timeline is hidden while Activity is idle; users can still start a new Upload.
-- **Reduced Motion:** animated stage decoration is disabled for users requesting reduced motion.
+- **Quick confirmation immediately after ZIP analysis:** Review opens at the summary, risk headline, required Sync-delete approval (if relevant), mandatory consent checkbox and Commit & Push / Push & Create PR button. The full changed-file list and diff viewer remain below as optional expandable sections. No mandatory scrolling through hundreds of files.
+- **Security and consistency:** A Critical file blocks the UI and backend commit path; selected changes, Sync deletion acknowledgement, repository/branch and verified GitHub state are not bypassed. No automatic Push or Pull Request merge.
+- **Compact review controls:** Review risk headline is visible before the button, while in-depth Security Scan and ZIP Analyzer remain available below. The normal confirmation panel no longer floats over file details on small phones.
+- **Sheet/keyboard refinement:** Native-dialog scroll lock is preserved, with `visualViewport` support for on-screen keyboard resizing, Escape/backdrop close and safe focus restoration to the launching control. Only the sheet scrolls while open.
+- **Animations:** Lightweight transitions with Reduced Motion support; no continuous fake progress and no extra GitHub side effects.
+- **Versioning:** header, Settings, footer, PWA version API, service worker public cache and offline screen use `3.6.0`.
 
 ## Deployment
 
-1. Extract the release ZIP and push the **contents of `Zipverra-v3.5.0/`** to the repository root on `main`.
-2. Keep existing Vercel environment variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
-3. Verify `npm install && npm test && npm run build` in networked CI/Vercel, then smoke-test Repo → Upload → Review → Confirm → Activity on an authorized disposable GitHub repository.
-4. Confirm iPhone standalone PWA sticky confirmation, Activity scroll to top, critical security blocking, Sync confirmation and live PR recovery.
+1. Extract the release ZIP; push the **contents of `Zipverra-v3.6.0/`** to the root of the existing Zipverra GitHub repository on branch `main`.
+2. Keep the five existing Vercel variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
+3. Confirm the Vercel production build and test with an authorized disposable repository. Select a ZIP containing a large file list, then confirm without opening the list. Also test Critical secret blocking, Sync deletion and PR.
+4. On an iPhone, test Repository/Branch/Help sheets after scrolling the page; open the keyboard, scroll the sheet, close using Escape where available or outside/X, and confirm the page scroll position and focus are restored.
 
-**Validation limit:** this environment cannot install Next.js due npm registry DNS `EAI_AGAIN`; `next build` and real iPhone/GitHub E2E have **not** been verified here. Static Chromium fixture checks do not replace production verification.
+**Validation status:** 296 automated Node tests passed plus static browser/UI checks at packaging time. `npm install` failed with DNS `EAI_AGAIN`; a production Next.js build, actual GitHub App E2E and iPhone Safari/PWA E2E **were not validated locally**.
 
-Further detail: [PREMIUM_WORKFLOW_V350.md](./PREMIUM_WORKFLOW_V350.md), [RELEASE_VALIDATION.md](./RELEASE_VALIDATION.md), [ROADMAP_NEXT.md](./ROADMAP_NEXT.md).
+See [MODAL_WORKFLOW_V360.md](./MODAL_WORKFLOW_V360.md), [RELEASE_VALIDATION.md](./RELEASE_VALIDATION.md), and [ROADMAP_NEXT.md](./ROADMAP_NEXT.md).
 
 ---
+
+## Previous release notes
 
 ## Previous v3.4.0 release information
 

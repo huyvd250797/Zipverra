@@ -1,4 +1,4 @@
-/* Zipverra Pro v3.5.0 — measured stage UI; no changes to GitHub mutation logic. */
+/* Zipverra Pro v3.6.0 — measured stage UI; no changes to GitHub mutation logic. */
 .pro-shell { --zip-workflow-ease:cubic-bezier(.2,.8,.2,1); }
 .pro-shell .premium-review-overview {
   display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0;

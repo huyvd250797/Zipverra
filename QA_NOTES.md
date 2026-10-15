@@ -1,3 +1,13 @@
+# Zipverra Pro v3.6.0 — Quick Review & iPhone Modal QA
+
+Check on a physical iPhone after deploy: ZIP analysis → Review with one-screen consent/button before file list, no accidental commit; Critical/Sync warnings always visible; PR explicit confirmation; Repository/Branch/Help modal background locked while keyboard is up; scroll restored and focus returned after closing.
+
+Local tests: 296/296 passing. Chromium independent fixtures passed responsive Review and modal scroll isolation; production build and live E2E not verified locally (npm registry DNS unavailable).
+
+See [MODAL_WORKFLOW_V360.md](./MODAL_WORKFLOW_V360.md) and [RELEASE_VALIDATION.md](./RELEASE_VALIDATION.md).
+
+---
+
 # Zipverra Pro v3.1.0 — Mobile Sheet & Workflow QA
 
 Verify modal scroll isolation on real iPhone Safari and installed PWA before treating this release as production-validated. Repo, Branch and Help must not scroll the background while open; closing must restore the exact previous scroll position. GitHub App session/permissions and branch switching must be checked against an isolated repository.

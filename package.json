@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.5.0",
+  "version": "3.6.0",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.5.0 — Premium Workflow Experience with guided Review, explicit Confirm, and live GitHub Activity; secure operations preserved",
+  "description": "Zipverra Pro v3.6.0 — Premium Workflow Experience with guided Review, explicit Confirm, and live GitHub Activity; secure operations preserved",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

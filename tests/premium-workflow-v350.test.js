@@ -6,8 +6,8 @@ const read = path => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'
 const page = read('app/page.jsx'), ui = read('app/components/ProfessionalUI.jsx');
 const styles = read('app/styles/premium-workflow-v350.css');
 
-test('v3.5.0 loads Premium Workflow last, preserving preceding visual layers',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.5.0');
+test('v3.6.0 loads Premium Workflow last, preserving preceding visual layers',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.6.0');
   const layout=read('app/layout.jsx');
   assert.match(layout,/premium-workflow-v350\.css/);
   assert.ok(layout.indexOf('mobile-layout-v340.css')<layout.indexOf('premium-workflow-v350.css'));
@@ -48,11 +48,12 @@ test('large Review starts summarized, small Review opens files; security stays o
   assert.match(page,/premium-review-files/);
   assert.match(page,/open=\{fileDetailsOpen\}/);
   assert.match(page,/setFileDetailsOpen\(reviewDisclosureDefaultOpen\(changes\.length\)\)/);
-  const securityAt=page.indexOf('className={`security-review');
-  const filesAt=page.indexOf('className="premium-review-files"');
+  const riskAt=page.indexOf('<ReviewRiskSnapshot');
   const warningAt=page.indexOf('className="warning-banner"');
   const confirmAt=page.indexOf('className="premium-review-confirm"');
-  assert.ok(securityAt>0 && filesAt>securityAt && warningAt>filesAt && confirmAt>warningAt);
+  const filesAt=page.indexOf('className="premium-review-files"');
+  const securityAt=page.indexOf('className={`security-review');
+  assert.ok(riskAt>0 && warningAt>riskAt && confirmAt>warningAt && filesAt>confirmAt && securityAt>filesAt);
   assert.match(page,/securityReport\?\.blocked/);
   assert.match(page,/syncConfirmed/);
   assert.match(page,/disabled=\{!canSubmitPush\}/);
