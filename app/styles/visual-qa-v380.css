@@ -1,0 +1,63 @@
+/* Zipverra Pro v3.8.0 — Visual QA & Stable UI release.
+   Final additive visual corrections; no auth, security, or GitHub write overrides. */
+:root { --zip-v380-target:44px; }
+.pro-shell, .pro-shell :is(.panel,.content-grid,.form-column,.side-column) { min-width:0; }
+.pro-shell .preview-panel { min-width:0; }
+.pro-shell .premium-review-confirm:focus { outline:none; }
+.pro-shell .premium-review-confirm:focus-visible { outline:3px solid var(--pro-focus);outline-offset:3px; }
+.pro-shell .premium-review-files { overflow:clip; }
+.pro-shell .premium-review-files[open] { overflow:visible; }
+.pro-shell .premium-review-files .review-list {
+  box-sizing:border-box;
+  max-height:clamp(240px,42dvh,430px);
+  overflow-y:auto;
+  overflow-x:hidden;
+  overscroll-behavior-y:contain;
+  scrollbar-gutter:stable;
+  -webkit-overflow-scrolling:touch;
+  scroll-padding-block:8px;
+}
+.pro-shell .premium-review-files .review-list:focus-visible { outline:2px solid var(--pro-focus); outline-offset:2px; }
+.pro-shell .premium-review-files .change-path { overflow-wrap:anywhere;word-break:break-word;min-width:0; }
+.pro-shell .premium-review-files .review-row { min-width:0; }
+.pro-shell .review-return-bar {
+  position:sticky;top:8px;z-index:4;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  margin:0;padding:10px 12px;border-bottom:1px solid var(--zip-ui-stroke);
+  background:var(--pro-surface-2);box-shadow:0 4px 14px rgba(0,0,0,.09);
+}
+.pro-shell .review-return-bar span {font-size:11px;font-weight:700;color:var(--pro-muted);min-width:0;}
+.pro-shell .review-return-bar .button {min-height:var(--zip-v380-target);margin:0;flex:none;white-space:normal;}
+.pro-shell .premium-review-files .review-return-bottom {margin:10px 12px 14px;}
+.pro-shell .review-return-bottom .button {min-height:var(--zip-v380-target);margin:0;white-space:normal;text-align:center;}
+.pro-shell .premium-review-confirm .confirm-row { align-items:flex-start;min-height:44px; }
+.pro-shell .premium-review-confirm .confirm-row input {flex:none;margin-top:3px;min-width:19px;min-height:19px;}
+.pro-shell .premium-review-files :is(.review-diff-button,.review-bulk button,.diff-filter) {min-height:var(--zip-v380-target);}
+.pro-shell .premium-review-files :is(button,input) {max-width:100%;}
+.pro-shell .premium-review-files :is(.review-toolbar,.review-select-summary) {min-width:0;}
+.pro-shell .premium-review-files .review-more {white-space:normal;min-height:var(--zip-v380-target);}
+.pro-shell :is(.premium-review-files-trigger,.premium-review-diagnostics>summary,.review-return-bar button,.review-return-bottom button):focus-visible {outline:2px solid var(--pro-focus);outline-offset:2px;}
+@media(max-width:760px) {
+  .pro-shell .preview-panel {scroll-margin-top:max(16px,env(safe-area-inset-top,0px));}
+  .pro-shell .premium-review-confirm {position:relative;bottom:auto;z-index:auto;box-shadow:none;}
+  .pro-shell .review-return-bar {top:max(8px,env(safe-area-inset-top,0px));}
+  .pro-shell .premium-review-files .review-list {max-height:min(38dvh,350px);}
+  .pro-shell .premium-review-files .review-row {gap:5px;}
+  .pro-shell .premium-review-files .change-path {font-size:11px;}
+  .pro-shell .review-return-bar .button {font-size:11px;padding:8px 10px;}
+  .pro-shell :is(.zip-modal-scroll,.review-list) {overscroll-behavior:contain;}
+}
+@media(max-width:360px) {
+  .pro-shell .review-return-bar {align-items:stretch;flex-direction:column;}
+  .pro-shell .review-return-bar .button {width:100%;}
+  .pro-shell .premium-review-files .diff-filters {gap:3px;}
+  .pro-shell .premium-review-files .diff-filter {font-size:10px;white-space:normal;}
+  .pro-shell .premium-review-files .review-row .review-diff-button {min-width:42px;}
+}
+/* Keep keyboard viewport region above the home indicator in standalone PWA. */
+@media(max-width:760px) {
+  .zip-modal--sheet .zip-modal-scroll {padding-bottom:max(20px,env(safe-area-inset-bottom,0px));}
+  .zip-modal--sheet .zip-modal-header {padding-top:max(12px,env(safe-area-inset-top,0px));}
+}
+@media(prefers-reduced-motion:reduce) {
+  .pro-shell .premium-review-files *, .pro-shell .premium-review-confirm * {scroll-behavior:auto!important;}
+}

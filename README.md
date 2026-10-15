@@ -1,26 +1,29 @@
-# Zipverra Pro v3.6.0 — Modal, Bottom Sheet & Motion Refinement
+# Zipverra Pro v3.8.0 — Visual QA & Stable UI Release
 
-**Source baseline:** Full Zipverra Pro v3.5.0 ZIP provided by the user. This is a UI/UX release, preserving all existing authenticated GitHub routes and the upload/commit/PR/security protection model.
+**Source baseline:** Full Zipverra Pro v3.6.0 ZIP provided by the user. Upgrade preserves the existing GitHub App OAuth, Direct Push, Pull Request, Workspace, History, Rollback, Recovery, security scanner, and five-tab mobile workflow.
 
-## New in v3.6.0
+## New in v3.8.0
 
-- **Quick confirmation immediately after ZIP analysis:** Review opens at the summary, risk headline, required Sync-delete approval (if relevant), mandatory consent checkbox and Commit & Push / Push & Create PR button. The full changed-file list and diff viewer remain below as optional expandable sections. No mandatory scrolling through hundreds of files.
-- **Security and consistency:** A Critical file blocks the UI and backend commit path; selected changes, Sync deletion acknowledgement, repository/branch and verified GitHub state are not bypassed. No automatic Push or Pull Request merge.
-- **Compact review controls:** Review risk headline is visible before the button, while in-depth Security Scan and ZIP Analyzer remain available below. The normal confirmation panel no longer floats over file details on small phones.
-- **Sheet/keyboard refinement:** Native-dialog scroll lock is preserved, with `visualViewport` support for on-screen keyboard resizing, Escape/backdrop close and safe focus restoration to the launching control. Only the sheet scrolls while open.
-- **Animations:** Lightweight transitions with Reduced Motion support; no continuous fake progress and no extra GitHub side effects.
-- **Versioning:** header, Settings, footer, PWA version API, service worker public cache and offline screen use `3.6.0`.
+- **Review without long-page scrolling:** After ZIP analysis, the existing Review summary, security findings, deletion acknowledgement and manual Commit & Push confirmation appear *before* the optional file listing. The list is now capped to a scrollable viewport (`max-height`) when expanded, avoiding a page several screens long.
+- **Jump directly back to confirmation:** An action at the top and bottom of expanded file details collapses the list and focuses the original manual confirmation area. It does not create an extra commit control, auto-check consent or bypass any backend gate.
+- **Safety state refresh:** Reanalysis resets both standard confirmation and Sync-delete acknowledgement. Changes to the selected files still invalidate both. Memoized Push readiness now explicitly includes the security-block state.
+- **Visual QA polish:** New final CSS layer tightens small-phone layout, long paths, focus states, 44px touch targets, nested scroll, desktop review spacing, reduced-motion and bottom-sheet safe-area behavior.
+- **PWA release metadata:** 3.8.0 in page, Settings, footer, version API, public Service Worker cache namespace and offline fallback. No new database, permissions, secrets or environment variables.
 
-## Deployment
+## Deployment to GitHub + Vercel
 
-1. Extract the release ZIP; push the **contents of `Zipverra-v3.6.0/`** to the root of the existing Zipverra GitHub repository on branch `main`.
-2. Keep the five existing Vercel variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`.
-3. Confirm the Vercel production build and test with an authorized disposable repository. Select a ZIP containing a large file list, then confirm without opening the list. Also test Critical secret blocking, Sync deletion and PR.
-4. On an iPhone, test Repository/Branch/Help sheets after scrolling the page; open the keyboard, scroll the sheet, close using Escape where available or outside/X, and confirm the page scroll position and focus are restored.
+1. Extract the archive and push the **contents of `Zipverra-v3.8.0/`** into the root of the existing application repository; do not push the outer folder as a nested app.
+2. Keep your existing Vercel variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`. Update `APP_URL` only if the deployed domain has changed.
+3. Build on Vercel or another networked CI with `npm install --no-audit --no-fund`, `npm test`, `npm run build` using Node 22. Existing GitHub Actions workflow runs tests/build on push and PR.
+4. Verify `/api/version` displays `3.8.0`, and refresh the app to apply the public PWA service-worker cache version. Old public cache entries are removed after activation; private API/auth responses are never cached.
+5. Test on an authorized throwaway repository: select ZIP with hundreds of files, check the quick confirmation flow without opening details, expand and scroll the file list, return to confirmation, then separately verify Sync delete acknowledgement, Critical block, and PR behavior. Test rollback/Recovery after interrupted operations before using production repositories.
+6. Test actual iPhone Safari and installed standalone PWA keyboard, modal focus and scroll, dynamic safe area, dark/light, reduced motion, and Wi-Fi interruption before labeling production validated.
 
-**Validation status:** 296 automated Node tests passed plus static browser/UI checks at packaging time. `npm install` failed with DNS `EAI_AGAIN`; a production Next.js build, actual GitHub App E2E and iPhone Safari/PWA E2E **were not validated locally**.
+## Validation boundaries
 
-See [MODAL_WORKFLOW_V360.md](./MODAL_WORKFLOW_V360.md), [RELEASE_VALIDATION.md](./RELEASE_VALIDATION.md), and [ROADMAP_NEXT.md](./ROADMAP_NEXT.md).
+**Local:** 301 Node unit/regression tests passed. Source and CSS checks and static Chromium viewport QA (when available) are documented in `VISUAL_QA_V380.md`. The environment could not finish fetching npm dependencies, so a production `next build`, authenticated GitHub E2E and real iPhone Safari/PWA verification have **not** been completed locally. A successful ZIP package by itself does not certify a Vercel deployment.
+
+Read `VISUAL_QA_V380.md`, `RELEASE_VALIDATION.md` and `ROADMAP_NEXT.md` before production rollout.
 
 ---
 

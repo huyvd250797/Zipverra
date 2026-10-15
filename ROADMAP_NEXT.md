@@ -1,19 +1,21 @@
-# Zipverra Pro — UX/UI roadmap after v3.6.0
+# Zipverra Pro — Roadmap after v3.8.0
 
-**Baseline:** v3.6.0 — Modal, Bottom Sheet & Motion Refinement; directly upgraded from user-supplied v3.5.0.
+**Baseline:** v3.8.0 — Visual QA & Stable UI Release from the complete user-supplied v3.6.0 source.
 
-## v3.7.0 — Performance & Accessibility Polish (next)
+## v3.8.0 release gates (before production certification)
 
-- Measure actual mobile performance (LCP, INP, CLS, ZIP analysis duration and tab transition latency).
-- Reduce render work when analyzing thousands of files and updating upload progress.
-- Accessibility review: VoiceOver screen-reader names, keyboard navigation, touch targets and focus management on iPhone Safari/PWA.
-- Review large list rendering, activity UI redraw frequency and lazy loading of advanced panels.
-- Preserve quick confirmation and all GitHub mutation safety checks.
+- [x] Preserve GitHub App authentication, server-side security scan, explicit confirmation and mutation recovery contracts.
+- [x] Add bounded file-list scrolling and one-tap return to the original gated Push decision.
+- [x] Regression checks and consistent 3.8.0 UI / PWA version metadata.
+- [ ] `npm install`, `npm test` and `npm run build` on networked GitHub Actions / Vercel.
+- [ ] Authenticated disposable-repository E2E: ZIP Direct Push, PR, Quick Edit, Download, History, Rollback, interrupted commit verification.
+- [ ] Real Safari and standalone PWA on physical iPhone (keyboard/modal/VoiceOver, background/resume, light/dark, reduced motion, offline).
 
-## v3.8.0 — Visual QA & Stable UI Release
+## v3.9.0 — Performance & Accessibility Certification (proposed)
 
-- Complete live iPhone Safari / standalone PWA UI regression for all five tabs, ZIP Upload/Download, modal keyboard scroll lock, dark/light/system themes and focus behavior.
-- Validate a production `next build` on CI/Vercel and real GitHub App authenticated E2E: Direct Push, PR, Quick Edit, History, Rollback and recovery.
-- Freeze visual system after resolving blocking bugs, package the final stable UI release with documentation and rollback instructions.
+- Profile large ZIP parsing and source compare with real archive samples to reduce memory and rerenders.
+- Add browser automation against a safe authenticated staging environment for mobile and desktop paths.
+- Complete VoiceOver / keyboard usability audit, focus order and tab labels.
+- Track Core Web Vitals (LCP, INP, CLS) through a privacy-preserving, opt-in strategy.
 
-**Explicitly out of scope:** automatic GitHub writes, force-push, blind retries of uncertain commits, background iOS uploads, and Vercel deployment tracking.
+**Out of scope:** automatic GitHub writes, forced pushes, blind retries of uncertain commits, background iOS uploads, or silent PR merges.

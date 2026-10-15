@@ -204,6 +204,7 @@ export default function Home() {
   const [pendingCommit, setPendingCommit] = useState(null);
   const fileInput = useRef(null);
   const previewRef = useRef(null);
+  const decisionRef = useRef(null);
   const activityRef = useRef(null);
   const analyzingRef = useRef(false);
   const archiveProgressAtRef = useRef(0);
@@ -503,7 +504,7 @@ export default function Home() {
     online: online && pwa.reachable, busy, pending: Boolean(pendingCommit || pendingPR),
     confirmed, syncDeleteCount: mode === 'sync' ? (stats?.delete || 0) : 0,
     syncConfirmed,
-  }), [preview, selectedChanges.length, securityReport?.critical, auth.authenticated,
+  }), [preview, selectedChanges.length, securityReport?.critical, securityReport?.blocked, auth.authenticated,
     online, pwa.reachable, busy, pendingCommit, pendingPR, confirmed, mode, stats?.delete, syncConfirmed]);
   const canSubmitPush = pushReadiness.ready;
   const copyCommitSha = useCallback(async (sha) => {
@@ -623,7 +624,7 @@ export default function Home() {
       setFileDetailsOpen(reviewDisclosureDefaultOpen(changes.length));
       saveRecent(`${input.owner}/${input.repo}`);
       setChangeFilter('all'); setReviewSearch(''); setVisibleLimit(100); setExcludedPaths([]); setDiffViewer(null); diffRequestRef.current += 1;
-      setConfirmed(false);
+      setConfirmed(false); setSyncConfirmed(false);
       setStatus(changes.length ? `Đã phân tích: ${changes.length} thay đổi cần xử lý.` : 'ZIP và repository đã đồng bộ, không có gì cần push.');
       setProgress(100);
       setPhase(PUSH_STAGES.IDLE);
@@ -744,6 +745,20 @@ export default function Home() {
     if (!preview) return;
     goToTab('home');
     window.requestAnimationFrame(() => previewRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }));
+  }
+
+  // A file list can contain thousands of paths. Return to the single, gated
+  // consent section without creating a second commit button or bypassing checks.
+  function goToDecision() {
+    if (!preview) return;
+    setFileDetailsOpen(false);
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+      const decision = decisionRef.current;
+      if (!decision?.isConnected) return;
+      const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+      decision.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+      decision.focus({ preventScroll: true });
+    }));
   }
 
   function updateSelection(path) {
@@ -881,7 +896,7 @@ export default function Home() {
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar" role="banner">
       <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span><em> Pro</em></strong><small>MOBILE GIT WORKSPACE</small></div></div>
-      <div className="header-actions">{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.6.0</span></div>
+      <div className="header-actions">{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.8.0</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} repoTools={activeTab === 'repositories' && auth.authenticated ? <button type="button" className={`repo-refresh-icon${loadingRepos ? ' is-loading' : ''}`} onClick={loadRepos} disabled={busy || loadingRepos} aria-label="Làm mới danh sách repository" title="Làm mới danh sách repository"><Icon name="refresh" size={17}/></button> : null}/>
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
@@ -957,7 +972,7 @@ export default function Home() {
               {stats.delete > 0 && <div className="warning-banner"><strong>Cảnh báo Sync</strong><p>Chế độ Sync sẽ xóa {stats.delete} file đang có trên GitHub. Các file này có thể bao gồm cấu hình deploy.</p><label className="confirm-row sync-confirm"><input type="checkbox" checked={syncConfirmed} disabled={busy} onChange={(e) => setSyncConfirmed(e.target.checked)}/><span>Tôi đồng ý xóa {stats.delete} file trong repository.</span></label></div>}
               <span id="push-readiness-help" className="visually-hidden">Trạng thái trước khi Push: {pushReadiness.title}. {pushReadiness.detail}</span>
               {!['CONFIRM', 'READY'].includes(pushReadiness.code) && <ReviewReadiness state={pushReadiness} selectedCount={selectedChanges.length} totalCount={preview.changes.length} strategy={releaseStrategy}/>}
-              <section className="premium-review-confirm" aria-label="Xác nhận và Push"><div className="premium-decision-heading"><strong>{releaseStrategy === 'pr' ? 'Xác nhận tạo Pull Request' : 'Sẵn sàng Commit & Push'}</strong><small>{selectedChanges.length} thay đổi · {preview.input.owner}/{preview.input.repo} · {preview.input.branch}</small></div>
+              <section ref={decisionRef} tabIndex={-1} className="premium-review-confirm" aria-label="Xác nhận và Push"><div className="premium-decision-heading"><strong>{releaseStrategy === 'pr' ? 'Xác nhận tạo Pull Request' : 'Sẵn sàng Commit & Push'}</strong><small>{selectedChanges.length} thay đổi · {preview.input.owner}/{preview.input.repo} · {preview.input.branch}</small></div>
                 <label className="confirm-row"><input type="checkbox" checked={confirmed} disabled={busy || !selectedChanges.length || Boolean(securityReport?.blocked)} onChange={(e) => setConfirmed(e.target.checked)}/><span>Tôi đã xem tổng quan, hiểu các cảnh báo và đồng ý {releaseStrategy === 'pr' ? 'tạo Pull Request' : 'cập nhật branch'} <b>{preview.input.branch}</b>.</span></label>
                 <button className="button primary full push-button" disabled={!canSubmitPush} aria-describedby="push-readiness-help" onClick={push}><Icon name="upload" size={18}/> {busy ? 'Đang xử lý...' : releaseStrategy === 'pr' ? `Push & Create PR (${selectedChanges.length} file)` : `Commit & Push (${selectedChanges.length} file)`}</button>
               </section>
@@ -965,12 +980,14 @@ export default function Home() {
               <details className="premium-review-files" open={fileDetailsOpen} onToggle={(event) => setFileDetailsOpen(event.currentTarget.open)}>
                 <summary className="premium-review-files-trigger"><span><strong>Danh sách file thay đổi</strong><small>{selectedChanges.length}/{preview.changes.length} file được chọn · Chạm để xem chi tiết</small></span><span aria-hidden="true" className="premium-files-chevron">⌄</span></summary>
               {fileDetailsOpen && <>
+              <div className="review-return-bar"><span>Đã chọn {selectedChanges.length}/{preview.changes.length} file</span><button type="button" className="button secondary" onClick={goToDecision}><Icon name="arrow" size={15}/> Tới xác nhận & Push</button></div>
               <div className="review-select-summary"><div><strong>{selectedChanges.length}/{preview.changes.length} thay đổi được chọn</strong><small>File bỏ chọn sẽ giữ nguyên trên GitHub, kể cả trong Sync.</small></div><span>{prettyBytes(selectedBytes)}</span></div>
               <div className="archive-meta">{preview.archive.files.length} file · {prettyBytes(preview.archive.unpackedSize)} đã giải nén{preview.archive.wrapper ? ` · Bỏ thư mục gốc: ${preview.archive.wrapper}/` : ''}{preview.archive.ignored ? ` · Bỏ qua ${preview.archive.ignored} file` : ''}</div>
               <div className="diff-filters" role="group" aria-label="Lọc file thay đổi">{[{id:'all',label:'Tất cả',n:preview.changes.length},{id:'add',label:'Thêm',n:totalStats.add},{id:'modify',label:'Sửa',n:totalStats.modify},{id:'delete',label:'Xóa',n:totalStats.delete}].map((option) => <button type="button" key={option.id} className={`diff-filter ${changeFilter === option.id ? 'selected' : ''}`} aria-pressed={changeFilter === option.id} onClick={() => setChangeFilter(option.id)}>{option.label} <span>{option.n}</span></button>)}</div>
               <div className="review-toolbar"><div className="input-icon"><Icon name="search" size={16}/><input type="search" aria-label="Tìm file thay đổi" placeholder="Tìm file trong diff" value={reviewSearch} onChange={e => {setReviewSearch(e.target.value);setVisibleLimit(100);}}/></div><div className="review-bulk"><button type="button" disabled={busy} onClick={() => bulkSelection(true)}>Chọn tất cả</button><button type="button" disabled={busy} onClick={() => bulkSelection(false)}>Bỏ chọn tất cả</button></div></div>
-              <div className="change-list review-list" aria-label="Danh sách thay đổi">{shownChanges.length ? shownChanges.slice(0,visibleLimit).map((item) => <div className={`change-row review-row ${excludedPaths.includes(item.path) ? 'excluded' : ''}`} key={item.path}><label className="review-check"><input type="checkbox" checked={!excludedPaths.includes(item.path)} disabled={busy} onChange={() => updateSelection(item.path)} aria-label={`Chọn ${item.path} để push`}/></label><span className={`change-mark ${item.kind}`}>{item.kind === 'add' ? 'A' : item.kind === 'modify' ? 'M' : 'D'}</span><span title={item.path} className="change-path">{item.path}</span><button type="button" className="review-diff-button" disabled={busy} onClick={() => inspectChange(item)} aria-label={`Xem diff ${item.path}`}>Diff</button></div>) : <div className="empty-change">{preview.changes.length ? 'Không có file thuộc bộ lọc này.' : 'Không có thay đổi để commit.'}</div>}</div>
+              <div className="change-list review-list" role="region" tabIndex={0} aria-label="Danh sách thay đổi · Cuộn trong vùng này để xem thêm file">{shownChanges.length ? shownChanges.slice(0,visibleLimit).map((item) => <div className={`change-row review-row ${excludedPaths.includes(item.path) ? 'excluded' : ''}`} key={item.path}><label className="review-check"><input type="checkbox" checked={!excludedPaths.includes(item.path)} disabled={busy} onChange={() => updateSelection(item.path)} aria-label={`Chọn ${item.path} để push`}/></label><span className={`change-mark ${item.kind}`}>{item.kind === 'add' ? 'A' : item.kind === 'modify' ? 'M' : 'D'}</span><span title={item.path} className="change-path">{item.path}</span><button type="button" className="review-diff-button" disabled={busy} onClick={() => inspectChange(item)} aria-label={`Xem diff ${item.path}`}>Diff</button></div>) : <div className="empty-change">{preview.changes.length ? 'Không có file thuộc bộ lọc này.' : 'Không có thay đổi để commit.'}</div>}</div>
               {shownChanges.length > visibleLimit && <button type="button" className="button secondary full review-more" onClick={() => setVisibleLimit(v => v + 100)}>Hiển thị thêm {Math.min(100,shownChanges.length-visibleLimit)} file · {shownChanges.length-visibleLimit} còn lại</button>}
+              <div className="review-return-bottom"><button type="button" className="button secondary full" onClick={goToDecision}><Icon name="check" size={16}/> Thu gọn danh sách · Quay lại xác nhận & Push</button></div>
               {diffViewer && <div className="inline-diff" aria-live="polite"><div className="inline-diff-heading"><strong>Diff · {diffViewer.path}</strong><button type="button" onClick={() => {diffRequestRef.current++;setDiffViewer(null);}} aria-label="Đóng diff">✕</button></div>{diffViewer.loading ? <p>Đang tải file từ commit đang review…</p> : diffViewer.message ? <p>{diffViewer.message}</p> : <div className="inline-diff-lines">{diffViewer.lines.map((line,index)=><div key={index} className={`diff-line diff-${line.kind}`}><span>{line.kind==='add'?'+':line.kind==='delete'?'−':' '}</span><code>{line.text || ' '}</code></div>)}</div>}</div>}
               </>}
               </details>
@@ -1016,7 +1033,7 @@ export default function Home() {
             <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
               profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
               onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.6.0</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.8.0</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -1027,7 +1044,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.6.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.8.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <RepositoryPickerSheet open={repoSheetOpen} onClose={() => setRepoSheetOpen(false)}
     repos={repos} selected={chosenRepo ? `${owner}/${repo}` : ''} favorites={favorites} recents={recents} usage={repositoryUsage}

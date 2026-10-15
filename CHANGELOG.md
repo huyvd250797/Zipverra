@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.8.0 — Visual QA & Stable UI Release (2026-10-15)
+
+- Added a bounded independent scroll region for 10–2,500 changed files, preventing expanded Review from pushing Commit & Push screens below the viewport.
+- Added two accessible **Tới xác nhận & Push** return actions in the optional change list; both collapse detail and focus/scroll to the same safe, gated manual consent panel.
+- Addressed stale Push readiness dependency on `securityReport.blocked`; fresh ZIP analysis clears both ordinary and Sync deletion confirmation.
+- Added final viewport CSS to improve overflow-safe long paths, narrow screens, touch targets, keyboard focus, reduced motion, modal safe area, mobile layout and button wrapping.
+- Updated PWA/client version and public cache keys to 3.8.0, keeping GitHub routes and credential handling unchanged.
+- Added five focused regression tests and retained the 296 prior cases; all 301 Node tests pass. Full production build/live iPhone GitHub E2E remain externally gated.
+
+
 ## v3.6.0 — Modal, Bottom Sheet & Motion Refinement (2026-10-15)
 
 - Placed redacted Review risk summary and explicit Commit & Push / Create PR confirmation **before** the optional changed-file list; users no longer need to scroll past hundreds of file rows after ZIP analysis.

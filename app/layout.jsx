@@ -13,6 +13,7 @@ import './styles/unified-components-v330.css';
 import './styles/mobile-layout-v340.css';
 import './styles/premium-workflow-v350.css';
 import './styles/modal-motion-v360.css';
+import './styles/visual-qa-v380.css';
 
 export const metadata = {
   title: 'Zipverra Pro — GitHub Workspace',

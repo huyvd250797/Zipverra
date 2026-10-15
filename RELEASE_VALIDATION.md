@@ -1,3 +1,13 @@
+## v3.8.0 validation status (2026-10-15)
+
+- Node test suite: **301/301 passed**.
+- New review navigation: capped file-list scroll, return-to-consent focus, no duplicate Commit & Push, confirmation gating and PWA version test coverage.
+- Production Next.js build: **not executed locally** — npm dependency installation blocked by environment limits. Run the unchanged CI workflow on GitHub/Vercel.
+- GitHub authenticated end-to-end: **not executed**; use a disposable repository on deployment.
+- Physical iPhone Safari and installed PWA: **not executed**; run the matrix in `VISUAL_QA_V380.md`.
+
+---
+
 # Zipverra Pro v3.6.0 — Release Validation
 
 **Baseline:** Full v3.5.0 source from the user; UI-only upgrade.
