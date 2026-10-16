@@ -1,3 +1,8 @@
+## v3.8.7 — Project Mismatch Severity Hotfix (17/10/2026)
+- Added a persistent red “Nghiêm trọng” severity badge, red title and subtle red surface to the critical project mismatch warning, including Light theme.
+- Kept acknowledgement status separate from severity, preserving all existing consent and Push behavior.
+- Validation: 364/364 existing tests passed; npm run build completed successfully. Mobile Safari visual acceptance remains manual.
+
 ## v3.8.7 — Accessibility & Visual QA Release (17/10/2026)
 - Restored native mobile zoom by removing restrictive viewport flags, pinch-gesture interception and touch-action zoom blockers.
 - Improved named main landmark focus after direct tab changes; improved dialog naming and translated loading accessibility copy.

@@ -19,11 +19,12 @@ export const ReviewRiskCenter = memo(function ReviewRiskCenter({
       <span className={`review-risk-count review-risk-count--${status}`}>{pendingCount ? `${pendingCount} cần xử lý` : status === 'clear' ? 'Không cảnh báo' : status === 'acknowledged' ? 'Đã xác nhận' : 'Cần xem'}</span>
     </header>
     {items.length ? <div className="review-risk-items">
-      {items.map(item => <div className={`review-risk-item review-risk-item--${item.tone}`} key={item.id}>
+      {items.map(item => <div className={`review-risk-item review-risk-item--${item.tone}${item.kind === 'identity' && item.tone === 'critical' ? ' review-risk-item--project-mismatch' : ''}`} key={item.id}>
         <div className="review-risk-item-top">
           <span className="review-risk-item-icon" aria-hidden="true"><StatusGlyph kind={item.kind === 'identity' ? 'identity' : item.kind === 'sync' ? 'sync' : item.tone === 'critical' ? 'critical' : 'warning'} size={17}/></span>
           <div className="review-risk-item-content">
             <strong>{item.title}</strong>
+            {item.kind === 'identity' && item.tone === 'critical' && <span className="review-risk-severity">Nghiêm trọng</span>}
             <small>{item.detail}</small>
           </div>
           <span className={`review-risk-state${item.required && item.approved ? ' review-risk-state--done' : ''}`}>

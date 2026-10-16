@@ -1,6 +1,31 @@
 /* v3.8.7 — Accessibility & Visual QA. Presentation-only fixes;
    does not change route visibility, risk approvals, PR or GitHub writes. */
 
+/* Project mismatch severity stays visible independently of user approval. */
+.review-risk-item--project-mismatch {
+  background:rgba(240,89,109,.07);
+  box-shadow:inset 3px 0 0 #ff9da8;
+}
+.review-risk-item--project-mismatch .review-risk-item-content strong {color:#ff9da8;}
+.review-risk-item--project-mismatch .review-risk-severity {
+  display:inline-flex;
+  justify-self:start;
+  max-width:100%;
+  box-sizing:border-box;
+  padding:4px 8px;
+  border:1px solid currentColor;
+  border-radius:7px;
+  color:#ff9da8;
+  background:rgba(240,89,109,.13);
+  font-size:12px;
+  font-weight:800;
+  line-height:1.4;
+  overflow-wrap:anywhere;
+}
+[data-theme="light"] .review-risk-item--project-mismatch {background:rgba(173,37,65,.06);box-shadow:inset 3px 0 0 #ad2541;}
+[data-theme="light"] .review-risk-item--project-mismatch .review-risk-item-content strong,
+[data-theme="light"] .review-risk-item--project-mismatch .review-risk-severity {color:#ad2541;}
+
 /* Small-screen usability and iOS input focus: 16px prevents unrequested
    Safari form-control zoom, while pinch zoom remains freely available. */
 @media (max-width:760px) {

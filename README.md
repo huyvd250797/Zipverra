@@ -1,5 +1,7 @@
 # Zipverra Pro v3.8.7 — Accessibility & Visual QA Release
 
+**Hotfix · Project Mismatch Severity:** Cảnh báo “Có thể upload nhầm dự án” có nhãn **Nghiêm trọng**, tiêu đề đỏ và nền đỏ nhẹ ở cả Dark/Light. Nhãn mức độ luôn hiển thị kể cả khi đã chấp nhận; trạng thái xác nhận và thao tác Push giữ nguyên.
+
 **Maintenance release from v3.8.6.** This update improves browser zoom, keyboard/screen-reader focus and small-screen resilience. It does not add GitHub features or modify authorization, security warnings, Sync consent, PR or Commit routes.
 
 **Release notes:** [`RELEASE_V387.md`](RELEASE_V387.md). **Manual acceptance:** [`QA_CHECKLIST_V387.md`](QA_CHECKLIST_V387.md).
