@@ -45,11 +45,12 @@ test('parse bounded package name; invalid manifests yield no identity',()=>{
  assert.equal(packageNameFromArchive([{path:'package.json',data:new Uint8Array([0]),bytes:1}]),'');
 });
 test('advisory mismatch warning requires explicit checkbox, never alters GitHub API',()=>{
- assert.match(page,/className="project-mismatch-alert" role="alert"/);
+ assert.match(page,/<ReviewRiskCenter summary={riskSummary}/);
+ assert.match(source('app/components/ReviewRiskCenter.jsx'), /Tôi đã kiểm tra/);
  assert.match(page,/setProjectMismatchConfirmed\(false\)/);
  assert.match(page,/pushReadiness.ready && \(preview\?\.identity\?\.severity !== 'critical' \|\| projectMismatchConfirmed\)/);
  assert.match(page,/disabled=\{!canSubmitPush\}/);
- assert.match(page,/Tôi xác nhận đúng repository/);
+ assert.match(source('app/components/ReviewRiskCenter.jsx'), /nguy cơ nhầm dự án/);
  assert.doesNotMatch(source('app/api/github/commit/route.js'),/projectMismatch/);
 });
 test('app logo and repo reload return to initial selections but do not erase uncertain journal',()=>{

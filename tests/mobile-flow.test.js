@@ -17,7 +17,7 @@ test('mobile navigation includes five sections and retains GitHub/OAuth fields',
 test('sync deletions need independent confirmation on top of usual preview consent', () => {
  const page = read('app/page.jsx');
  assert.match(page, /setSyncConfirmed\(false\)/);
- assert.match(page, /Tôi đồng ý xóa/);
+ assert.match(read('app/components/ReviewRiskCenter.jsx'), /Tôi đồng ý xóa/);
  assert.match(page, /stats\?\.delete > 0 && !syncConfirmed/);
  assert.match(page, /disabled=\{!canSubmitPush\}/);
  assert.match(read('lib/ux-polish.js'), /syncDeleteCount > 0 && !syncConfirmed/);

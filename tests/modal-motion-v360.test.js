@@ -11,21 +11,20 @@ const layout = read('app/layout.jsx');
 const safe = { hasPreview:true, selectedCount:20, critical:0, authenticated:true,
   online:true, busy:false, pending:false, confirmed:false, syncDeleteCount:0, syncConfirmed:false };
 
-test('v3.8.4 includes modal-motion override after all prior UI layers',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.8.4');
+test('v3.8.5 includes modal-motion override after all prior UI layers',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.8.5');
   assert.match(layout,/import '\.\/styles\/modal-motion-v360\.css'/);
   assert.ok(layout.indexOf('premium-workflow-v350.css') < layout.indexOf('modal-motion-v360.css'));
 });
 test('quick confirmation precedes file listing and diagnostic detail',()=>{
   const overview=page.indexOf('<ReviewSummary selected=');
-  const risk=page.indexOf('<ReviewRiskSnapshot');
-  const sync=page.indexOf('className="warning-banner"');
+  const risk=page.indexOf('<ReviewRiskCenter');
   const confirm=page.indexOf('className="premium-review-confirm"');
   const button=page.indexOf('className="button primary full push-button"');
   const files=page.indexOf('className="premium-review-files"');
   const diagnostics=page.indexOf('className="premium-review-diagnostics"');
-  assert.ok(overview > 0 && overview < risk && risk < sync && sync < confirm && confirm < button && button < files && files < diagnostics);
-  assert.match(page, /\['CONFIRM', 'READY'\]/);
+  assert.ok(overview > 0 && overview < risk && risk < confirm && confirm < button && button < files && files < diagnostics);
+  assert.match(page, /\['SECURITY', 'SYNC', 'CONFIRM', 'READY'\]/);
   assert.match(page, /\{fileDetailsOpen && <>/);
 });
 test('all selected changes can be confirmed without opening file list, but never automatically pushed',()=>{
@@ -46,7 +45,8 @@ test('Critical risk blocks quick commit even after consent and highlights file p
 test('Sync deletion requires its own checkbox before quick push',()=>{
   assert.equal(reviewReadiness({...safe,confirmed:true,syncDeleteCount:3}).code,'SYNC');
   assert.equal(reviewReadiness({...safe,confirmed:true,syncDeleteCount:3,syncConfirmed:true}).ready,true);
-  assert.match(page,/checked=\{syncConfirmed\}/);
+  assert.match(page,/onSyncConsent=\{\(value\) => \{ setSyncConfirmed\(value\); setConfirmed\(false\); \}\}/);
+  assert.match(read('app/components/ReviewRiskCenter.jsx'), /checked=\{item.approved\}/);
 });
 test('pending / offline / busy actions never enable quick commit',()=>{
   for(const input of [{pending:true},{online:false},{busy:true},{authenticated:false}]) {

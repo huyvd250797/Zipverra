@@ -1,3 +1,9 @@
+## v3.8.5 — Smart Warning & Review UX
+- Unified the Review warnings for Security Scan, project identity mismatch and Sync deletion in one Risk Center with individual approval states.
+- Removed redundant stacked alerts and readiness duplications; diagnostics are collapsed by default and reachable through explicit links.
+- Kept a separate final Commit/PR confirmation; consent resets on file-selection changes and risk-approval toggles invalidate final confirmation.
+- Added accessible mobile styles, light/dark colors and 12 regression tests; no GitHub API or secret policy changes.
+
 ## v3.8.4 — Unified Notification System
 - Bounded, deduplicated toast queue, prioritizing verified GitHub results.
 - Avoid repeated toasts for state already rendered as inline warnings/errors.

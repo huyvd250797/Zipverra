@@ -1,4 +1,6 @@
-# Zipverra Pro v3.8.4 — Security Warning Confirmation Hotfix
+# Zipverra Pro v3.8.5 — Smart Warning & Review UX
+
+Release details: [`RELEASE_V385.md`](RELEASE_V385.md). This maintenance release consolidates Review alerts into one Risk Center without changing GitHub API behavior.
 
 **Source baseline:** Zipverra Pro v3.8.0 — Visual QA & Stable UI Release. Maintenance hotfix preserves the existing GitHub App OAuth, Direct Push, Pull Request, Workspace, History, Rollback, Recovery, security scanner, and five-tab mobile workflow.
 
@@ -36,7 +38,7 @@
 
 ## Deployment to GitHub + Vercel
 
-1. Extract the archive and push the **contents of `Zipverra-v3.8.4/`** into the root of the existing application repository; do not push the outer folder as a nested app.
+1. Extract the archive and push the **contents of `Zipverra-v3.8.5/`** into the root of the existing application repository; do not push the outer folder as a nested app.
 2. Keep your existing Vercel variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`. Update `APP_URL` only if the deployed domain has changed.
 3. Build on Vercel or another networked CI with `npm install --no-audit --no-fund`, `npm test`, `npm run build` using Node 22. Existing GitHub Actions workflow runs tests/build on push and PR.
 4. Verify `/api/version` displays `3.8.3`, and refresh the app to apply the public PWA service-worker cache version. Old public cache entries are removed after activation; private API/auth responses are never cached.

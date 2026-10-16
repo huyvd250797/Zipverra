@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.8.4",
+  "version": "3.8.5",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.8.4 — Unified Notification System: deduplication, sequential toasts and confirmation dialogs",
+  "description": "Zipverra Pro v3.8.5 — Smart Warning & Review UX: unified risk assessment and explicit consent",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
