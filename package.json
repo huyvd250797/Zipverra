@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.8.5",
+  "version": "3.8.6",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.8.5 — Smart Warning & Review UX: unified risk assessment and explicit consent",
+  "description": "Zipverra Pro v3.8.6 — Premium Visual & Interaction Polish: coherent design tokens, feedback and motion",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

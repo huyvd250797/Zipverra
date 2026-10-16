@@ -2,6 +2,7 @@
 
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import ModalSheet from './ModalSheet.jsx';
+import StatusGlyph from './StatusGlyph.jsx';
 
 /** A single accessible toast, shown sequentially by the bounded notification queue. */
 export const FeedbackToast = memo(function FeedbackToast({ notice, queuedCount = 0, onDismiss }) {
@@ -31,9 +32,9 @@ export const FeedbackToast = memo(function FeedbackToast({ notice, queuedCount =
   }, [notice?.id]);
   return <div className="pro-toast-region" aria-label="Thông báo Zipverra">
     {notice && <div key={notice.id} className={`pro-toast pro-toast--${notice.tone}${exiting ? ' pro-toast--exiting' : ''}`} role={notice.tone === 'error' ? 'alert' : 'status'} aria-live={notice.tone === 'error' ? 'assertive' : 'polite'} aria-atomic="true" onPointerEnter={() => setPaused(true)} onPointerLeave={() => setPaused(false)} onFocus={() => setPaused(true)} onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setPaused(false); }}>
-      <span className="pro-toast-symbol" aria-hidden="true">{notice.tone === 'success' ? '✓' : notice.tone === 'error' ? '!' : notice.tone === 'warning' ? '!' : 'i'}</span>
+      <span className="pro-toast-symbol" aria-hidden="true"><StatusGlyph kind={notice.tone} size={19}/></span>
       <div className="pro-toast-copy"><strong>{notice.title}</strong><p>{notice.detail}</p>{queuedCount > 0 && <small className="pro-toast-pending">Còn {queuedCount} thông báo</small>}</div>
-      <button className="pro-toast-dismiss" type="button" onClick={() => startClose(notice.id)} disabled={exiting} aria-label="Đóng thông báo">×</button>
+      <button className="pro-toast-dismiss" type="button" onClick={() => startClose(notice.id)} disabled={exiting} aria-label="Đóng thông báo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>}
   </div>;
 });
@@ -42,7 +43,7 @@ export const FeedbackToast = memo(function FeedbackToast({ notice, queuedCount =
 export function FeedbackBanner({ tone = 'info', title, children, actions = null, className = '' }) {
   const severity = ['info', 'success', 'warning', 'error', 'critical'].includes(tone) ? tone : 'info';
   return <aside className={`zip-feedback-banner zip-feedback-banner--${severity} ${className}`.trim()} role={severity === 'critical' || severity === 'error' ? 'alert' : 'status'}>
-    <span className="zip-feedback-banner-icon" aria-hidden="true">{severity === 'success' ? '✓' : severity === 'info' ? 'i' : '!'}</span>
+    <span className="zip-feedback-banner-icon" aria-hidden="true"><StatusGlyph kind={severity} size={18}/></span>
     <div className="zip-feedback-banner-body"><strong>{title}</strong><div>{children}</div></div>
     {actions && <div className="zip-feedback-banner-actions">{actions}</div>}
   </aside>;

@@ -1,5 +1,6 @@
 'use client';
 import { memo } from 'react';
+import StatusGlyph from './StatusGlyph.jsx';
 
 /** Unified Review decision surface. Pure UI; permission checks remain in Home and GitHub API. */
 export const ReviewRiskCenter = memo(function ReviewRiskCenter({
@@ -10,7 +11,7 @@ export const ReviewRiskCenter = memo(function ReviewRiskCenter({
   const { items, pendingCount, requiredCount, status } = summary;
   return <section className={`review-risk-center review-risk-center--${status}${summary.hasCritical ? ' review-risk-center--critical' : ''}`} aria-label="Đánh giá rủi ro trước khi Push">
     <header className="review-risk-head">
-      <span className="review-risk-emblem" aria-hidden="true">{status === 'clear' || status === 'acknowledged' ? '✓' : '!'}</span>
+      <span className="review-risk-emblem" aria-hidden="true"><StatusGlyph kind={status === 'clear' || status === 'acknowledged' ? 'success' : summary.hasCritical ? 'critical' : 'warning'} size={20}/></span>
       <div className="review-risk-heading">
         <strong>Đánh giá rủi ro</strong>
         <small aria-live="polite">{status === 'clear' ? 'Không phát hiện cảnh báo theo các quy tắc hiện có' : pendingCount ? `${pendingCount}/${requiredCount} xác nhận cần hoàn tất` : status === 'acknowledged' ? `Đã hoàn tất ${requiredCount} xác nhận rủi ro` : `${items.length} lưu ý · Không yêu cầu xác nhận thêm`}</small>
@@ -20,7 +21,7 @@ export const ReviewRiskCenter = memo(function ReviewRiskCenter({
     {items.length ? <div className="review-risk-items">
       {items.map(item => <div className={`review-risk-item review-risk-item--${item.tone}`} key={item.id}>
         <div className="review-risk-item-top">
-          <span className="review-risk-item-icon" aria-hidden="true">{item.kind === 'identity' ? '↗' : item.kind === 'sync' ? '−' : '!'}</span>
+          <span className="review-risk-item-icon" aria-hidden="true"><StatusGlyph kind={item.kind === 'identity' ? 'identity' : item.kind === 'sync' ? 'sync' : item.tone === 'critical' ? 'critical' : 'warning'} size={17}/></span>
           <div className="review-risk-item-content">
             <strong>{item.title}</strong>
             <small>{item.detail}</small>

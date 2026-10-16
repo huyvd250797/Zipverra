@@ -99,7 +99,7 @@ export default function ModalSheet({ open, onClose, title, children, variant = '
     <div className="zip-modal-panel">
       <header className="zip-modal-header">
         <strong>{title}</strong>
-        <UiIconButton className="zip-modal-close" onClick={requestClose} label={`Đóng ${title}`} aria-label={`Đóng ${title}`}>×</UiIconButton>
+        <UiIconButton className="zip-modal-close" onClick={requestClose} label={`Đóng ${title}`} aria-label={`Đóng ${title}`}><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></UiIconButton>
       </header>
       <div className="zip-modal-scroll" data-modal-scroll-region>{children}</div>
     </div>

@@ -1,0 +1,134 @@
+/* Zipverra Pro v3.8.6 — Premium Visual & Interaction Polish.
+   Strictly presentational: do not alter mobile-view visibility, dialog positioning,
+   scroll locking, API states, consent gates, or GitHub authorization. */
+:root {
+  --v386-ease: cubic-bezier(.22,.82,.24,1);
+  --v386-fast: 150ms;
+  --v386-normal: 220ms;
+  --v386-sheet: 260ms;
+  --v386-radius-control: 12px;
+  --v386-radius-card: 18px;
+  --v386-hairline: color-mix(in srgb,var(--pro-border) 74%,transparent);
+  --v386-highlight: color-mix(in srgb,var(--pro-accent) 8%,var(--pro-surface));
+  --v386-soft-shadow: 0 8px 26px rgba(0,0,0,.09);
+}
+html[data-theme="light"] {
+  --v386-hairline: #dbe4e9;
+  --v386-highlight: #f1faf7;
+  --v386-soft-shadow: 0 9px 25px rgba(21,51,68,.06);
+}
+/* Baseline: crisp typography and predictable rhythm without shrinking controls. */
+.pro-shell {font-feature-settings:"kern" 1;}
+.pro-shell :is(.panel,.polish-launchpad,.settings-section,.pro-dashboard,.pro-profiles,.pro-journal-panel){
+  border-color:var(--v386-hairline);border-radius:var(--v386-radius-card);box-shadow:var(--v386-soft-shadow);
+}
+.pro-shell .step-heading h2 {font-weight:780;line-height:1.3;letter-spacing:-.035em;}
+.pro-shell .step-heading p,.pro-shell .hint,.pro-shell .archive-meta {line-height:1.6;}
+.pro-shell .step-heading p {font-size:13px;}
+.pro-shell .field label,.pro-shell .zip-ui-input-caption {font-size:13px;font-weight:710;line-height:1.4;}
+.pro-shell .hint {font-size:12px;}
+.pro-shell :is(.field input,.field select,.field textarea,.zip-ui-input) {
+  min-height:46px;font-size:14px;line-height:1.45;border-radius:var(--v386-radius-control);
+  border-color:var(--pro-border-strong);transition:border-color var(--v386-fast) ease,box-shadow var(--v386-fast) ease,background-color var(--v386-fast) ease;
+}
+.pro-shell :is(.field input,.field select,.field textarea,.zip-ui-input):focus-visible {
+  border-color:var(--pro-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--pro-accent) 17%,transparent);
+}
+/* Actions: same hit area and weight across native and shared component buttons. */
+.pro-shell :is(.button,.zip-ui-button,.zip-picker-trigger,.zip-picker-actions button,.zip-hub-shortcuts button,.theme-options button) {
+  min-height:44px;border-radius:var(--v386-radius-control);font-size:13px;font-weight:740;
+  transition:background-color var(--v386-fast) ease,border-color var(--v386-fast) ease,
+    color var(--v386-fast) ease,transform var(--v386-fast) var(--v386-ease),box-shadow var(--v386-fast) ease;
+}
+.pro-shell :is(.button,.zip-ui-button,.zip-picker-trigger,.zip-picker-actions button):active:not(:disabled) {transform:scale(.986);}
+.pro-shell :is(.button,.zip-ui-button,.zip-picker-trigger,.zip-picker-actions button):disabled {box-shadow:none;}
+.pro-shell :is(.zip-ui-icon-button,.repo-refresh-icon,.repo-connection-icon,.step-header-action,.step-header-status) {
+  width:44px;min-width:44px;height:44px;border-radius:12px;
+}
+.pro-shell .zip-ui-card,.pro-shell .mobile-quick-card {border-color:var(--v386-hairline);border-radius:15px;}
+.pro-shell :is(.pill,.zip-ui-badge,.stage-chip) {line-height:1.35;font-size:11px;letter-spacing:.005em;}
+.pro-shell .drop-zone {border-radius:16px;}
+.pro-shell .drop-zone strong {font-size:15px;line-height:1.35;}
+.pro-shell .drop-zone small {font-size:12px;line-height:1.5;}
+/* Risk Center: one scannable hierarchy. No extra warnings or approvals introduced. */
+.review-risk-center {border-radius:var(--v386-radius-card);gap:13px;padding:clamp(15px,3vw,20px);box-shadow:none;}
+.review-risk-heading strong {font-weight:780;letter-spacing:-.025em;}
+.review-risk-head {gap:12px;}
+.review-risk-emblem {border-radius:12px;}
+.review-risk-emblem svg,.review-risk-item-icon svg,.pro-toast-symbol svg,.zip-feedback-banner-icon svg {display:block;flex-shrink:0;}
+.review-risk-items {border-color:var(--v386-hairline);background:color-mix(in srgb,var(--pro-surface) 72%,var(--pro-surface-2));}
+.review-risk-item {padding:15px;gap:11px;}
+.review-risk-item+.review-risk-item {border-top-color:var(--v386-hairline);}
+.review-risk-item-content strong {font-size:14px;font-weight:760;line-height:1.45;}
+.review-risk-item-content small {font-size:13px;line-height:1.55;}
+.review-risk-state {font-size:11px;line-height:1.3;padding:6px 9px;}
+.review-risk-approval {border-radius:12px;padding:13px;font-size:13px;line-height:1.55;transition:border-color var(--v386-fast) ease,background-color var(--v386-fast) ease;}
+.review-risk-approval input[type=checkbox]{min-width:20px;width:20px;height:20px;flex-basis:20px;}
+.review-risk-link,.review-risk-diagnostics-link {min-height:44px;line-height:1.45;}
+.review-risk-approval:focus-within {outline:2px solid var(--pro-focus);outline-offset:3px;}
+/* Notifications: quieter chrome, adequate room for descriptions and dismissal. */
+.pro-toast {border-radius:16px;background:var(--pro-surface);border:1px solid var(--pro-border-strong);box-shadow:0 18px 46px rgba(0,0,0,.21);gap:12px;padding:14px;}
+html[data-theme="light"] .pro-toast {box-shadow:0 16px 42px rgba(18,52,70,.14);}
+.pro-toast-symbol {flex:0 0 30px;width:30px;height:30px;border-radius:10px;display:grid;place-items:center;}
+.pro-toast-copy strong {font-size:14px;line-height:1.4;font-weight:770;}
+.pro-toast-copy p {font-size:13px;line-height:1.55;margin-top:3px;}
+.pro-toast-pending {font-size:12px;}
+.pro-toast-dismiss {width:44px;min-width:44px;height:44px;margin:-8px -8px -8px 0;border-radius:11px;}
+.zip-feedback-banner {border-radius:14px;padding:14px;gap:11px;}
+.zip-feedback-banner-icon {width:30px;height:30px;flex:0 0 30px;border-radius:10px;}
+.zip-feedback-banner-body {font-size:13px;line-height:1.55;}
+.zip-feedback-banner-body strong {font-size:14px;font-weight:780;}
+/* Consistent confirmation and picker styling. Never change native dialog mechanics. */
+.zip-modal {border-radius:22px;border-color:var(--pro-border-strong);background:var(--pro-surface);color:var(--pro-text);}
+.zip-modal-header {padding:15px 18px;border-bottom-color:var(--v386-hairline);}
+.zip-modal-header strong {font-size:16px;font-weight:780;letter-spacing:-.02em;line-height:1.4;}
+.zip-modal-close {width:44px;height:44px;border-radius:12px;font-size:23px;}
+.zip-modal-scroll {padding-inline:18px;}
+.zip-modal .zip-quick-chip {min-height:44px;height:auto;padding-block:8px;font-size:12px;}
+.zip-modal .zip-quick-heading {font-size:12px;letter-spacing:.02em;}
+.zip-modal .zip-repo-results-heading strong {font-size:12px;}
+.zip-modal :is(.zip-repo-option,.zip-branch-option) {min-height:44px;}
+.zip-confirm-content {gap:18px;}
+.zip-confirm-content p {font-size:14px;line-height:1.65;}
+.zip-confirm-actions .button {min-height:48px;font-size:14px;}
+/* Motion: predictable enter/exit and no stacking, zero layout shifts. */
+@keyframes v386-sheet-in {from{opacity:0;transform:translate3d(0,28px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes v386-sheet-out {from{opacity:1;transform:translate3d(0,0,0)}to{opacity:0;transform:translate3d(0,35px,0)}}
+@keyframes v386-dialog-in {from{opacity:0;transform:translate3d(0,8px,0) scale(.984)}to{opacity:1;transform:translate3d(0,0,0) scale(1)}}
+@keyframes v386-dialog-out {from{opacity:1;transform:translate3d(0,0,0) scale(1)}to{opacity:0;transform:translate3d(0,6px,0) scale(.985)}}
+@keyframes v386-toast-in {from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes v386-toast-out {to{opacity:0;transform:translate3d(0,10px,0)}}
+.zip-modal[open].zip-modal--sheet:not(.zip-modal--exiting){animation:v386-sheet-in var(--v386-sheet) var(--v386-ease) both;}
+.zip-modal[open].zip-modal--sheet.zip-modal--exiting{animation:v386-sheet-out 210ms ease-in both!important;pointer-events:none;}
+.zip-modal[open]:not(.zip-modal--sheet):not(.zip-modal--exiting){animation:v386-dialog-in var(--v386-normal) var(--v386-ease) both;}
+.zip-modal[open]:not(.zip-modal--sheet).zip-modal--exiting{animation:v386-dialog-out 210ms ease-in both!important;pointer-events:none;}
+.pro-toast:not(.pro-toast--exiting){animation:v386-toast-in 190ms var(--v386-ease) both;}
+.pro-toast.pro-toast--exiting{animation:v386-toast-out 170ms ease-in both!important;}
+/* Mobile readability and reach without changing the 5-tab routing system. */
+@media(max-width:760px){
+  .pro-shell .panel {padding:17px 15px;}
+  .pro-shell .step-heading p {font-size:12.5px;}
+  .pro-shell .field label {font-size:13px;}
+  .pro-shell .hint {font-size:12px;}
+  .pro-shell .mobile-nav-item span:not(.mobile-nav-icon) {font-size:10.5px;line-height:1.3;}
+  .pro-shell .mobile-nav-item {min-height:54px;}
+  .pro-shell .mobile-quick-card .zip-current-actions .button {min-height:44px;font-size:11.5px;padding-inline:9px;}
+  .pro-shell .review-risk-count {flex-shrink:0;}
+  .review-risk-item-top {flex-wrap:wrap;}
+  .review-risk-state {margin-left:36px;}
+  .zip-modal--sheet {border-radius:24px 24px 0 0;}
+  .zip-modal--sheet .zip-modal-header {position:relative;padding-top:22px;}
+  .zip-modal--sheet .zip-modal-header::before {content:"";position:absolute;top:8px;left:50%;transform:translateX(-50%);width:36px;height:4px;border-radius:99px;background:var(--pro-border-strong);opacity:.8;pointer-events:none;}
+  .zip-modal-scroll {padding-inline:15px;}
+}
+@media(max-width:380px){
+  .review-risk-center {padding:13px;}
+  .review-risk-count {font-size:10px;}
+  .review-risk-item {padding:12px;}
+  .pro-shell .zip-hub-branch {max-width:110px;}
+}
+@media(prefers-reduced-motion:reduce){
+  .zip-modal[open],.zip-modal[open]::backdrop,.pro-toast,
+  .pro-shell :is(.button,.zip-ui-button,.zip-picker-trigger,.zip-picker-actions button,.field input,.field select,.field textarea,.zip-ui-input),
+  .review-risk-approval {animation:none!important;transition:none!important;scroll-behavior:auto!important;}
+}

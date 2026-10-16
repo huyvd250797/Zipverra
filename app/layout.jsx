@@ -17,6 +17,7 @@ import './styles/visual-qa-v380.css';
 import './styles/stable-experience-v383.css';
 import './styles/notifications-v384.css';
 import './styles/review-risk-v385.css';
+import './styles/premium-interactions-v386.css';
 
 export const metadata = {
   title: 'Zipverra Pro — GitHub Workspace',

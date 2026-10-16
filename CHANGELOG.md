@@ -1,3 +1,10 @@
+## v3.8.6 — Premium Visual & Interaction Polish (17/10/2026)
+- Unified UI layer for spacing, typography, focus styles, surface colors and button touch targets while preserving five mobile views and existing responsive visibility rules.
+- Shared semantic SVG status icon family for Review Risk Center, Toast and contextual banners; clear close controls.
+- Refined modal/bottom-sheet/toast open and exit motions; honors Reduce Motion and preexisting iOS viewport/scroll handling.
+- Synchronized app and PWA versions and service worker cache; added 10 targeted regression tests. **351/351 passed**, 100 JS/JSX files parsed, 31 GitHub API routes unchanged.
+- Production `next build` pending CI/Vercel verification due npm registry `EAI_AGAIN`; existing Feature Freeze remains.
+
 ## v3.8.5 — Smart Warning & Review UX
 - Unified the Review warnings for Security Scan, project identity mismatch and Sync deletion in one Risk Center with individual approval states.
 - Removed redundant stacked alerts and readiness duplications; diagnostics are collapsed by default and reachable through explicit links.
