@@ -1,15 +1,17 @@
-# Zipverra Pro v3.8.6 — Premium Visual & Interaction Polish
+# Zipverra Pro v3.8.7 — Accessibility & Visual QA Release
 
-Release details: [`RELEASE_V386.md`](RELEASE_V386.md). This maintenance release polishes design tokens, typography, interactions and visual feedback; the v3.8.5 Risk Center and GitHub API behavior are preserved.
+**Maintenance release from v3.8.6.** This update improves browser zoom, keyboard/screen-reader focus and small-screen resilience. It does not add GitHub features or modify authorization, security warnings, Sync consent, PR or Commit routes.
 
-**Source baseline:** Zipverra Pro v3.8.0 — Visual QA & Stable UI Release. Maintenance hotfix preserves the existing GitHub App OAuth, Direct Push, Pull Request, Workspace, History, Rollback, Recovery, security scanner, and five-tab mobile workflow.
+**Release notes:** [`RELEASE_V387.md`](RELEASE_V387.md). **Manual acceptance:** [`QA_CHECKLIST_V387.md`](QA_CHECKLIST_V387.md).
 
-## v3.8.6 — Premium Visual & Interaction Polish
+## v3.8.7 — Accessibility & Visual QA
 
-- Unified final presentation layer: `app/styles/premium-interactions-v386.css`. Consistent spacing, typography, interactive controls, mobile layout and status colors across Dark/Light.
-- Shared SVG status glyphs and Close icons on Toast, Banner, Risk Center and native dialogs; the underlying security warnings, approvals and API calls are unchanged.
-- Coordinated Toast/Modal/Bottom Sheet entrance and exit, Reduced Motion, sheet grip and iPhone tap targets; modal focus and scroll safety remain unchanged.
-- **351/351 tests passed**, 100 JS/JSX files passed syntax parser, and 31 GitHub route files are byte-identical to v3.8.5. Production Next build remains unverified locally because npm registry DNS resolution failed.
+- Removed the restrictive `maximumScale`/`userScalable` viewport flags and the global gesture interception, allowing Safari and accessibility magnification to use native pinch gestures.
+- Allowed native browser touch actions; increased form-control font size to 16px on narrow screens to avoid involuntary iOS focus zoom.
+- Added controlled focus to the named main landmark after **user-initiated tab navigation**, without stealing focus on startup or automated GitHub phase changes.
+- Linked modal accessible names to their visible header, made splash announcements Vietnamese, and improved small-screen wrapping, minimum touch areas and reduced-motion/high-contrast presentation.
+- Added `accessibility-visual-qa-v387.css` last; prior UI and API layers are preserved. Dark/Light pre-paint initialization remains unchanged.
+- Updated app, PWA and public cache versions to 3.8.7. Run `npm test`, `npm run build`, and the manual QA checklist on Vercel Preview before production release.
 
 ## v3.8.3 — Motion / Clean Restart / Wrong-Project Warning / Instant Theme
 
@@ -45,16 +47,16 @@ Release details: [`RELEASE_V386.md`](RELEASE_V386.md). This maintenance release 
 
 ## Deployment to GitHub + Vercel
 
-1. Extract the archive and push the **contents of `Zipverra-v3.8.6/`** into the root of the existing application repository; do not push the outer folder as a nested app.
+1. Extract the archive and push the **contents of `Zipverra-v3.8.7/`** into the root of the existing application repository; do not push the outer folder as a nested app.
 2. Keep your existing Vercel variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`. Update `APP_URL` only if the deployed domain has changed.
 3. Build on Vercel or another networked CI with `npm install --no-audit --no-fund`, `npm test`, `npm run build` using Node 22. Existing GitHub Actions workflow runs tests/build on push and PR.
-4. Verify `/api/version` displays `3.8.6`, and refresh the app to apply the public PWA service-worker cache version. Old public cache entries are removed after activation; private API/auth responses are never cached.
+4. Verify `/api/version` displays `3.8.7`, and refresh the app to apply the public PWA service-worker cache version. Old public cache entries are removed after activation; private API/auth responses are never cached.
 5. Test on an authorized throwaway repository: select ZIP with hundreds of files, check the quick confirmation flow without opening details, expand and scroll the file list, return to confirmation, then separately verify Sync delete acknowledgement, Critical consent dialog (No/Yes) and PR behavior. Test rollback/Recovery after interrupted operations before using production repositories.
 6. Test actual iPhone Safari and installed standalone PWA keyboard, modal focus and scroll, dynamic safe area, dark/light, reduced motion, and Wi-Fi interruption before labeling production validated.
 
 ## Validation boundaries
 
-**Local:** 351 Node unit/regression tests passed for v3.8.6. Source and CSS checks and static Chromium viewport QA (when available) are documented in `VISUAL_QA_V380.md`. The environment could not finish fetching npm dependencies, so a production `next build`, authenticated GitHub E2E and real iPhone Safari/PWA verification have **not** been completed locally. A successful ZIP package by itself does not certify a Vercel deployment.
+**Local validation** is recorded in `RELEASE_V387.md` and `QA_CHECKLIST_V387.md`. Legacy validation remains in `VISUAL_QA_V380.md`. The environment could not finish fetching npm dependencies, so a production `next build`, authenticated GitHub E2E and real iPhone Safari/PWA verification have **not** been completed locally. A successful ZIP package by itself does not certify a Vercel deployment.
 
 Read `VISUAL_QA_V380.md`, `RELEASE_VALIDATION.md` and `ROADMAP_NEXT.md` before production rollout.
 

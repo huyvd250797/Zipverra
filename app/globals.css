@@ -18,8 +18,8 @@
 @media(max-width:550px){.auth-card{padding:13px}.account-row{gap:9px}.auth-chip{padding:5px 6px}}
 
 /* Mobile PWA: no pinch-to-zoom, keep horizontal/vertical scrolling usable. */
-html,body{width:100%;overscroll-behavior-y:none;touch-action:pan-x pan-y;-webkit-text-size-adjust:100%}
-button,a,input,select,label{touch-action:pan-x pan-y}
+html,body{width:100%;overscroll-behavior-y:none;touch-action:auto;-webkit-text-size-adjust:100%}
+button,a,input,select,label{touch-action:auto}
 @media(max-width:700px){
   /* iOS Safari auto-zooms focused inputs when their font size is below 16px. */
   .field input,.field select{font-size:16px}
@@ -386,7 +386,7 @@ html[data-theme="light"] .review-toolbar .input-icon input{background:#fff;color
 .workspace-editor-actions{display:flex;flex-wrap:wrap;gap:9px;margin:13px 0}
 .workspace-editor-actions .button{min-height:42px;font-size:12px;text-decoration:none}
 .workspace-code{background:#071321;border:1px solid #294051;border-radius:12px;max-height:480px;min-height:190px;overflow:auto;color:#c1e4db;padding:16px 14px;font-size:12px;line-height:1.65;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;tab-size:2;white-space:pre}
-.workspace-textarea{display:block;width:100%;min-height:330px;max-width:100%;resize:vertical;background:#071321;border:1px solid #375368;color:#dcefea;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:16px;line-height:1.6;tab-size:2;border-radius:12px;padding:13px;white-space:pre;overflow:auto;outline:0;touch-action:pan-x pan-y}
+.workspace-textarea{display:block;width:100%;min-height:330px;max-width:100%;resize:vertical;background:#071321;border:1px solid #375368;color:#dcefea;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:16px;line-height:1.6;tab-size:2;border-radius:12px;padding:13px;white-space:pre;overflow:auto;outline:0;touch-action:auto}
 .workspace-editor-foot{display:flex;justify-content:space-between;gap:8px;margin:8px 0 14px;color:#9bbbc6;font-size:11px;flex-wrap:wrap}
 .workspace-empty-confirm{display:flex;gap:9px;align-items:center;color:#f0c492;font-size:12px;margin:14px 0;line-height:1.5}
 .workspace-empty-confirm input{width:19px;height:19px;accent-color:#5cdbad;flex-shrink:0}

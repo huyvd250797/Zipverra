@@ -22,7 +22,7 @@ export default function SplashScreen({ loading }) {
   const hidden = timedOut || (minimumElapsed && !loading);
 
   return (
-    <div className={`app-splash${hidden ? ' app-splash--hidden' : ''}`} role="status" aria-label="Zipverra is loading" aria-hidden={hidden}>
+    <div className={`app-splash${hidden ? ' app-splash--hidden' : ''}`} role="status" aria-label="Zipverra đang khởi động" aria-hidden={hidden}>
       <div className="app-splash__glow" />
       <div className="app-splash__content">
         <div className="app-splash__logo">
@@ -30,8 +30,8 @@ export default function SplashScreen({ loading }) {
         </div>
         <div className="app-splash__name">Zip<span>verra</span></div>
         <p className="app-splash__tagline">Push to GitHub from Mobile</p>
-        <div className="app-splash__loader" aria-label="Loading" />
-        <p className="app-splash__status">Preparing your workspace...</p>
+        <div className="app-splash__loader" aria-hidden="true" />
+        <p className="app-splash__status">Đang chuẩn bị không gian làm việc...</p>
       </div>
       <div className="app-splash__footer">ZIPVERRA PRO · GITHUB WORKSPACE</div>
     </div>

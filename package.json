@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.8.6",
+  "version": "3.8.7",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.8.6 — Premium Visual & Interaction Polish: coherent design tokens, feedback and motion",
+  "description": "Zipverra Pro v3.8.7 — Premium Visual & Interaction Polish: coherent design tokens, feedback and motion",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

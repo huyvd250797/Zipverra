@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { lockModalScroll } from '../../lib/modal-scroll-lock.js';
 import { modalViewportGeometry } from '../../lib/modal-viewport.js';
 import { UiIconButton } from './UnifiedUI.jsx';
@@ -8,6 +8,7 @@ import { UiIconButton } from './UnifiedUI.jsx';
 /** Native top-layer modal: only its scroll region scrolls; iOS keyboard safe. */
 export default function ModalSheet({ open, onClose, title, children, variant = 'sheet' }) {
   const dialogRef = useRef(null);
+  const titleId = useId();
   const [exiting, setExiting] = useState(false);
   const closeTimerRef = useRef(null);
   const closeRequestedRef = useRef(false);
@@ -94,11 +95,11 @@ export default function ModalSheet({ open, onClose, title, children, variant = '
     };
   }, [open]);
 
-  return <dialog ref={dialogRef} className={`zip-modal zip-modal--${variant}${exiting ? ' zip-modal--exiting' : ''}`} aria-label={title}
+  return <dialog ref={dialogRef} className={`zip-modal zip-modal--${variant}${exiting ? ' zip-modal--exiting' : ''}`} aria-labelledby={titleId}
     onClick={event => { if (event.target === event.currentTarget) requestClose(); }}>
     <div className="zip-modal-panel">
       <header className="zip-modal-header">
-        <strong>{title}</strong>
+        <strong id={titleId}>{title}</strong>
         <UiIconButton className="zip-modal-close" onClick={requestClose} label={`Đóng ${title}`} aria-label={`Đóng ${title}`}><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></UiIconButton>
       </header>
       <div className="zip-modal-scroll" data-modal-scroll-region>{children}</div>

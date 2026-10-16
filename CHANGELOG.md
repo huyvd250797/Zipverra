@@ -1,3 +1,10 @@
+## v3.8.7 — Accessibility & Visual QA Release (17/10/2026)
+- Restored native mobile zoom by removing restrictive viewport flags, pinch-gesture interception and touch-action zoom blockers.
+- Improved named main landmark focus after direct tab changes; improved dialog naming and translated loading accessibility copy.
+- Added final scoped accessibility CSS for narrow-screen input focus, keyboard outlines, wrapping, contrast preferences and Reduced Motion.
+- GitHub write/security APIs untouched; tests and release validation in `RELEASE_V387.md`.
+- Manual iPhone Safari/PWA, GitHub E2E and Vercel production build still require environment-based acceptance before Stable signoff.
+
 ## v3.8.6 — Premium Visual & Interaction Polish (17/10/2026)
 - Unified UI layer for spacing, typography, focus styles, surface colors and button touch targets while preserving five mobile views and existing responsive visibility rules.
 - Shared semantic SVG status icon family for Review Risk Center, Toast and contextual banners; clear close controls.

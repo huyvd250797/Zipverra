@@ -1,0 +1,77 @@
+/* v3.8.7 — Accessibility & Visual QA. Presentation-only fixes;
+   does not change route visibility, risk approvals, PR or GitHub writes. */
+
+/* Small-screen usability and iOS input focus: 16px prevents unrequested
+   Safari form-control zoom, while pinch zoom remains freely available. */
+@media (max-width:760px) {
+  .pro-shell :is(input[type="text"],input[type="search"],input[type="email"],
+    input[type="password"],input[type="url"],input[type="tel"],input[type="number"],
+    input:not([type]),select,textarea,.zip-ui-input),
+  .zip-modal :is(input[type="text"],input[type="search"],input[type="email"],
+    input[type="password"],input[type="url"],input[type="tel"],input[type="number"],
+    input:not([type]),select,textarea,.zip-ui-input) {
+    font-size:16px;
+  }
+  .pro-shell .mobile-nav-item span:not(.mobile-nav-icon) {
+    font-size:11px;
+    line-height:1.35;
+  }
+  .pro-shell .step-heading p,.pro-shell .hint,.pro-shell .archive-meta {
+    font-size:13px;
+    line-height:1.55;
+  }
+  .pro-shell :is(.repo-advanced summary,.pro-dash-details summary,
+    .premium-review-diagnostics>summary) {min-height:44px;}
+}
+
+/* Text expansion / narrower screens: prevent long paths and status messages
+   from widening the document. The user can still pinch and zoom. */
+.pro-shell :is(.settings-info,.settings-info strong,.zip-sheet-kicker,
+ .zip-repo-name,.zip-branch-option,.zip-repo-option,.review-risk-item-content,
+ .review-risk-approval,.change-path,.pro-toast-copy,.sensitive-consent-paths) {
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.zip-modal :is(.zip-repo-name,.zip-sheet-note,.zip-branch-option) {
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+/* Visible keyboard focus on controls, including direct-ancestor modal actions.
+   Main landmark is programmatically focused only to announce navigation. */
+.pro-shell :is(button,a,input,select,textarea,summary):focus-visible,
+.zip-modal :is(button,a,input,select,textarea,summary):focus-visible,
+.mobile-bottom-nav .mobile-nav-item:focus-visible {
+  outline:3px solid var(--pro-focus)!important;
+  outline-offset:2px!important;
+}
+
+/* Respect OS high-contrast requests without hard-coding dark-mode colors. */
+@media (prefers-contrast:more) {
+ .pro-shell :is(.panel,.zip-ui-card,.mobile-quick-card,.zip-mobile-hub),
+ .zip-modal,.pro-toast,.review-risk-center,
+ .zip-feedback-banner {border-width:2px;border-color:var(--pro-border-strong);}
+ .pro-shell .hint,.pro-toast-copy p,.review-risk-item-content small {color:var(--pro-text);}
+ .pro-shell :is(button,a,input,select,textarea,summary):focus-visible,
+ .zip-modal :is(button,a,input,select,textarea,summary):focus-visible {
+   outline-width:3px!important;
+ }
+}
+@media (prefers-reduced-motion:reduce) {
+ html,body,.pro-shell {scroll-behavior:auto!important;}
+ .pro-shell *, .pro-shell *::before,.pro-shell *::after,
+ .zip-modal,.zip-modal *, .zip-modal::backdrop,.pro-toast,.pro-toast * {
+   animation-duration:0.01ms!important;
+   animation-iteration-count:1!important;
+   transition-duration:0.01ms!important;
+ }
+}
+/* 320–360px: Risk Center badges must wrap to their own row rather than
+   compress headings to one word per line. This was reproduced in Chromium QA. */
+@media (max-width:360px) {
+ .review-risk-head,.review-risk-item-top {flex-wrap:wrap;}
+ .review-risk-heading {flex:1 1 calc(100% - 48px);min-width:calc(100% - 48px);}
+ .review-risk-count {margin-left:48px;}
+ .review-risk-item-content {flex:1 1 calc(100% - 36px);min-width:calc(100% - 36px);}
+ .review-risk-state {margin-left:36px;}
+ .review-risk-item-content strong {overflow-wrap:break-word;}
+}

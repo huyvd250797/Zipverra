@@ -20,17 +20,16 @@ test('PWA manifest supports standalone iOS/Android installation with raster icon
   }
 });
 
-test('mobile viewport prevents zoom and uses edge-to-edge safe areas', () => {
+test('mobile viewport allows zoom and uses edge-to-edge safe areas', () => {
   const layout = source('app/layout.jsx');
   const style = source('app/globals.css');
   const guard = source('app/components/MobileViewportGuard.jsx');
-  assert.match(layout, /maximumScale:\s*1/);
-  assert.match(layout, /userScalable:\s*false/);
+  assert.doesNotMatch(layout, /maximumScale:\s*1/);
+  assert.doesNotMatch(layout, /userScalable:\s*false/);
   assert.match(layout, /viewportFit:\s*'cover'/);
-  assert.match(style, /touch-action:pan-x pan-y/);
+  assert.match(style, /touch-action:auto/);
   assert.match(style, /\.field input,\.field select\{font-size:16px\}/);
-  assert.match(guard, /touches\.length > 1/);
-  assert.match(guard, /removeEventListener\('gesturestart'/);
+  assert.doesNotMatch(guard, /preventDefault\(|touchmove|gesturestart/);
 });
 
 test('splash displays on first HTML paint and has a network failsafe', () => {

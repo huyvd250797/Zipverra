@@ -18,6 +18,7 @@ import './styles/stable-experience-v383.css';
 import './styles/notifications-v384.css';
 import './styles/review-risk-v385.css';
 import './styles/premium-interactions-v386.css';
+import './styles/accessibility-visual-qa-v387.css';
 
 export const metadata = {
   title: 'Zipverra Pro — GitHub Workspace',
@@ -30,8 +31,8 @@ export const metadata = {
 export const viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  // Do not restrict pinch-to-zoom or browser text magnification.
+  // iOS still uses viewportFit for safe-area edge-to-edge layout.
   viewportFit: 'cover',
   themeColor: '#0B111B',
 };

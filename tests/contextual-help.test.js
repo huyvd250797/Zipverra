@@ -44,7 +44,8 @@ test('help sheet can be closed, is labelled, keyboard focusable and prevents scr
   const modal = read('app/components/ModalSheet.jsx');
   const layout = read('app/layout.jsx');
   assert.match(content, /<ModalSheet open=\{open\}/);
-  assert.match(modal, /aria-label=\{title\}/);
+  assert.match(modal, /aria-labelledby=\{titleId\}/);
+  assert.match(modal, /<strong id=\{titleId\}>\{title\}<\/strong>/);
   assert.match(modal, /aria-label=\{`Đóng \$\{title\}`\}/);
   assert.match(modal, /event\.target === event\.currentTarget/);
   assert.match(styles, /::backdrop/);

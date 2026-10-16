@@ -14,7 +14,7 @@ const views = Object.freeze({
 export function UXViewIntro({ activeTab, online, pending, repoTools = null }) {
   const screen = views[activeTab] || views.repositories;
   return <div className="mobile-context pro-view-intro" aria-label={`Màn hình ${screen.title}`}>
-    <div className="pro-view-copy"><h2>{screen.title}</h2></div>
+    <div className="pro-view-copy"><h2 id="zipverra-current-view">{screen.title}</h2></div>
     <div className="pro-view-indicators"><span className={`mobile-connection ${online ? 'connected' : 'disconnected'}`} role="status" aria-label={online ? 'Online' : 'Offline'} title={online ? 'Online' : 'Offline'}>{online ? 'Online' : 'Offline'}</span>{repoTools ? <div className="pro-view-tools" role="group" aria-label="Repository controls">{repoTools}</div> : null}{pending && <span className="pro-pending-marker" aria-label="Có thao tác cần xác minh" title="Cần xác minh">!</span>}<ContextualHelp tab={activeTab}/></div>
   </div>;
 }
