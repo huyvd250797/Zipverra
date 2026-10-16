@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.8.3",
+  "version": "3.8.4",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.8.3 — Security Warning Override Hotfix: explicit confirmation for source risks in Push/PR",
+  "description": "Zipverra Pro v3.8.4 — Unified Notification System: deduplication, sequential toasts and confirmation dialogs",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

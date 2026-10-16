@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs';
 import { createInteractionNotice, shouldAnnounceEvent } from '../lib/interaction-feedback.js';
 const read = path => readFileSync(new URL(`../${path}`, import.meta.url),'utf8');
 
-test('v3.8.3 has separate optional motion layer loaded last',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.8.3');
+test('v3.8.4 has separate optional motion layer loaded last',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.8.4');
   const layout=read('app/layout.jsx');
   assert.ok(layout.indexOf('pro-design-system.css') < layout.indexOf('pro-motion.css'));
   for(const css of ['--motion-quick','--motion-enter','--motion-steady','--motion-curve','pro-toast-region','pro-skeleton','pro-enter','pro-toast-enter','prefers-reduced-motion:reduce'])
@@ -31,9 +31,9 @@ test('toast has accessible announcement and dismissal with stale-id guard',()=>{
   assert.match(ui,/role=\{notice\.tone === 'error' \? 'alert' : 'status'\}/);
   assert.match(ui,/aria-live=\{notice\.tone === 'error' \? 'assertive' : 'polite'\}/);
   assert.match(ui,/window\.clearTimeout\(timer\)/);
-  assert.match(ui,/onDismiss\(notice\.id\)/);
-  assert.match(page,/current\?\.id === id \? null : current/);
-  assert.match(page,/<FeedbackToast notice=\{notice\} onDismiss=\{dismissNotice\}/);
+  assert.match(ui,/startClose\(notice\.id\)/);
+  assert.match(page,/dismissQueuedNotice\(current, id\)/);
+  assert.match(page,/<FeedbackToast notice=\{notifications\.active\} queuedCount=\{notifications\.queued\.length\} onDismiss=\{dismissNotice\}/);
 });
 test('toast never echoes raw GitHub error or secret payload',()=>{
   for(const event of ['repo-selected','zip-invalid','review-ready','no-changes','push-verified','pr-verified','action-failed','network-offline','network-online']) {

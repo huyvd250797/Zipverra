@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { APP_VERSION, isNewVersion, shouldCheckAgain, safeToActivateUpdate, validRollbackJournal, RECOVERY_ROLLBACK_KEY } from '../../lib/pwa-reliability.js';
+import { FeedbackBanner } from './InteractionFeedback.jsx';
 
 /** Version awareness without caching private data or silently reloading during a Git write. */
 export function usePwaReliability({ busy = false, dirty = false, pending = false } = {}) {
@@ -109,13 +110,13 @@ export function usePwaReliability({ busy = false, dirty = false, pending = false
 
 /** A small, accessible banner that never reloads during an unresolved mutation or edit. */
 export function PwaStatusBanner({ online, reachable, updateAvailable, canApplyUpdate, applyUpdate, checking, checkForUpdates }) {
-  if (!online || !reachable) return <aside className="pwa-lifecycle-banner pwa-lifecycle-banner--offline" role="status" aria-live="polite">
-    <div><strong>Đang offline hoặc máy chủ không phản hồi</strong><p>Chỉ xem dữ liệu đã có. Không tự Push, Merge hoặc Rollback khi mạng bị gián đoạn.</p></div>
-    <button type="button" className="button secondary" disabled={!online || checking} onClick={checkForUpdates}>Thử lại</button>
-  </aside>;
+  if (!online || !reachable) return <FeedbackBanner tone="warning" className="pwa-lifecycle-banner pwa-lifecycle-banner--offline" title="Đang offline hoặc máy chủ không phản hồi"
+    actions={<button type="button" className="button secondary" disabled={!online || checking} onClick={checkForUpdates}>Thử lại</button>}>
+    <p>Chỉ xem dữ liệu đã có. Không tự Push, Merge hoặc Rollback khi mạng bị gián đoạn.</p>
+  </FeedbackBanner>;
   if (!updateAvailable) return null;
-  return <aside className="pwa-lifecycle-banner pwa-lifecycle-banner--update" role="status" aria-live="polite">
-    <div><strong>Zipverra có phiên bản mới</strong><p>{canApplyUpdate ? 'Cập nhật khi sẵn sàng. Trang sẽ tải lại sau khi xác nhận.' : 'Hoàn tất Push, bỏ bản Review chưa commit, hoặc lưu bản nháp trước khi cập nhật.'}</p></div>
-    <button className="button secondary" type="button" onClick={applyUpdate} disabled={!canApplyUpdate}>Cập nhật</button>
-  </aside>;
+  return <FeedbackBanner tone="info" className="pwa-lifecycle-banner pwa-lifecycle-banner--update" title="Zipverra có phiên bản mới"
+    actions={<button className="button secondary" type="button" onClick={applyUpdate} disabled={!canApplyUpdate}>Cập nhật</button>}>
+    <p>{canApplyUpdate ? 'Cập nhật khi sẵn sàng. Trang sẽ tải lại sau khi xác nhận.' : 'Hoàn tất Push, bỏ bản Review chưa commit, hoặc lưu bản nháp trước khi cập nhật.'}</p>
+  </FeedbackBanner>;
 }

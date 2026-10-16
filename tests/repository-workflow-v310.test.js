@@ -149,8 +149,8 @@ test('branch list denies unauthorized repo before contacting branch endpoint',as
 test('changing repo or branch warns before discarding unpushed review state',()=>{
   const page=read('app/page.jsx');
   const sheets=read('app/components/RepositoryWorkflowSheets.jsx');
-  assert.match(page,/Đổi repository sẽ bỏ ZIP và Review chưa Push/);
-  assert.match(page,/Đổi branch sẽ bỏ Review ZIP chưa Push/);
+  assert.match(page,/title: 'Đổi repository\?'[\s\S]*?Review chưa Push sẽ bị bỏ/);
+  assert.match(page,/title: 'Đổi branch\?'[\s\S]*?Review ZIP chưa Push sẽ bị bỏ/);
   assert.match(page,/if \(value\.toLowerCase\(\) === `\$\{owner\}\/\$\{repo\}`\.toLowerCase\(\)\)/);
   assert.match(page,/nextBranch === branch/);
   assert.match(sheets,/window\.requestAnimationFrame\(\(\) => onChoose\(name\)\)/);

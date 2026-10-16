@@ -1,3 +1,11 @@
+## v3.8.4 — Unified Notification System
+- Bounded, deduplicated toast queue, prioritizing verified GitHub results.
+- Avoid repeated toasts for state already rendered as inline warnings/errors.
+- Shared persistent banner for network and PWA update states.
+- Native confirmation dialogs replaced for destructive restart, local history removal, repo/branch changes and Workspace edits.
+- Accessibility, motion and version synchronization; 329 regression tests passed.
+- Production build verification pending due npm registry DNS failure.
+
 # Changelog
 
 ## v3.8.3 — Motion, Restart & Project Identity Warning Hotfix (16/10/2026)

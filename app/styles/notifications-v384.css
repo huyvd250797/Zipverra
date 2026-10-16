@@ -1,0 +1,36 @@
+/* Zipverra v3.8.4 — uniform, accessible non-obstructive feedback. */
+@keyframes zip-notification-exit {to {opacity:0;transform:translate3d(0,10px,0) scale(.985)}}
+.pro-toast--exiting {animation:zip-notification-exit 170ms ease-in forwards;pointer-events:none;}
+.pro-toast-copy strong {font-size:14px;line-height:1.4;}
+.pro-toast-copy p {font-size:12px;line-height:1.55;}
+.pro-toast-pending {display:block;color:var(--pro-muted);margin-top:7px;font-size:11px;font-weight:600;}
+.pro-toast-dismiss {min-width:44px;min-height:44px;margin:-7px -7px -7px 0;}
+.pro-toast-dismiss:disabled {opacity:.55;cursor:default;}
+.zip-feedback-banner {display:flex;gap:12px;align-items:flex-start;padding:13px 14px;margin:12px 0;border:1px solid var(--pro-border-strong);border-radius:14px;background:var(--pro-surface-2);color:var(--pro-text);}
+.zip-feedback-banner-icon {display:grid;place-items:center;flex:none;width:26px;height:26px;border-radius:50%;background:var(--pro-accent-surface);color:var(--pro-accent);font-weight:800;}
+.zip-feedback-banner--warning {border-color:var(--pro-warning);}
+.zip-feedback-banner--critical,.zip-feedback-banner--error {border-color:var(--pro-error);}
+.zip-feedback-banner--critical .zip-feedback-banner-icon,.zip-feedback-banner--error .zip-feedback-banner-icon {background:rgba(205,77,93,.14);color:var(--pro-error);}
+.zip-feedback-banner--warning .zip-feedback-banner-icon {background:rgba(227,163,72,.13);color:var(--pro-warning);}
+.zip-feedback-banner-body {flex:1;min-width:0;overflow-wrap:anywhere;font-size:12px;line-height:1.55;}
+.zip-feedback-banner-body strong {display:block;margin-bottom:4px;font-size:14px;line-height:1.4;}
+.zip-feedback-banner-actions {display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.zip-confirm-content {display:grid;gap:20px;padding:3px 0 6px;}
+.zip-confirm-content p {margin:0;font-size:14px;line-height:1.6;color:var(--pro-text);overflow-wrap:anywhere;}
+.zip-confirm-actions {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.zip-confirm-actions .button {min-height:46px;min-width:0;white-space:normal;text-align:center;}
+.zip-modal--confirm {width:min(calc(100% - 24px),420px);max-height:min(72dvh,calc(var(--zip-visible-height) - 20px));}
+.zip-modal--confirm .zip-modal-panel {max-height:min(72dvh,calc(var(--zip-visible-height) - 20px));}
+/* Persisting PWA notices have priority in document flow; toast never covers nav. */
+.pwa-lifecycle-banner {position:relative;z-index:1;}
+@media(max-width:360px) {.pro-toast-copy strong{font-size:13px}.pro-toast-copy p{font-size:12px}.zip-confirm-actions {grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce) {.pro-toast--exiting {animation:none!important}}
+
+/* Destructive confirmation is visually distinct without changing GitHub authorization. */
+.zip-confirm-actions .button.danger {background:#9e3346;border-color:#d76d7a;color:#fff;box-shadow:none;}
+.zip-confirm-actions .button.danger:hover {background:#b13b4d;}
+html[data-theme="light"] .zip-confirm-actions .button.danger {background:#ad3449;color:#fff;border-color:#972f42;}
+
+.pro-shell .pwa-lifecycle-banner>.zip-feedback-banner-actions {flex:0 0 auto;}
+.pro-shell .pwa-lifecycle-banner>.zip-feedback-banner-body {flex:1 1 auto;}
+@media(max-width:430px) {.pro-shell .pwa-lifecycle-banner{flex-wrap:wrap}.pro-shell .pwa-lifecycle-banner>.zip-feedback-banner-actions{margin-left:38px}}

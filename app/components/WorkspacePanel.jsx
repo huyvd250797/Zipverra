@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { makeLineDiff } from '../../lib/smart-push.js';
 import { highlightSegments } from '../../lib/workspace-highlight.js';
 import { workspaceBreadcrumbs, workspaceEntries, workspaceInsert } from '../../lib/workspace-ux.js';
+import { ConfirmationDialog, useConfirmationDialog } from './InteractionFeedback.jsx';
 
 function pickLanguage(path) {
   if (/\.(?:jsx?|tsx?|mjs|cjs)$/i.test(path)) return 'JavaScript / TypeScript';
@@ -16,6 +17,7 @@ function pickLanguage(path) {
 }
 function shortenHash(value) { return typeof value === 'string' ? value.slice(0, 10) : '—'; }
 export default function WorkspacePanel({ authenticated, owner, repo, branch, online, busy, onBack, api, onCommit, onDirtyChange }) {
+  const { ask: askConfirmation, request: confirmRequest, answer: answerConfirmation } = useConfirmationDialog();
   const [directory,setDirectory]=useState('');
   const [listing,setListing]=useState(null);
   const [selected,setSelected]=useState(null);
@@ -45,9 +47,9 @@ export default function WorkspacePanel({ authenticated, owner, repo, branch, onl
   const viewReady=Boolean(owner && repo && branch && authenticated);
 
   function clearEditor(){onDirtyChange?.(false);setSelected(null);setDraft('');setReview(null);setPane('code');setConfirmed(false);setAllowEmpty(false);setHistory(null);}
-  function mayDiscard(){return !dirty || window.confirm('Bản chỉnh sửa chưa được commit sẽ bị bỏ. Tiếp tục?');}
+  async function mayDiscard(){return !dirty || await askConfirmation({ title: 'Bỏ bản nháp chưa commit?', message: 'Thay đổi trong trình chỉnh sửa sẽ bị bỏ. Source trên GitHub không bị ảnh hưởng.', confirmLabel: 'Bỏ bản nháp', danger: true });}
   async function openDirectory(path){
-    if(locked||!mayDiscard())return;
+    if(locked||!await mayDiscard())return;
     clearEditor();setSuccess(null);setFilter('');setSearchResults(null);setError('');setWorking(true);
     try{const result=await api('workspace/list',{...coords,directory:path});setListing(result);setDirectory(path);}
     catch(e){setError(e.message);}
@@ -60,7 +62,7 @@ export default function WorkspacePanel({ authenticated, owner, repo, branch, onl
     try{const x=await api('workspace/search',{...coords,query:filter.trim()});setSearchResults(x);}catch(e){setError(e.message);}finally{setWorking(false);}
   }
   async function openFile(path){
-    if(locked||!mayDiscard())return;
+    if(locked||!await mayDiscard())return;
     clearEditor();setError('');setSuccess(null);setWorking(true);
     try{
       const value=await api('workspace/file',{...coords,path});
@@ -142,8 +144,8 @@ export default function WorkspacePanel({ authenticated, owner, repo, branch, onl
   }
   function toggleFolder(path){setFavoriteFolders(current=>current.includes(path)?current.filter(x=>x!==path):[...current.slice(-5),path]);}
 
-  return <article className="panel workspace-panel" data-mobile-view="repositories" aria-label="Repository Workspace">
-    <div className="workspace-heading"><div><span className="mini-label">ZIPVERRA / WORKSPACE</span><h2>Repository Explorer</h2><p>{owner}/{repo} · <code>{branch}</code></p></div><button type="button" className="button secondary workspace-back" disabled={working||busy} onClick={()=>{if(mayDiscard())onBack();}}>← Repos</button></div>
+  return <><ConfirmationDialog request={confirmRequest} onAnswer={answerConfirmation}/><article className="panel workspace-panel" data-mobile-view="repositories" aria-label="Repository Workspace">
+    <div className="workspace-heading"><div><span className="mini-label">ZIPVERRA / WORKSPACE</span><h2>Repository Explorer</h2><p>{owner}/{repo} · <code>{branch}</code></p></div><button type="button" className="button secondary workspace-back" disabled={working||busy} onClick={async()=>{if(await mayDiscard())onBack();}}>← Repos</button></div>
     <div className="workspace-intro">Duyệt source, xem code, chỉnh sửa và kiểm tra lịch sử file ngay trên điện thoại. ZIP Push vẫn là luồng chính.</div>
     {success && <div className="workspace-success" role="status"><strong>{success.kind==='verified'?'Nội dung đã được xác minh':'Commit thành công'}</strong><span>{success.path} · {shortenHash(success.sha)}</span>{success.url&&<a href={success.url} target="_blank" rel="noopener noreferrer">Mở commit GitHub ↗</a>}</div>}
     {error&&<div className="error-banner" role="alert">{error}</div>}
@@ -162,7 +164,7 @@ export default function WorkspacePanel({ authenticated, owner, repo, branch, onl
       {listing?.entries?.length>0&&entries.length===0&&<p className="workspace-empty">Không tìm thấy kết quả.</p>}
       {listing&&<small className="workspace-note">Đang duyệt HEAD {shortenHash(listing.head)} · {entries.length} mục. File nhị phân và file trên 64 KiB chỉ đọc / không hỗ trợ chỉnh sửa.</small>}
     </>:<div className="workspace-editor">
-      <div className="workspace-editor-title"><button type="button" className="workspace-return" disabled={working} onClick={()=>{if(mayDiscard())clearEditor();}}>← Danh sách</button><strong>{selected.path}</strong><span className="workspace-language">{pickLanguage(selected.path)}</span></div>
+      <div className="workspace-editor-title"><button type="button" className="workspace-return" disabled={working} onClick={async()=>{if(await mayDiscard())clearEditor();}}>← Danh sách</button><strong>{selected.path}</strong><span className="workspace-language">{pickLanguage(selected.path)}</span></div>
       <div className="workspace-editor-meta">HEAD: <code>{shortenHash(selected.head)}</code> · File SHA: <code>{shortenHash(selected.sha)}</code> · {selected.bytes} bytes</div>
       <nav className="workspace-view-tabs" aria-label="Chế độ xem và chỉnh sửa file">
         {[{id:'code',label:'Code'},{id:'edit',label:'Edit'},{id:'review',label:'Review',disabled:!review},{id:'history',label:'History'}].map(tab=><button type="button" key={tab.id} aria-current={pane===tab.id?'page':undefined} className={pane===tab.id?'active':''} disabled={locked||tab.disabled} onClick={()=>{if(tab.id==='history'){if(history)setPane('history');else readHistory();}else setPane(tab.id);}}>{tab.label}</button>)}
@@ -171,7 +173,7 @@ export default function WorkspacePanel({ authenticated, owner, repo, branch, onl
       {pane==='history'&&<section className="workspace-history" aria-label="Lịch sử file"><strong>Lịch sử của file</strong>{historyBusy?<p>Đang tải lịch sử…</p>:history?.length?history.map(h=><a key={h.sha} href={h.url||`https://github.com/${owner}/${repo}/commit/${h.sha}`} target="_blank" rel="noopener noreferrer"><code>{shortenHash(h.sha)}</code><span>{h.message}</span><span aria-hidden="true">↗</span></a>):<p>Chưa tìm thấy commit gần đây.</p>}</section>}
       {pane==='edit'&&<section className="workspace-edit-pane" aria-label="Quick Edit">
         <label className="workspace-input-label" htmlFor="workspace-editor-input">Source editor · UTF-8</label>
-        <div className="workspace-mobile-tools" role="toolbar" aria-label="Công cụ chỉnh sửa"><button type="button" disabled={locked} onClick={insertIndent}>↳ Indent</button><button type="button" disabled={locked||!dirty} onClick={()=>{if(window.confirm('Hoàn tác toàn bộ chỉnh sửa chưa commit?'))changeDraft(selected.content);}}>↶ Reset</button><span>{new TextEncoder().encode(draft).length.toLocaleString('vi-VN')} / 65.536 B</span></div>
+        <div className="workspace-mobile-tools" role="toolbar" aria-label="Công cụ chỉnh sửa"><button type="button" disabled={locked} onClick={insertIndent}>↳ Indent</button><button type="button" disabled={locked||!dirty} onClick={async()=>{if(await askConfirmation({ title: 'Hoàn tác thay đổi?', message: 'Toàn bộ thay đổi chưa commit trong file hiện tại sẽ bị hủy.', confirmLabel: 'Hoàn tác', danger: true }))changeDraft(selected.content);}}>↶ Reset</button><span>{new TextEncoder().encode(draft).length.toLocaleString('vi-VN')} / 65.536 B</span></div>
         <textarea ref={editorRef} id="workspace-editor-input" className="workspace-textarea" spellCheck={false} autoCapitalize="off" autoCorrect="off" value={draft} onChange={e=>changeDraft(e.target.value)} onKeyDown={e=>{if(e.key==='Tab'){e.preventDefault();insertIndent();}else if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();preview();}}} disabled={locked} rows={14} aria-label="Chỉnh sửa file source"/>
         <div className="workspace-editor-foot"><span>Chỉ lưu file text tối đa 64 KiB</span><span>{dirty?'● Chưa lưu':'Không có thay đổi'}</span></div>
         {!draft.length&&<label className="workspace-empty-confirm"><input type="checkbox" checked={allowEmpty} onChange={e=>{setAllowEmpty(e.target.checked);setReview(null);setConfirmed(false);}}/> Tôi xác nhận muốn lưu file rỗng.</label>}
@@ -181,5 +183,5 @@ export default function WorkspacePanel({ authenticated, owner, repo, branch, onl
       {pane==='review'&&review&&<section className="workspace-review" aria-label="Review thay đổi"><strong>Review · {selected.path}</strong><p>So sánh từ <code>{shortenHash(review.head)}</code> đến phiên bản mới. Preview hết hạn sau 5 phút.</p>{review.security?.findings?.length>0 && <div className="workspace-security"><strong>Security Scan · {review.security.warning} Warning</strong>{review.security.findings.map((f,i)=><p key={i}>{f.title} · {f.path}{f.line>0?`:${f.line}`:''}. {f.action}</p>)}</div>}<div className="workspace-diff">{diff?.truncated?<p>Diff quá dài để hiển thị đầy đủ. Xem lại nội dung trong editor và GitHub trước khi xác nhận.</p>:(diff?.lines||[]).map((line,i)=><div key={i} className={`diff-line diff-${line.kind}`}><span>{line.kind==='add'?'+':line.kind==='delete'?'−':' '}</span><code>{line.text||' '}</code></div>)}</div><label className="confirm-row"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)} disabled={locked}/><span>Tôi đã kiểm tra thay đổi và đồng ý tạo commit trên <b>{branch}</b>.</span></label><button type="button" className="button primary full" disabled={!confirmed||locked} onClick={save}>Commit & Save File</button><button type="button" className="button secondary full" disabled={locked} onClick={()=>setPane('edit')}>← Trở lại chỉnh sửa</button></section>}
       {pane==='code'&&<section className="workspace-code-pane" aria-label="Xem nội dung file"><pre className="workspace-code" aria-label="Nội dung file"><code>{codeLines.slice(0,900).map((line,i)=><span key={i} className="workspace-code-line"><span className="workspace-line-number" aria-hidden="true">{i+1}</span>{highlightSegments(line,pickLanguage(selected.path)).map((token,j)=><span key={j} className={`workspace-syntax-${token.kind}`}>{token.text}</span>)}</span>)}</code></pre>{codeLines.length>900&&<p className="workspace-note">Viewer chỉ hiển thị 900 dòng đầu tiên. Dùng Edit để xem toàn bộ file.</p>}</section>}
     </div>}
-  </article>;
+  </article></>;
 }

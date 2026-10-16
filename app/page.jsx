@@ -18,10 +18,11 @@ import { MOBILE_TABS, RECENTS_KEY, THEME_KEY, filterChanges, updateRecentReposit
 import { REPO_USAGE_KEY, normalizeRepositoryUsage, recordRepositorySelection, usageFromActivity } from '../lib/repository-suggestions.js';
 import { FAVORITES_KEY, analyzeSource, selectChanges, toggleExcluded, filterReview, sortedRepositories, updateFavorites, isTextPreviewable, decodePreview, makeLineDiff, transferEstimate } from '../lib/smart-push.js';
 import SplashScreen from './components/SplashScreen.jsx';
-import { FeedbackToast, LoadingSkeleton } from './components/InteractionFeedback.jsx';
+import { FeedbackToast, LoadingSkeleton, ConfirmationDialog, useConfirmationDialog } from './components/InteractionFeedback.jsx';
 import { usePwaReliability, PwaStatusBanner } from './components/PwaReliability.jsx';
 import RecoveryCenter from './components/RecoveryCenter.jsx';
 import { createInteractionNotice, shouldAnnounceEvent } from '../lib/interaction-feedback.js';
+import { INITIAL_NOTICES, enqueueNotice, dismissNotice as dismissQueuedNotice } from '../lib/notification-center.js';
 import { shouldWarnWorkspaceExit } from '../lib/workspace-ux.js';
 import { WorkflowStrip, CurrentRepository, StatusIndicator, UXViewIntro, StatusEmpty } from './components/ProfessionalUI.jsx';
 import { ReviewSummary, ReviewRiskSnapshot, LiveActivityFocus } from './components/PremiumWorkflow.jsx';
@@ -139,14 +140,20 @@ function Icon({ name, size = 20 }) {
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('repositories');
-  const [notice, setNotice] = useState(null);
+  const [notifications, setNotifications] = useState(INITIAL_NOTICES);
   const noticeSequence = useRef(0);
+  const { ask: askConfirmation, request: confirmRequest, answer: answerConfirmation } = useConfirmationDialog();
   const notify = useCallback((event, verified = false) => {
     if (!shouldAnnounceEvent(event, verified)) return;
     const message = createInteractionNotice(event);
-    if (message) setNotice({ ...message, id: ++noticeSequence.current });
+    // Errors, security risks and repository/review states are already displayed
+    // contextually: don't announce the same event again in a floating toast.
+    if (message && message.presentation !== 'inline') {
+      const nextNotice = { ...message, id: ++noticeSequence.current };
+      setNotifications(current => enqueueNotice(current, nextNotice));
+    }
   }, []);
-  const dismissNotice = useCallback((id) => setNotice(current => current?.id === id ? null : current), []);
+  const dismissNotice = useCallback(id => setNotifications(current => dismissQueuedNotice(current, id)), []);
   const [workspaceOpen, setWorkspaceOpen] = useState(false);
   const [repoSheetOpen, setRepoSheetOpen] = useState(false);
   const [branchSheetOpen, setBranchSheetOpen] = useState(false);
@@ -374,8 +381,8 @@ export default function Home() {
     proActivityRef.current=next;setProActivity(next);
     try{localStorage.setItem(accountStorageKey(PRO_ACTIVITY_KEY,auth.user),JSON.stringify(next));}catch{}
   }
-  function clearLocalActions() {
-    if (!window.confirm('Xóa toàn bộ nhật ký hoạt động được lưu trên thiết bị này? Lịch sử GitHub không bị ảnh hưởng.')) return;
+  async function clearLocalActions() {
+    if (!await askConfirmation({ title: 'Xóa nhật ký trên thiết bị?', message: 'Toàn bộ nhật ký hoạt động lưu trên thiết bị này sẽ bị xóa. Lịch sử commit trên GitHub không bị ảnh hưởng.', confirmLabel: 'Xóa nhật ký', danger: true })) return;
     proActivityRef.current=[];setProActivity([]);
     try{localStorage.removeItem(accountStorageKey(PRO_ACTIVITY_KEY,auth.user));}catch{}
   }
@@ -547,13 +554,14 @@ export default function Home() {
     setProgress(0);
     if (!pendingCommit) setPhase(PUSH_STAGES.IDLE);
   };
-  function restartWorkspace() {
+  async function restartWorkspace() {
     // A pending write must be verified, never silently hidden by a reset.
     if (busy || loadingRepos || pendingCommit || pendingPR) {
-      window.alert('Đang xử lý hoặc có thao tác GitHub cần xác minh. Mở Activity và hoàn tất trước khi khởi động lại.');
+      await askConfirmation({ title: 'Chưa thể khởi động lại', message: 'Đang xử lý hoặc có thao tác GitHub cần xác minh. Mở Activity và hoàn tất trước khi khởi động lại.', confirmLabel: 'Đã hiểu' });
       return;
     }
-    if ((file || preview || workspaceDirtyRef.current) && !window.confirm('Khởi động lại Zipverra? Repository, ZIP, Review và bản nháp chưa commit đang chọn sẽ bị bỏ. Lịch sử GitHub và tùy chọn giao diện vẫn được giữ.')) return;
+    if ((file || preview || workspaceDirtyRef.current) && !await askConfirmation({ title: 'Khởi động lại Zipverra?', message: 'Repository, ZIP, Review và bản nháp chưa commit đang chọn sẽ bị bỏ. Lịch sử GitHub và tùy chọn giao diện vẫn được giữ.', confirmLabel: 'Khởi động lại', danger: true })) return;
+    if (busy || loadingRepos || pendingCommit || pendingPR) return;
     clearUploadCheckpoint();
     // Unmount all transient editors/sheets and request a clean, fully reloaded home screen.
     window.location.assign(window.location.pathname);
@@ -582,11 +590,12 @@ export default function Home() {
     } catch (e) { setError(e.message); setStatus(''); }
     finally { setBusy(false); setLoadingRepos(false); }
   }
-  function chooseRepo(value) {
+  async function chooseRepo(value) {
     if (!value || busy || pendingCommit || pendingPR) return;
     // Re-selecting the same repo must not erase an uncommitted ZIP Review.
     if (value.toLowerCase() === `${owner}/${repo}`.toLowerCase()) { goToTab('home'); return; }
-    if (file && phase !== PUSH_STAGES.SUCCEEDED && !window.confirm('Đổi repository sẽ bỏ ZIP và Review chưa Push. Tiếp tục?')) return;
+    if (file && phase !== PUSH_STAGES.SUCCEEDED && !await askConfirmation({ title: 'Đổi repository?', message: 'ZIP và Review chưa Push sẽ bị bỏ. Thao tác đã ghi lên GitHub không bị ảnh hưởng.', confirmLabel: 'Đổi repository', danger: true })) return;
+    if (busy || pendingCommit || pendingPR) return;
     if (!canLeaveWorkspace('', true)) return;
     workspaceDirtyRef.current = false;setWorkspaceOpen(false);
     const index = value.indexOf('/');
@@ -600,9 +609,10 @@ export default function Home() {
     notify('repo-selected');
     goToTab('home');
   }
-  function chooseBranch(nextBranch) {
+  async function chooseBranch(nextBranch) {
     if (!nextBranch || nextBranch === branch || busy || pendingCommit || pendingPR) return;
-    if (file && phase !== PUSH_STAGES.SUCCEEDED && !window.confirm('Đổi branch sẽ bỏ Review ZIP chưa Push. Tiếp tục?')) return;
+    if (file && phase !== PUSH_STAGES.SUCCEEDED && !await askConfirmation({ title: 'Đổi branch?', message: 'Bản Review ZIP chưa Push sẽ bị bỏ. Không thay đổi các commit đã có trên GitHub.', confirmLabel: 'Đổi branch', danger: true })) return;
+    if (busy || pendingCommit || pendingPR) return;
     change(setBranch, nextBranch);
   }
   function chooseFile(next) {
@@ -943,13 +953,14 @@ export default function Home() {
   return <>
     <MobileViewportGuard/>
     <SplashScreen loading={auth.loading}/>
-    <FeedbackToast notice={notice} onDismiss={dismissNotice}/>
+    <FeedbackToast notice={notifications.active} queuedCount={notifications.queued.length} onDismiss={dismissNotice}/>
+    <ConfirmationDialog request={confirmRequest} onAnswer={answerConfirmation}/>
     <a className="polish-skip-link" href="#zipverra-main">Bỏ qua điều hướng, đến nội dung chính</a>
     <div className="shell pro-shell polish-shell">
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar" role="banner">
       <button type="button" className="brand brand-restart" onClick={restartWorkspace} aria-label="Khởi động lại Zipverra về màn hình ban đầu" title="Khởi động lại ứng dụng và bỏ lựa chọn hiện tại"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span><em> Pro</em></strong><small>MOBILE GIT WORKSPACE</small></div></button>
-      <div className="header-actions">{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.8.3</span></div>
+      <div className="header-actions">{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.8.4</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} repoTools={activeTab === 'repositories' && auth.authenticated ? <button type="button" className={`repo-refresh-icon${loadingRepos ? ' is-loading' : ''}`} onClick={restartWorkspace} disabled={busy || loadingRepos || Boolean(pendingCommit || pendingPR)} aria-label="Khởi động lại ứng dụng, bỏ các lựa chọn và tải lại danh sách repository" title="Khởi động lại từ đầu"><Icon name="refresh" size={17}/></button> : null}/>
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
@@ -1098,7 +1109,7 @@ export default function Home() {
             <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
               profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
               onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.8.3</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.8.4</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -1109,7 +1120,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.8.3</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.8.4</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <ModalSheet open={Boolean(preview && securityDialogOpen && requiresConsent)} onClose={() => setSecurityDialogOpen(false)} title="Cảnh báo thông tin nhạy cảm" variant="sheet">
     <div className="sensitive-consent-modal" role="alert">

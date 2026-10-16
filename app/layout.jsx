@@ -15,6 +15,7 @@ import './styles/premium-workflow-v350.css';
 import './styles/modal-motion-v360.css';
 import './styles/visual-qa-v380.css';
 import './styles/stable-experience-v383.css';
+import './styles/notifications-v384.css';
 
 export const metadata = {
   title: 'Zipverra Pro — GitHub Workspace',
