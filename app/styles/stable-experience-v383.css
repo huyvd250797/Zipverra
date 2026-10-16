@@ -1,0 +1,37 @@
+/* v3.8.3: deliberate, reversible, reduced-motion-safe transitions. */
+@keyframes zip383-sheet-enter{from{opacity:0;transform:translate3d(0,30px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes zip383-sheet-exit{from{opacity:1;transform:translate3d(0,0,0)}to{opacity:0;transform:translate3d(0,38px,0)}}
+@keyframes zip383-dialog-enter{from{opacity:0;transform:scale(.985)}to{opacity:1;transform:scale(1)}}
+@keyframes zip383-dialog-exit{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(.985)}}
+@keyframes zip383-backdrop-enter{from{opacity:0}to{opacity:1}}
+@keyframes zip383-backdrop-exit{from{opacity:1}to{opacity:0}}
+@keyframes zip383-view-enter{from{opacity:0}to{opacity:1}}
+@keyframes zip383-view-exit{from{opacity:1}to{opacity:0}}
+.zip-modal[open].zip-modal--sheet:not(.zip-modal--exiting){animation:zip383-sheet-enter 270ms cubic-bezier(.2,.8,.2,1) both;}
+.zip-modal[open].zip-modal--sheet.zip-modal--exiting{animation:zip383-sheet-exit 210ms ease-in both!important;pointer-events:none;}
+.zip-modal[open]:not(.zip-modal--sheet):not(.zip-modal--exiting){animation:zip383-dialog-enter 220ms ease-out both;}
+.zip-modal[open].zip-modal--exiting:not(.zip-modal--sheet){animation:zip383-dialog-exit 210ms ease-in both!important;pointer-events:none;}
+.zip-modal[open]:not(.zip-modal--exiting)::backdrop{animation:zip383-backdrop-enter 270ms ease both;}
+.zip-modal[open].zip-modal--exiting::backdrop{animation:zip383-backdrop-exit 210ms ease both!important;}
+.pro-shell main[data-active-view] .content-grid [data-mobile-view],.pro-shell .pro-view-intro{animation:zip383-view-enter 215ms ease-out both;}
+.pro-shell main.zip-view-exiting .content-grid [data-mobile-view],.pro-shell main.zip-view-exiting ~ .pro-view-intro{animation:zip383-view-exit 150ms ease-in both!important;pointer-events:none;}
+.pro-shell main.zip-view-exiting{animation:zip383-view-exit 150ms ease-in both;pointer-events:none;}
+.pro-shell .brand-restart{display:flex;align-items:center;gap:10px;text-align:left;border:0;background:none;color:inherit;padding:0;cursor:pointer;font:inherit;min-width:0;}
+.pro-shell .brand-restart:focus-visible{outline:2px solid var(--pro-accent);outline-offset:5px;border-radius:12px;}
+.project-mismatch-alert{border:2px solid #db5767;border-radius:16px;padding:15px;background:color-mix(in srgb,#8e2435 29%,var(--pro-surface));color:var(--pro-text);margin:14px 0;display:grid;gap:9px;}
+.project-mismatch-title{display:flex;align-items:center;gap:9px;color:#ff8d9a;line-height:1.4;}
+.project-mismatch-alert p{margin:0;font-size:12px;line-height:1.6;overflow-wrap:anywhere;}
+.project-mismatch-alert .project-mismatch-evidence{font-size:11px;color:var(--pro-muted);}
+.project-mismatch-consent{margin-top:5px!important;align-items:center;}
+.project-identity-notice{padding:11px 13px;border:1px solid var(--pro-warning);border-radius:12px;background:color-mix(in srgb,var(--pro-warning) 12%,var(--pro-surface));font-size:12px;line-height:1.5;margin:12px 0;}
+html[data-theme=light] .project-mismatch-alert{background:#fff0f1;color:#5b2030;}
+html[data-theme=light] .project-mismatch-title{color:#a52640;}
+html[data-theme=light] .project-mismatch-alert .project-mismatch-evidence{color:#73515c;}
+html[data-theme=light] .project-identity-notice{color:#775023;background:#fff6e2;}
+@media(prefers-reduced-motion:reduce){.zip-modal[open],.zip-modal[open]::backdrop,.pro-shell main[data-active-view],.pro-shell main[data-active-view] .content-grid [data-mobile-view],.pro-shell .pro-view-intro{animation:none!important;transition:none!important;}}
+
+/* The splash follows saved theme before hydration; no inverse-colored flash. */
+html[data-theme=light] .app-splash{background:#f3f8fc;color:#17374e;}
+html[data-theme=light] .app-splash__glow{background:radial-gradient(ellipse 57% 38% at 50% 44%,#a8eee099,transparent 78%);}
+html[data-theme=light] .app-splash__tagline,html[data-theme=light] .app-splash__status{color:#506c80;}
+html[data-theme=light] .app-splash__footer{color:#61798a;}

@@ -1,11 +1,21 @@
 # Changelog
 
+## v3.8.3 — Motion, Restart & Project Identity Warning Hotfix (16/10/2026)
+
+- Native ModalSheet: opening bottom sheet slides upward while fading in, dismissal slides downward while fading out; native dialog remains mounted until exit animation completes. Escape/backdrop/close use the same path, with iOS scroll locking, keyboard sizing and reduced-motion support unchanged.
+- Tab transitions: short fade-out for the old view and fade-in for the next view without clearing draft state during normal tab switching.
+- Clicking the GitHub repository refresh **icon** or the Zipverra **brand icon/title** restarts the application to its initial unselected repository/ZIP/Review state; preserves theme, account-scoped favorites/history and verified GitHub history. In-progress mutations and unresolved pending journals block accidental reset.
+- New **advisory project identity analyzer** compares source tree path overlap, root package metadata (when safely retrievable), and equal Git blob hashes. A high-confidence mismatch is highlighted in red after ZIP analysis. User can still Push/PR by ticking an additional acknowledgment plus existing Commit & Push confirmation. Small/empty repositories do not yield false strong mismatch claims. Project identity is heuristic and cannot be proven solely from paths/hashes.
+- Pre-paint theme initialization reads saved dark/light/system choice before app appears; defers writing settings until local preference was loaded. The splash follows theme and prevents light-to-dark flash.
+- Added 10 focused tests, now **320/320 passing**; 96 JS/JSX files pass TypeScript parsing. Next.js production build remains unverified because npm registry resolution failed (`EAI_AGAIN`). No GitHub write endpoint changed.
+- Maintenance hotfix: Feature Freeze remains in force.
+
 ## v3.8.2 — Security Warning Confirmation Hotfix (15/10/2026)
 - Critical/credential trong ZIP Review được xử lý nhất quán bằng modal **Có / Không**; chỉ khi chọn Có mới cho phép tiếp tục Commit & Push/PR sau bước xác nhận thông thường.
 - Sau khi đồng ý, cảnh báo Critical không còn trình bày như lỗi chặn vĩnh viễn; Smart ZIP Analyzer chuyển `SECRET_FILE` sang cảnh báo thay vì block cứng.
 - Sửa fixture trong `tests/source-security.test.js`: tạo mẫu private key giả tại runtime, tránh bị v3.8.0 chặn khi chính ZIP Zipverra được upload để nâng cấp.
 - Backend giữ security scan, kiểm tra signed blob proofs và xác nhận; không bỏ qua đường dẫn ZIP nguy hiểm, GitHub permissions/branch protection, Push Protection và điều kiện xác minh.
-- Đồng bộ PWA cache/version v3.8.2; tổng 310 automated tests.
+- Đồng bộ PWA cache/version v3.8.3; tổng 310 automated tests.
 - Giữ Feature Freeze; đây là hotfix không bổ sung module.
 
 ## v3.8.1 — Sensitive File Consent Hotfix (15/10/2026)

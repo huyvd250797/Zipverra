@@ -8,11 +8,11 @@ const page = read('app/page.jsx');
 const css = read('app/styles/visual-qa-v380.css');
 const layout = read('app/layout.jsx');
 
-test('v3.8.2 consistent runtime, service worker cache, footer and stylesheet order',()=>{
-  assert.equal(JSON.parse(read('package.json')).version, '3.8.2');
-  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.8\.2'/);
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.8\.2/);
-  assert.match(page, /Zipverra · v3\.8\.2/);
+test('v3.8.3 consistent runtime, service worker cache, footer and stylesheet order',()=>{
+  assert.equal(JSON.parse(read('package.json')).version, '3.8.3');
+  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.8\.3'/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.8\.3/);
+  assert.match(page, /Zipverra · v3\.8\.3/);
   assert.ok(layout.indexOf('modal-motion-v360.css') < layout.indexOf('visual-qa-v380.css'));
 });
 

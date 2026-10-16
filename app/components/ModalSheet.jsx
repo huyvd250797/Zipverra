@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { lockModalScroll } from '../../lib/modal-scroll-lock.js';
 import { modalViewportGeometry } from '../../lib/modal-viewport.js';
 import { UiIconButton } from './UnifiedUI.jsx';
@@ -8,11 +8,25 @@ import { UiIconButton } from './UnifiedUI.jsx';
 /** Native top-layer modal: only its scroll region scrolls; iOS keyboard safe. */
 export default function ModalSheet({ open, onClose, title, children, variant = 'sheet' }) {
   const dialogRef = useRef(null);
+  const [exiting, setExiting] = useState(false);
+  const closeTimerRef = useRef(null);
+  const closeRequestedRef = useRef(false);
   const callbackRef = useRef(onClose);
   callbackRef.current = onClose;
+  function requestClose() {
+    if (closeRequestedRef.current) return;
+    closeRequestedRef.current = true;
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    if (reduced) { callbackRef.current?.(); return; }
+    setExiting(true);
+    closeTimerRef.current = window.setTimeout(() => { callbackRef.current?.(); }, 225);
+  }
 
   useEffect(() => {
     if (!open) return;
+    closeRequestedRef.current = false;
+    // Never carry the exiting state into the next opening.
+    setExiting(false);
     const dialog = dialogRef.current;
     if (!dialog) return;
     const opener = document.activeElement;
@@ -32,8 +46,8 @@ export default function ModalSheet({ open, onClose, title, children, variant = '
         dialog.style.setProperty('--zip-keyboard-inset', `${keyboardInset}px`);
       });
     };
-    const onCancel = event => { event.preventDefault(); callbackRef.current?.(); };
-    const onClose = () => { if (!closing) callbackRef.current?.(); };
+    const onCancel = event => { event.preventDefault(); requestClose(); };
+    const onClose = () => { if (!closing) requestClose(); };
     const onFocusWithin = event => {
       if (!scrollRegion?.contains(event.target) || !event.target.matches?.('input, textarea, select, [contenteditable="true"]')) return;
       // Only the sheet scrolls when the virtual keyboard takes space.
@@ -59,6 +73,9 @@ export default function ModalSheet({ open, onClose, title, children, variant = '
     }
     return () => {
       closing = true;
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+      closeRequestedRef.current = false;
       dialog.removeEventListener('cancel', onCancel);
       dialog.removeEventListener('close', onClose);
       dialog.removeEventListener('focusin', onFocusWithin);
@@ -77,12 +94,12 @@ export default function ModalSheet({ open, onClose, title, children, variant = '
     };
   }, [open]);
 
-  return <dialog ref={dialogRef} className={`zip-modal zip-modal--${variant}`} aria-label={title}
-    onClick={event => { if (event.target === event.currentTarget) callbackRef.current?.(); }}>
+  return <dialog ref={dialogRef} className={`zip-modal zip-modal--${variant}${exiting ? ' zip-modal--exiting' : ''}`} aria-label={title}
+    onClick={event => { if (event.target === event.currentTarget) requestClose(); }}>
     <div className="zip-modal-panel">
       <header className="zip-modal-header">
         <strong>{title}</strong>
-        <UiIconButton className="zip-modal-close" onClick={() => callbackRef.current?.()} label={`Đóng ${title}`} aria-label={`Đóng ${title}`}>×</UiIconButton>
+        <UiIconButton className="zip-modal-close" onClick={requestClose} label={`Đóng ${title}`} aria-label={`Đóng ${title}`}>×</UiIconButton>
       </header>
       <div className="zip-modal-scroll" data-modal-scroll-region>{children}</div>
     </div>

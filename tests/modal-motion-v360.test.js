@@ -11,8 +11,8 @@ const layout = read('app/layout.jsx');
 const safe = { hasPreview:true, selectedCount:20, critical:0, authenticated:true,
   online:true, busy:false, pending:false, confirmed:false, syncDeleteCount:0, syncConfirmed:false };
 
-test('v3.8.2 includes modal-motion override after all prior UI layers',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.8.2');
+test('v3.8.3 includes modal-motion override after all prior UI layers',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.8.3');
   assert.match(layout,/import '\.\/styles\/modal-motion-v360\.css'/);
   assert.ok(layout.indexOf('premium-workflow-v350.css') < layout.indexOf('modal-motion-v360.css'));
 });
@@ -41,7 +41,7 @@ test('Critical risk blocks quick commit even after consent and highlights file p
   const component=read('app/components/PremiumWorkflow.jsx');
   assert.match(component,/premium-risk-\$\{tone\}/);
   assert.match(component,/criticalPaths\.join/);
-  assert.match(page,/disabled=\{busy \|\| !selectedChanges\.length \|\| \(requiresConsent && !sensitiveConsent\)\}/);
+  assert.match(page,/disabled=\{busy \|\| !selectedChanges\.length \|\| \(requiresConsent && !sensitiveConsent\)/);
 });
 test('Sync deletion requires its own checkbox before quick push',()=>{
   assert.equal(reviewReadiness({...safe,confirmed:true,syncDeleteCount:3}).code,'SYNC');
@@ -68,7 +68,7 @@ test('iOS viewport calculation adapts to keyboard and safe bounds',()=>{
 test('native dialog traps focus, Escape closes, background locked and focus returns',()=>{
   assert.match(modal,/lockModalScroll\(document, window, scrollRegion\)/);
   assert.match(modal,/dialog\.showModal\(\)/);
-  assert.match(modal,/event\.preventDefault\(\); callbackRef\.current\?\.\(\)/);
+  assert.match(modal,/event\.preventDefault\(\); requestClose\(\)/);
   assert.match(modal,/opener\.focus\?\.\(\{ preventScroll: true \}\)/);
   assert.match(modal,/dialog\.querySelector\('\.zip-modal-close'\)\?\.focus/);
   assert.match(modal,/viewport\?\.addEventListener\('resize'/);

@@ -14,6 +14,7 @@ import './styles/mobile-layout-v340.css';
 import './styles/premium-workflow-v350.css';
 import './styles/modal-motion-v360.css';
 import './styles/visual-qa-v380.css';
+import './styles/stable-experience-v383.css';
 
 export const metadata = {
   title: 'Zipverra Pro — GitHub Workspace',
@@ -33,5 +34,5 @@ export const viewport = {
 };
 
 export default function RootLayout({ children }) {
-  return <html lang="vi"><body>{children}</body></html>;
+  return <html lang="vi" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{__html:`(function(){try{var v=localStorage.getItem('zipverra.theme.v1');var choice=(v==='light'||v==='dark'||v==='system')?v:'dark';var light=choice==='light'||(choice==='system'&&matchMedia('(prefers-color-scheme: light)').matches);document.documentElement.setAttribute('data-theme',light?'light':'dark');document.documentElement.style.colorScheme=light?'light':'dark';}catch(e){document.documentElement.setAttribute('data-theme','dark');}})();`}}/></head><body>{children}</body></html>;
 }

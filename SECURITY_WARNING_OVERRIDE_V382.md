@@ -1,4 +1,4 @@
-# Zipverra Pro v3.8.2 — Security Warning Confirmation
+# Zipverra Pro v3.8.3 — Security Warning Confirmation
 
 ## Các trường hợp được phép tiếp tục sau xác nhận
 
@@ -19,7 +19,7 @@ Trong **Upload ZIP → Analyze → Review → Direct Push / Create PR**, Securit
 
 ## Chú ý bootstrapping từ v3.8.0
 
-Bản cũ v3.8.0 vẫn chặn Critical vô điều kiện khi bạn chưa deploy hotfix. Để upload chính source Zipverra v3.8.2 qua v3.8.0, một fixture mô phỏng private key trong `tests/source-security.test.js` đã được sửa để *không chứa toàn bộ private key header dạng nguyên văn trên đĩa*. Bài test vẫn ghép header tại runtime và đảm bảo scanner nhận diện.
+Bản cũ v3.8.0 vẫn chặn Critical vô điều kiện khi bạn chưa deploy hotfix. Để upload chính source Zipverra v3.8.3 qua v3.8.0, một fixture mô phỏng private key trong `tests/source-security.test.js` đã được sửa để *không chứa toàn bộ private key header dạng nguyên văn trên đĩa*. Bài test vẫn ghép header tại runtime và đảm bảo scanner nhận diện.
 
 Trong trường hợp GitHub thực tế từ chối PR hoặc Push bởi push protection, phải chỉnh source/revoke secret theo chỉ dẫn GitHub; app không thể ghi đè chính sách GitHub.
 

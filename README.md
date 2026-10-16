@@ -1,8 +1,16 @@
-# Zipverra Pro v3.8.2 — Security Warning Confirmation Hotfix
+# Zipverra Pro v3.8.3 — Security Warning Confirmation Hotfix
 
 **Source baseline:** Zipverra Pro v3.8.0 — Visual QA & Stable UI Release. Maintenance hotfix preserves the existing GitHub App OAuth, Direct Push, Pull Request, Workspace, History, Rollback, Recovery, security scanner, and five-tab mobile workflow.
 
-## Maintenance hotfix v3.8.2
+## v3.8.3 — Motion / Clean Restart / Wrong-Project Warning / Instant Theme
+
+- ZIP mới được phân tích và so với cây file trên branch, tên `package.json` và SHA file (khi có). Cảnh báo đỏ khi nghi ngờ chọn nhầm source dự án, vẫn cho phép Push/PR sau khi xác nhận thêm.
+- Chạm logo/tên Zipverra hoặc icon làm mới tại tab Repos sẽ tải lại ứng dụng về trạng thái **chưa chọn repository/file/Review**. Không tự reset khi thao tác GitHub đang chạy hoặc cần xác minh.
+- Bottom sheet trượt lên + fade-in khi mở; trượt xuống + fade-out khi đóng. Tab có fade-out/fade-in. Tôn trọng `prefers-reduced-motion`.
+- Dark/Light/System được xác định trước khi hiển thị app; không đổi theme giữa lúc khởi động.
+- `npm test`: 320 tests. Sau khi push GitHub, Vercel cần chạy `npm install` + `npm run build` để xác nhận production build.
+
+## Maintenance hotfix v3.8.3
 
 - **Không còn tự chặn source ở Review chỉ vì Security Scan phát hiện Critical:** app mở hộp thoại Có/Không; chọn Có và tick xác nhận Review thì Direct Push hoặc PR được phép tiếp tục, backend vẫn quét lại và xác minh cờ đồng ý. Không tự Push khi chỉ chọn Có.
 - **Rà soát giao diện:** trạng thái đã đồng ý được thể hiện là cảnh báo cần lưu ý (không còn viền đỏ kiểu “bị chặn”); tiêu đề, hướng dẫn và Smart ZIP Analyzer thống nhất với quy trình xác nhận.
@@ -28,16 +36,16 @@
 
 ## Deployment to GitHub + Vercel
 
-1. Extract the archive and push the **contents of `Zipverra-v3.8.2/`** into the root of the existing application repository; do not push the outer folder as a nested app.
+1. Extract the archive and push the **contents of `Zipverra-v3.8.3/`** into the root of the existing application repository; do not push the outer folder as a nested app.
 2. Keep your existing Vercel variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`. Update `APP_URL` only if the deployed domain has changed.
 3. Build on Vercel or another networked CI with `npm install --no-audit --no-fund`, `npm test`, `npm run build` using Node 22. Existing GitHub Actions workflow runs tests/build on push and PR.
-4. Verify `/api/version` displays `3.8.2`, and refresh the app to apply the public PWA service-worker cache version. Old public cache entries are removed after activation; private API/auth responses are never cached.
+4. Verify `/api/version` displays `3.8.3`, and refresh the app to apply the public PWA service-worker cache version. Old public cache entries are removed after activation; private API/auth responses are never cached.
 5. Test on an authorized throwaway repository: select ZIP with hundreds of files, check the quick confirmation flow without opening details, expand and scroll the file list, return to confirmation, then separately verify Sync delete acknowledgement, Critical consent dialog (No/Yes) and PR behavior. Test rollback/Recovery after interrupted operations before using production repositories.
 6. Test actual iPhone Safari and installed standalone PWA keyboard, modal focus and scroll, dynamic safe area, dark/light, reduced motion, and Wi-Fi interruption before labeling production validated.
 
 ## Validation boundaries
 
-**Local:** 310 Node unit/regression tests passed for v3.8.2. Source and CSS checks and static Chromium viewport QA (when available) are documented in `VISUAL_QA_V380.md`. The environment could not finish fetching npm dependencies, so a production `next build`, authenticated GitHub E2E and real iPhone Safari/PWA verification have **not** been completed locally. A successful ZIP package by itself does not certify a Vercel deployment.
+**Local:** 310 Node unit/regression tests passed for v3.8.3. Source and CSS checks and static Chromium viewport QA (when available) are documented in `VISUAL_QA_V380.md`. The environment could not finish fetching npm dependencies, so a production `next build`, authenticated GitHub E2E and real iPhone Safari/PWA verification have **not** been completed locally. A successful ZIP package by itself does not certify a Vercel deployment.
 
 Read `VISUAL_QA_V380.md`, `RELEASE_VALIDATION.md` and `ROADMAP_NEXT.md` before production rollout.
 

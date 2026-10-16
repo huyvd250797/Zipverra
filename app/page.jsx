@@ -6,6 +6,7 @@ import { encodeBase64 } from '../lib/base64.js';
 import { readArchiveOffThread } from '../lib/archive-worker-client.js';
 import { manifestFingerprint, validatedCheckpoint, makeCheckpoint, uploadBlobsInBatches, UPLOAD_CHECKPOINT_KEY } from '../lib/upload-batches.js';
 import { calculateChanges, countChanges } from '../lib/operations.js';
+import { compareProjectIdentity, packageNameFromArchive, packageNameFromText } from '../lib/project-identity.js';
 import { zipCommitMessage } from '../lib/paths.js';
 import { makeReleaseBranch } from '../lib/branch-names.js';
 import { scanSelectedChanges, reportSelectedSecurity, needsSensitiveConsent } from '../lib/source-security.js';
@@ -160,6 +161,9 @@ export default function Home() {
   }
 
   const [theme, setTheme] = useState('dark');
+  const [themeReady, setThemeReady] = useState(false);
+  const [viewExiting, setViewExiting] = useState(false);
+  const viewTimerRef = useRef(null);
   const [prefersLight, setPrefersLight] = useState(false);
   const [proProfiles, setProProfiles] = useState([]);
   const [proActivity, setProActivity] = useState([]);
@@ -181,6 +185,7 @@ export default function Home() {
   const [transfer, setTransfer] = useState(null);
   const [changeFilter, setChangeFilter] = useState('all');
   const [syncConfirmed, setSyncConfirmed] = useState(false);
+  const [projectMismatchConfirmed, setProjectMismatchConfirmed] = useState(false);
   const [auth, setAuth] = useState({ loading: true, authenticated: false, user: null });
   const [repos, setRepos] = useState([]);
   const [installations, setInstallations] = useState([]);
@@ -222,6 +227,7 @@ export default function Home() {
       const oldTheme = window.localStorage.getItem(THEME_KEY);
       if (oldTheme === 'dark' || oldTheme === 'light' || oldTheme === 'system') setTheme(themeChoice(oldTheme));
     } catch { /* private browsing may block local storage */ }
+    setThemeReady(true);
   }, []);
   useEffect(() => {
     const query = window.matchMedia('(prefers-color-scheme: light)');
@@ -231,9 +237,11 @@ export default function Home() {
     return () => query.removeEventListener?.('change', onThemeChange);
   }, []);
   useEffect(() => {
+    if (!themeReady) return;
     document.documentElement.dataset.theme = resolveTheme(theme, prefersLight);
+    document.documentElement.style.colorScheme = resolveTheme(theme, prefersLight);
     try { window.localStorage.setItem(THEME_KEY, theme); } catch { /* optional preference */ }
-  }, [theme, prefersLight]);
+  }, [theme, prefersLight, themeReady]);
   // Move the viewport only after the new tab commits to the DOM. In mobile
   // Safari, scrollTo issued before setActiveTab renders can retain the previous
   // long Review/Recent Actions scroll position and hide Live Push progress.
@@ -242,6 +250,7 @@ export default function Home() {
   useEffect(() => {
     return scheduleTabViewport(window, document, activeTab, activityRef.current);
   }, [activeTab]);
+  useEffect(() => () => window.clearTimeout(viewTimerRef.current), []);
   function goToTab(tab) {
     if (!MOBILE_TABS.includes(tab) || !canLeaveWorkspace(tab)) return;
     if (tab === activeTab && typeof window !== 'undefined') {
@@ -249,7 +258,11 @@ export default function Home() {
       pendingSameTabScroll.current = scheduleTabViewport(window, document, tab, activityRef.current);
     }
     setRepoSheetOpen(false); setBranchSheetOpen(false);
-    setActiveTab(tab);
+    window.clearTimeout(viewTimerRef.current);
+    if (tab !== activeTab && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      setViewExiting(true);
+      viewTimerRef.current = window.setTimeout(() => { setActiveTab(tab); setViewExiting(false); }, 155);
+    } else { setActiveTab(tab); setViewExiting(false); }
   }
   function saveUploadCheckpoint(value) {
     try { window.localStorage.setItem(UPLOAD_CHECKPOINT_KEY, JSON.stringify(value)); } catch { /* no persistent storage available */ }
@@ -514,7 +527,7 @@ export default function Home() {
     syncConfirmed,
   }), [preview, selectedChanges.length, securityReport?.critical, sensitiveFindings.length, sensitiveConsent, auth.authenticated,
     online, pwa.reachable, busy, pendingCommit, pendingPR, confirmed, mode, stats?.delete, syncConfirmed]);
-  const canSubmitPush = pushReadiness.ready;
+  const canSubmitPush = pushReadiness.ready && (preview?.identity?.severity !== 'critical' || projectMismatchConfirmed);
   const copyCommitSha = useCallback(async (sha) => {
     if (!/^[a-f0-9]{40}$/i.test(sha || '')) return;
     try { await navigator.clipboard.writeText(sha); notify('sha-copied'); }
@@ -524,7 +537,7 @@ export default function Home() {
     setPreview(null);
     setFileDetailsOpen(false);
     setConfirmed(false);
-    setSyncConfirmed(false); setSensitiveConsent(false); setSecurityDialogOpen(false);
+    setSyncConfirmed(false); setSensitiveConsent(false); setSecurityDialogOpen(false); setProjectMismatchConfirmed(false);
     setChangeFilter('all');
     setExcludedPaths([]); setReviewSearch(''); setVisibleLimit(100); setDiffViewer(null); diffRequestRef.current += 1;
     setTransfer(null);
@@ -534,6 +547,17 @@ export default function Home() {
     setProgress(0);
     if (!pendingCommit) setPhase(PUSH_STAGES.IDLE);
   };
+  function restartWorkspace() {
+    // A pending write must be verified, never silently hidden by a reset.
+    if (busy || loadingRepos || pendingCommit || pendingPR) {
+      window.alert('Đang xử lý hoặc có thao tác GitHub cần xác minh. Mở Activity và hoàn tất trước khi khởi động lại.');
+      return;
+    }
+    if ((file || preview || workspaceDirtyRef.current) && !window.confirm('Khởi động lại Zipverra? Repository, ZIP, Review và bản nháp chưa commit đang chọn sẽ bị bỏ. Lịch sử GitHub và tùy chọn giao diện vẫn được giữ.')) return;
+    clearUploadCheckpoint();
+    // Unmount all transient editors/sheets and request a clean, fully reloaded home screen.
+    window.location.assign(window.location.pathname);
+  }
   function change(setter, value) {
     if (workspaceOpen && [setOwner,setRepo,setBranch].includes(setter)) {
       if (!canLeaveWorkspace('', true)) return;
@@ -624,15 +648,31 @@ export default function Home() {
       const remote = await api('snapshot', input);
       const changes = calculateChanges(archive.files, remote.files, mode);
       const insights = analyzeSource({ ...archive, changes });
+      // This read-only check is advisory: paths and manifests cannot prove project identity.
+      // Never block the upload if optional manifest retrieval fails.
+      let remotePackageName = '';
+      const initialIdentity = compareProjectIdentity({archiveFiles:archive.files,remoteFiles:remote.files});
+      if (initialIdentity.severity !== 'matched' && remote.files.some(f => f.type === 'blob' && f.path === 'package.json')) {
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => controller.abort(), 5500);
+        try {
+          const response = await fetch('/api/github/text', {method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({...input,expectedHead:remote.head,path:'package.json'}),signal:controller.signal});
+          if (response.ok) {const data=await response.json(); if (data.available) remotePackageName=packageNameFromText(data.content);}
+        } catch { /* heuristic remains available using file tree only */ }
+        finally { window.clearTimeout(timer); }
+      }
+      const identity=compareProjectIdentity({archiveFiles:archive.files,remoteFiles:remote.files,
+        localName:packageNameFromArchive(archive.files),remoteName:remotePackageName});
       // Web Worker already scans file contents. Fallback runs the same bounded scanner.
       if (!archive.security) archive.security=scanSelectedChanges(archive.files,archive.files.map(f=>({path:f.path,kind:'add'})));
       const releaseBranch = releaseStrategy === 'pr'
         ? makeReleaseBranch(file.name, crypto.randomUUID().replaceAll('-', '').slice(0, 8)) : null;
-      setPreview({ archive, remote, changes, insights, input: { owner: input.owner, repo: input.repo, branch: input.branch }, mode, filename: file.name, releaseStrategy, releaseBranch });
+      setPreview({ archive, remote, changes, insights, identity, input: { owner: input.owner, repo: input.repo, branch: input.branch }, mode, filename: file.name, releaseStrategy, releaseBranch });
       setFileDetailsOpen(reviewDisclosureDefaultOpen(changes.length));
       saveRecent(`${input.owner}/${input.repo}`);
       setChangeFilter('all'); setReviewSearch(''); setVisibleLimit(100); setExcludedPaths([]); setDiffViewer(null); diffRequestRef.current += 1;
-      setConfirmed(false); setSyncConfirmed(false); setSensitiveConsent(false);
+      setConfirmed(false); setSyncConfirmed(false); setSensitiveConsent(false); setProjectMismatchConfirmed(false);
       const selectedReport=reportSelectedSecurity(archive.security,changes);
       setSecurityDialogOpen(needsSensitiveConsent(selectedReport.findings));
       setStatus(changes.length ? `Đã phân tích: ${changes.length} thay đổi cần xử lý.` : 'ZIP và repository đã đồng bộ, không có gì cần push.');
@@ -655,7 +695,7 @@ export default function Home() {
     clearUploadCheckpoint();
     setPreview(null);
     setConfirmed(false);
-    setSyncConfirmed(false); setSensitiveConsent(false); setSecurityDialogOpen(false);
+    setSyncConfirmed(false); setSensitiveConsent(false); setSecurityDialogOpen(false); setProjectMismatchConfirmed(false);
     setChangeFilter('all'); setExcludedPaths([]); setDiffViewer(null);
     setError(''); setErrorHint('');
   }
@@ -773,12 +813,12 @@ export default function Home() {
 
   function updateSelection(path) {
     setExcludedPaths(current => toggleExcluded(preview?.changes || [], current, path));
-    setConfirmed(false); setSyncConfirmed(false); setSensitiveConsent(false); setSecurityDialogOpen(false);
+    setConfirmed(false); setSyncConfirmed(false); setSensitiveConsent(false); setSecurityDialogOpen(false); setProjectMismatchConfirmed(false);
   }
   function bulkSelection(keep) {
     if (!preview) return;
     setExcludedPaths(keep ? [] : preview.changes.map(change => change.path));
-    setConfirmed(false); setSyncConfirmed(false); setSensitiveConsent(false); setSecurityDialogOpen(false);
+    setConfirmed(false); setSyncConfirmed(false); setSensitiveConsent(false); setSecurityDialogOpen(false); setProjectMismatchConfirmed(false);
   }
   async function inspectChange(change) {
     if (!preview || busy) return;
@@ -908,13 +948,13 @@ export default function Home() {
     <div className="shell pro-shell polish-shell">
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar" role="banner">
-      <div className="brand"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span><em> Pro</em></strong><small>MOBILE GIT WORKSPACE</small></div></div>
-      <div className="header-actions">{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.8.2</span></div>
+      <button type="button" className="brand brand-restart" onClick={restartWorkspace} aria-label="Khởi động lại Zipverra về màn hình ban đầu" title="Khởi động lại ứng dụng và bỏ lựa chọn hiện tại"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span><em> Pro</em></strong><small>MOBILE GIT WORKSPACE</small></div></button>
+      <div className="header-actions">{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.8.3</span></div>
     </header>
-    <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} repoTools={activeTab === 'repositories' && auth.authenticated ? <button type="button" className={`repo-refresh-icon${loadingRepos ? ' is-loading' : ''}`} onClick={loadRepos} disabled={busy || loadingRepos} aria-label="Làm mới danh sách repository" title="Làm mới danh sách repository"><Icon name="refresh" size={17}/></button> : null}/>
+    <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} repoTools={activeTab === 'repositories' && auth.authenticated ? <button type="button" className={`repo-refresh-icon${loadingRepos ? ' is-loading' : ''}`} onClick={restartWorkspace} disabled={busy || loadingRepos || Boolean(pendingCommit || pendingPR)} aria-label="Khởi động lại ứng dụng, bỏ các lựa chọn và tải lại danh sách repository" title="Khởi động lại từ đầu"><Icon name="refresh" size={17}/></button> : null}/>
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
     {activeTab !== 'activity' && (error || busy) && <button type="button" className={`mobile-global-status ${error ? 'has-error' : ''}`} onClick={() => goToTab('activity')}><span>{error ? `Cần kiểm tra: ${error}` : `${status || 'Đang xử lý...'} · ${progress}%`}</span><Icon name="arrow" size={17}/></button>}
-    <main id="zipverra-main" tabIndex={-1} data-active-view={activeTab}>
+    <main id="zipverra-main" tabIndex={-1} data-active-view={activeTab} className={viewExiting ? 'zip-view-exiting' : ''}>
       {activeTab === 'home' && <WorkflowStrip currentStep={flowStep} onRepo={() => goToTab('repositories')} onUpload={() => goToTab('home')} onReview={goToReview} onActivity={() => goToTab('activity')}/> }
       {activeTab === 'home' && <CurrentRepository owner={owner} repo={repo} branch={branch} busy={busy || Boolean(pendingCommit || pendingPR)} onChoose={() => goToTab('repositories')} onBranch={() => setBranchSheetOpen(true)}/> }
       {(pendingCommit || pendingPR) && activeTab !== 'activity' && <button type="button" className="mobile-recovery-shortcut" onClick={() => goToTab('activity')}>Có thao tác GitHub cần xác minh · Mở Activity <Icon name="arrow" size={15}/></button>}
@@ -982,6 +1022,13 @@ export default function Home() {
               <ReviewSummary selected={selectedChanges.length} total={preview.changes.length} bytes={prettyBytes(selectedBytes)} strategy={releaseStrategy} target={preview.input.branch}/>
               <div className="stat-grid"><div><strong className="good">+{stats.add}</strong><span>Thêm</span></div><div><strong className="warn">~{stats.modify}</strong><span>Sửa</span></div><div><strong className="bad">−{stats.delete}</strong><span>Xóa</span></div></div>
               <ReviewRiskSnapshot report={securityReport} insights={preview.insights} approved={sensitiveConsent}/>
+              {preview.identity?.severity === 'critical' && <div className="project-mismatch-alert" role="alert">
+                <div className="project-mismatch-title"><Icon name="shield" size={23}/><strong>NGHIÊM TRỌNG · Có thể upload nhầm dự án!</strong></div>
+                <p>Source ZIP có rất ít điểm chung với <b>{preview.input.owner}/{preview.input.repo}</b> (branch <b>{preview.input.branch}</b>). Có thể đây là source của dự án khác. Kiểm tra lại repository trước khi Push.</p>
+                <p className="project-mismatch-evidence">Trùng {preview.identity.common} đường dẫn đặc trưng trên tối thiểu {Math.min(preview.identity.localCount,preview.identity.remoteCount)} file{preview.identity.differentNames ? ' · Tên package.json không khớp' : ''}. Đây chỉ là phân tích tương đồng, không phải kết luận chắc chắn.</p>
+                <label className="confirm-row project-mismatch-consent"><input type="checkbox" checked={projectMismatchConfirmed} disabled={busy} onChange={e => {setProjectMismatchConfirmed(e.target.checked);setConfirmed(false);}}/><span>Tôi xác nhận đúng repository, hiểu rằng source có thể thuộc dự án khác và vẫn muốn tiếp tục.</span></label>
+              </div>}
+              {preview.identity?.severity === 'uncertain' && <div className="project-identity-notice" role="status">ZIP và repository ít đường dẫn trùng nhau. Hãy kiểm tra tên dự án trước khi Push; chưa đủ bằng chứng để kết luận upload nhầm.</div>}
               {requiresConsent && <div className={`security-consent-card${sensitiveConsent ? ' security-consent-card--approved' : ''}`} role="status">
                 <strong>{sensitiveConsent ? 'Đã chấp nhận rủi ro · Có thể tiếp tục Push/PR' : 'Security Scan: Cần quyết định Có / Không'}</strong>
                 <p>{sensitiveConsent ? 'Bạn vẫn cần tick xác nhận Commit & Push như bình thường.' : 'Source có thể chứa token, khóa API hoặc thông tin đăng nhập. Bạn muốn tiếp tục không?'}</p>
@@ -991,7 +1038,7 @@ export default function Home() {
               <span id="push-readiness-help" className="visually-hidden">Trạng thái trước khi Push: {pushReadiness.title}. {pushReadiness.detail}</span>
               {!['CONFIRM', 'READY'].includes(pushReadiness.code) && <ReviewReadiness state={pushReadiness} selectedCount={selectedChanges.length} totalCount={preview.changes.length} strategy={releaseStrategy}/>}
               <section ref={decisionRef} tabIndex={-1} className="premium-review-confirm" aria-label="Xác nhận và Push"><div className="premium-decision-heading"><strong>{releaseStrategy === 'pr' ? 'Xác nhận tạo Pull Request' : 'Sẵn sàng Commit & Push'}</strong><small>{selectedChanges.length} thay đổi · {preview.input.owner}/{preview.input.repo} · {preview.input.branch}</small></div>
-                <label className="confirm-row"><input type="checkbox" checked={confirmed} disabled={busy || !selectedChanges.length || (requiresConsent && !sensitiveConsent)} onChange={(e) => setConfirmed(e.target.checked)}/><span>Tôi đã xem tổng quan, hiểu các cảnh báo và đồng ý {releaseStrategy === 'pr' ? 'tạo Pull Request' : 'cập nhật branch'} <b>{preview.input.branch}</b>.</span></label>
+                <label className="confirm-row"><input type="checkbox" checked={confirmed} disabled={busy || !selectedChanges.length || (requiresConsent && !sensitiveConsent) || (preview.identity?.severity === 'critical' && !projectMismatchConfirmed)} onChange={(e) => setConfirmed(e.target.checked)}/><span>Tôi đã xem tổng quan, hiểu các cảnh báo và đồng ý {releaseStrategy === 'pr' ? 'tạo Pull Request' : 'cập nhật branch'} <b>{preview.input.branch}</b>.</span></label>
                 <button className="button primary full push-button" disabled={!canSubmitPush} aria-describedby="push-readiness-help" onClick={push}><Icon name="upload" size={18}/> {busy ? 'Đang xử lý...' : releaseStrategy === 'pr' ? `Push & Create PR (${selectedChanges.length} file)` : `Commit & Push (${selectedChanges.length} file)`}</button>
               </section>
               <p className="premium-review-skip-note">Muốn kiểm tra hoặc bỏ chọn file? Mở danh sách chi tiết bên dưới.</p>
@@ -1051,7 +1098,7 @@ export default function Home() {
             <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
               profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
               onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.8.2</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.8.3</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -1062,7 +1109,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.8.2</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.8.3</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <ModalSheet open={Boolean(preview && securityDialogOpen && requiresConsent)} onClose={() => setSecurityDialogOpen(false)} title="Cảnh báo thông tin nhạy cảm" variant="sheet">
     <div className="sensitive-consent-modal" role="alert">

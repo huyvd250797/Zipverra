@@ -18,7 +18,7 @@ test('Repository heading contains one icon-only Refresh and one shared contextua
   const ui = read('app/components/ProfessionalUI.jsx');
   assert.match(page, /repoTools=\{activeTab === 'repositories' && auth\.authenticated \? <button/);
   assert.match(page, /className=\{`repo-refresh-icon/);
-  assert.match(page, /aria-label="Làm mới danh sách repository"/);
+  assert.match(page, /aria-label="Khởi động lại ứng dụng, bỏ các lựa chọn và tải lại danh sách repository"/);
   assert.equal((ui.match(/<ContextualHelp tab=/g) || []).length, 1);
   assert.match(ui, /<ContextualHelp tab=\{activeTab\}\/>/);
 });
