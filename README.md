@@ -1,10 +1,16 @@
-# Zipverra Pro v3.8.7 — Accessibility & Visual QA Release
+# Zipverra Pro v3.8.8 — Smooth Motion & Interaction Hotfix
 
 **Hotfix · Project Mismatch Severity:** Cảnh báo “Có thể upload nhầm dự án” có nhãn **Nghiêm trọng**, tiêu đề đỏ và nền đỏ nhẹ ở cả Dark/Light. Nhãn mức độ luôn hiển thị kể cả khi đã chấp nhận; trạng thái xác nhận và thao tác Push giữ nguyên.
 
 **Maintenance release from v3.8.6.** This update improves browser zoom, keyboard/screen-reader focus and small-screen resilience. It does not add GitHub features or modify authorization, security warnings, Sync consent, PR or Commit routes.
 
-**Release notes:** [`RELEASE_V387.md`](RELEASE_V387.md). **Manual acceptance:** [`QA_CHECKLIST_V387.md`](QA_CHECKLIST_V387.md).
+**Release notes:** [`RELEASE_V388.md`](RELEASE_V388.md). Earlier release: [`RELEASE_V387.md`](RELEASE_V387.md). **Manual acceptance:** [`QA_CHECKLIST_V387.md`](QA_CHECKLIST_V387.md).
+
+## v3.8.8 — Smooth Motion & Interaction Hotfix
+
+- Native sheet/dialog keeps the last content visible while reversing with slide/fade or scale/fade; confirmation dismissal and repository/branch choice also animate fully.
+- Fade-out before navigation, then fade-in on the next view; stable header/tabbar and smoother disclosures where browsers support size interpolation.
+- Reduced Motion fully supported; no changes to GitHub APIs or security consent.
 
 ## v3.8.7 — Accessibility & Visual QA
 
@@ -49,10 +55,10 @@
 
 ## Deployment to GitHub + Vercel
 
-1. Extract the archive and push the **contents of `Zipverra-v3.8.7/`** into the root of the existing application repository; do not push the outer folder as a nested app.
+1. Extract the archive and push the **contents of `Zipverra-v3.8.8/`** into the root of the existing application repository; do not push the outer folder as a nested app.
 2. Keep your existing Vercel variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`. Update `APP_URL` only if the deployed domain has changed.
 3. Build on Vercel or another networked CI with `npm install --no-audit --no-fund`, `npm test`, `npm run build` using Node 22. Existing GitHub Actions workflow runs tests/build on push and PR.
-4. Verify `/api/version` displays `3.8.7`, and refresh the app to apply the public PWA service-worker cache version. Old public cache entries are removed after activation; private API/auth responses are never cached.
+4. Verify `/api/version` displays `3.8.8`, and refresh the app to apply the public PWA service-worker cache version. Old public cache entries are removed after activation; private API/auth responses are never cached.
 5. Test on an authorized throwaway repository: select ZIP with hundreds of files, check the quick confirmation flow without opening details, expand and scroll the file list, return to confirmation, then separately verify Sync delete acknowledgement, Critical consent dialog (No/Yes) and PR behavior. Test rollback/Recovery after interrupted operations before using production repositories.
 6. Test actual iPhone Safari and installed standalone PWA keyboard, modal focus and scroll, dynamic safe area, dark/light, reduced motion, and Wi-Fi interruption before labeling production validated.
 

@@ -8,11 +8,11 @@ const css = read('app/styles/accessibility-visual-qa-v387.css');
 const modal = read('app/components/ModalSheet.jsx');
 const ui = read('app/components/ProfessionalUI.jsx');
 
-test('v3.8.7 app, public cache and manifest version align', () => {
-  assert.equal(JSON.parse(read('package.json')).version, '3.8.7');
-  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.8\.7'/);
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.8\.7/);
-  assert.match(page, /Zipverra · v3\.8\.7/);
+test('v3.8.8 app, public cache and manifest version align', () => {
+  assert.equal(JSON.parse(read('package.json')).version, '3.8.8');
+  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.8\.8'/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.8\.8/);
+  assert.match(page, /Zipverra · v3\.8\.8/);
 });
 test('new accessibility CSS loads after existing premium polish', () => {
   assert.ok(root.indexOf('premium-interactions-v386.css') < root.indexOf('accessibility-visual-qa-v387.css'));
@@ -48,7 +48,7 @@ test('focus is not stolen on initial render or background GitHub phase changes',
 test('native modal accessible name corresponds to rendered visible heading', () => {
   assert.match(modal, /useId\(\)/);
   assert.match(modal, /aria-labelledby=\{titleId\}/);
-  assert.match(modal, /<strong id=\{titleId\}>\{title\}<\/strong>/);
+  assert.match(modal, /<strong id=\{titleId\}>\{rendered\.title\}<\/strong>/);
   assert.match(modal, /lockModalScroll/);
 });
 test('screen reader loading labels follow app language', () => {

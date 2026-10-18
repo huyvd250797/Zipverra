@@ -1,0 +1,130 @@
+/* Zipverra Pro v3.8.8 — Smooth Motion & Interaction Hotfix.
+   LAST in cascade. Compositor-friendly opacity/transform animation, no layout
+   animation on GitHub progress, no changes to semantic/consent/API state. */
+:root {
+  --zip388-smooth: cubic-bezier(.22,1,.36,1);
+  --zip388-leave: cubic-bezier(.4,0,1,1);
+  --zip388-sheet-in: 340ms;
+  --zip388-sheet-out: 250ms;
+  --zip388-dialog-in: 260ms;
+  --zip388-dialog-out: 210ms;
+  --zip388-route-in: 260ms;
+  --zip388-route-out: 170ms;
+}
+
+/* Native dialog stays in top layer until closing animation finishes. */
+@keyframes zip388-slide-up {
+  from {opacity:0;transform:translate3d(0,64px,0) scale(.995)}
+  to {opacity:1;transform:translate3d(0,0,0) scale(1)}
+}
+@keyframes zip388-slide-down {
+  from {opacity:1;transform:translate3d(0,0,0) scale(1)}
+  to {opacity:0;transform:translate3d(0,72px,0) scale(.995)}
+}
+@keyframes zip388-dialog-enter {
+  from {opacity:0;transform:translate3d(0,16px,0) scale(.965)}
+  to {opacity:1;transform:translate3d(0,0,0) scale(1)}
+}
+@keyframes zip388-dialog-leave {
+  from {opacity:1;transform:translate3d(0,0,0) scale(1)}
+  to {opacity:0;transform:translate3d(0,12px,0) scale(.975)}
+}
+@keyframes zip388-dim-enter {from{opacity:0}to{opacity:1}}
+@keyframes zip388-dim-leave {from{opacity:1}to{opacity:0}}
+
+.zip-modal[open].zip-modal--sheet:not(.zip-modal--exiting) {
+  animation:zip388-slide-up var(--zip388-sheet-in) var(--zip388-smooth) both!important;
+}
+.zip-modal[open].zip-modal--sheet.zip-modal--exiting {
+  animation:zip388-slide-down var(--zip388-sheet-out) var(--zip388-leave) both!important;
+  pointer-events:none;
+}
+.zip-modal[open]:not(.zip-modal--sheet):not(.zip-modal--exiting) {
+  animation:zip388-dialog-enter var(--zip388-dialog-in) var(--zip388-smooth) both!important;
+}
+.zip-modal[open]:not(.zip-modal--sheet).zip-modal--exiting {
+  animation:zip388-dialog-leave var(--zip388-dialog-out) var(--zip388-leave) both!important;
+  pointer-events:none;
+}
+.zip-modal[open]:not(.zip-modal--exiting)::backdrop {
+  animation:zip388-dim-enter 280ms ease-out both!important;
+}
+.zip-modal[open].zip-modal--exiting::backdrop {
+  animation:zip388-dim-leave 220ms ease-in both!important;
+}
+
+/* Keep route exit and entry separate. Never animate permanent header/nav,
+   which should stay fixed and immediately responsive. */
+@keyframes zip388-view-in {
+  from {opacity:0;transform:translate3d(0,10px,0)}
+  to {opacity:1;transform:translate3d(0,0,0)}
+}
+@keyframes zip388-view-out {
+  from {opacity:1;transform:translate3d(0,0,0)}
+  to {opacity:0;transform:translate3d(0,-6px,0)}
+}
+.pro-shell[data-view-exiting="true"] .pro-view-intro {
+  animation:zip388-view-out var(--zip388-route-out) ease-in both!important;
+  pointer-events:none;
+}
+.pro-shell:not([data-view-exiting="true"]) .pro-view-intro {
+  animation:zip388-view-in var(--zip388-route-in) var(--zip388-smooth) both!important;
+}
+@media(max-width:760px) {
+  .pro-shell main.zip-view-exiting {
+    animation:zip388-view-out var(--zip388-route-out) ease-in both!important;
+    pointer-events:none;
+  }
+  .pro-shell main.zip-view-exiting .content-grid [data-mobile-view] {animation:none!important;}
+  .pro-shell main[data-active-view]:not(.zip-view-exiting) .content-grid [data-mobile-view] {
+    animation:zip388-view-in var(--zip388-route-in) var(--zip388-smooth) both!important;
+  }
+  /* Native sheet remains pinned to the Safari safe-area/visualViewport bottom. */
+  .zip-modal--sheet {backface-visibility:hidden;}
+}
+
+
+/* Mount-only entrances for nested workspace / PR / rollback flows. These are
+   short compositor animations: scrolling lists and editing text stay static. */
+@keyframes zip388-panel-reveal {
+  from {opacity:0;transform:translate3d(0,9px,0)}
+  to {opacity:1;transform:translate3d(0,0,0)}
+}
+.pro-shell :is(.workspace-editor,.workspace-code-pane,.workspace-edit-pane,
+  .workspace-review,.workspace-history,.branch-pr-content,.branch-pr-merge,
+  .history-preview,.workspace-success,.polish-outcome) {
+  animation:zip388-panel-reveal 235ms var(--zip388-smooth) both;
+}
+
+/* Only expand/collapse details that already have a summary; don't affect
+   accordion semantics, scrolling or unmounted contents in repository views. */
+@supports (interpolate-size:allow-keywords) and selector(details::details-content) {
+  .pro-shell details:is(.premium-review-files,.premium-review-diagnostics,.repo-advanced,.pro-dash-details,.zip-repo-extra-tools,.pwa-recovery-advanced) {
+    interpolate-size:allow-keywords;
+  }
+  .pro-shell details:is(.premium-review-files,.premium-review-diagnostics,.repo-advanced,.pro-dash-details,.zip-repo-extra-tools,.pwa-recovery-advanced)::details-content {
+    block-size:0;opacity:0;overflow:clip;
+    transition:block-size 280ms var(--zip388-smooth),opacity 220ms ease,content-visibility 280ms allow-discrete;
+  }
+  .pro-shell details[open]:is(.premium-review-files,.premium-review-diagnostics,.repo-advanced,.pro-dash-details,.zip-repo-extra-tools,.pwa-recovery-advanced)::details-content {
+    block-size:auto;opacity:1;
+  }
+}
+/* Small contextual feedback without expensive transforms of long lists. */
+.pro-shell :is(.zip-repo-option,.zip-branch-option,.mobile-nav-item,.zip-hub-shortcuts button) {
+  transition:background-color 160ms ease,border-color 160ms ease,color 160ms ease,transform 175ms var(--zip388-smooth);
+}
+.pro-shell :is(.zip-repo-option,.zip-branch-option,.zip-hub-shortcuts button):active:not(:disabled) {
+  transform:scale(.987);
+}
+/* Honor OS reduced-motion for all newly added transitions. */
+@media(prefers-reduced-motion:reduce) {
+  .zip-modal[open],.zip-modal[open]::backdrop,
+  .pro-shell main,.pro-shell main .content-grid [data-mobile-view],
+  .pro-shell .pro-view-intro,
+  .pro-shell :is(.workspace-editor,.workspace-code-pane,.workspace-edit-pane,.workspace-review,.workspace-history,.branch-pr-content,.branch-pr-merge,.history-preview,.workspace-success,.polish-outcome),
+  .pro-shell :is(.zip-repo-option,.zip-branch-option,.mobile-nav-item,.zip-hub-shortcuts button) {
+    animation:none!important;transition:none!important;
+  }
+  .pro-shell details::details-content {transition:none!important;}
+}

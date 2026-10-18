@@ -9,11 +9,11 @@ const toast = read('app/components/InteractionFeedback.jsx');
 const risk = read('app/components/ReviewRiskCenter.jsx');
 const modal = read('app/components/ModalSheet.jsx');
 
-test('v3.8.7 runtime, PWA cache and branded version are consistent', () => {
-  assert.equal(JSON.parse(read('package.json')).version, '3.8.7');
-  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.8\.7'/);
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.8\.7/);
-  assert.match(read('app/page.jsx'), /v3\.8\.7/);
+test('v3.8.8 runtime, PWA cache and branded version are consistent', () => {
+  assert.equal(JSON.parse(read('package.json')).version, '3.8.8');
+  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.8\.8'/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.8\.8/);
+  assert.match(read('app/page.jsx'), /v3\.8\.8/);
 });
 test('polish CSS is loaded last without removing dedicated risk and notification layers', () => {
   const deps = ['notifications-v384.css','review-risk-v385.css','premium-interactions-v386.css'];
@@ -59,7 +59,7 @@ test('sheet, dialog and notification animations include both directions', () => 
   assert.match(toast, /pro-toast--exiting/);
 });
 test('close controls are labelled and icons hide from assistive tech', () => {
-  assert.match(modal, /aria-label=\{`Đóng \$\{title\}`\}/);
+  assert.match(modal, /aria-label=\{`Đóng \$\{rendered\.title\}`\}/);
   assert.match(toast, /aria-label="Đóng thông báo"/);
   assert.match(modal, /aria-hidden="true"/);
   assert.match(read('app/components/StatusGlyph.jsx'), /'aria-hidden': true/);
