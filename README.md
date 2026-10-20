@@ -1,4 +1,12 @@
-# Zipverra Pro v3.8.8 — Smooth Motion & Interaction Hotfix
+# Zipverra Pro v3.8.9 — Large Archive Support & Memory Optimization
+
+**Release details:** [RELEASE_V389.md](RELEASE_V389.md) · **Acceptance checklist:** [QA_CHECKLIST_V389.md](QA_CHECKLIST_V389.md).
+
+**Standard:** 120 MiB ZIP / 240 MiB uncompressed. **Extended:** 200 MiB / 400 MiB, one-time consent per ZIP. The 2.5 MB/file, 2,500 source-file and GitHub branch safety constraints are unchanged. Browser Web Worker retains the compressed archive and returns only SHA/path/size/scan metadata. Bytes are read on demand and checksum validated before upload or Diff. Proof refresh is mandatory before Commit if evidence is expiring. Avoid backgrounding iPhone while working with large archives.
+
+---
+
+## Historical notes — v3.8.8 Smooth Motion & Interaction Hotfix
 
 **Hotfix · Project Mismatch Severity:** Cảnh báo “Có thể upload nhầm dự án” có nhãn **Nghiêm trọng**, tiêu đề đỏ và nền đỏ nhẹ ở cả Dark/Light. Nhãn mức độ luôn hiển thị kể cả khi đã chấp nhận; trạng thái xác nhận và thao tác Push giữ nguyên.
 
@@ -6,7 +14,7 @@
 
 **Release notes:** [`RELEASE_V388.md`](RELEASE_V388.md). Earlier release: [`RELEASE_V387.md`](RELEASE_V387.md). **Manual acceptance:** [`QA_CHECKLIST_V387.md`](QA_CHECKLIST_V387.md).
 
-## v3.8.8 — Smooth Motion & Interaction Hotfix
+### v3.8.8 — Smooth Motion & Interaction Hotfix
 
 - Native sheet/dialog keeps the last content visible while reversing with slide/fade or scale/fade; confirmation dismissal and repository/branch choice also animate fully.
 - Fade-out before navigation, then fade-in on the next view; stable header/tabbar and smoother disclosures where browsers support size interpolation.
@@ -55,10 +63,10 @@
 
 ## Deployment to GitHub + Vercel
 
-1. Extract the archive and push the **contents of `Zipverra-v3.8.8/`** into the root of the existing application repository; do not push the outer folder as a nested app.
+1. Extract the archive and push the **contents of `Zipverra-v3.8.9/`** into the root of the existing application repository; do not push the outer folder as a nested app.
 2. Keep your existing Vercel variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`. Update `APP_URL` only if the deployed domain has changed.
 3. Build on Vercel or another networked CI with `npm install --no-audit --no-fund`, `npm test`, `npm run build` using Node 22. Existing GitHub Actions workflow runs tests/build on push and PR.
-4. Verify `/api/version` displays `3.8.8`, and refresh the app to apply the public PWA service-worker cache version. Old public cache entries are removed after activation; private API/auth responses are never cached.
+4. Verify `/api/version` displays `3.8.9`, and refresh the app to apply the public PWA service-worker cache version. Old public cache entries are removed after activation; private API/auth responses are never cached.
 5. Test on an authorized throwaway repository: select ZIP with hundreds of files, check the quick confirmation flow without opening details, expand and scroll the file list, return to confirmation, then separately verify Sync delete acknowledgement, Critical consent dialog (No/Yes) and PR behavior. Test rollback/Recovery after interrupted operations before using production repositories.
 6. Test actual iPhone Safari and installed standalone PWA keyboard, modal focus and scroll, dynamic safe area, dark/light, reduced motion, and Wi-Fi interruption before labeling production validated.
 
@@ -476,7 +484,7 @@ Tab **Repos** chỉ chứa repo, branch, tìm kiếm và repo gần đây (đã 
 ### Advanced ZIP & Large Source — v1.7.0
 
 - **Web Worker:** JSZip giải nén, bảo vệ ZIP traversal, phát hiện file nguy hiểm và tính Git SHA-1 ngoài luồng giao diện; `Uint8Array` được transfer về main thread, giảm copy bộ nhớ. Nếu trình duyệt không hỗ trợ Worker, tải module parser theo nhu cầu và chạy fallback trên UI thread.
-- **ZIP lớn hơn:** tối đa **80 MiB file ZIP**, **160 MiB dữ liệu giải nén**, **2.500 file source (tối đa 10.000 phần tử trong ZIP tính cả file bỏ qua)**, **2.500 file thay đổi mỗi commit**, tối đa 12.000 file được đọc ở repository đích. Cần thiết bị đủ RAM; ZIP 80 MiB không bảo đảm mọi iPhone đều giải nén được.
+- **ZIP lớn hơn:** tối đa **120 MiB ZIP/240 MiB giải nén Standard; 200 MiB ZIP/400 MiB giải nén Extended (có xác nhận)**, **2.500 file source (tối đa 10.000 phần tử trong ZIP tính cả file bỏ qua)**, **2.500 file thay đổi mỗi commit**, tối đa 12.000 file được đọc ở repository đích. Cần thiết bị đủ RAM; ZIP lớn không bảo đảm mọi iPhone đủ RAM để phân tích được.
 - **Giới hạn file đơn:** **2,5 MB/file** (định dạng nhị phân lẫn text). Các yêu cầu gửi Base64 qua Vercel dưới ngưỡng body 4,5 MB; chưa hỗ trợ split một file lớn thành nhiều phần để tạo **một Git blob** vì GitHub Git Data REST API không có giao diện multipart blob. File lớn hơn cần Git/Git LFS hoặc cơ chế object-storage/worker riêng trong tương lai.
 - **Batch upload:** nhóm tối đa 12 file, 2 upload blob đồng thời. Chỉ gửi **file thay đổi**, không gửi nguyên ZIP lên server; không tự retry commit/branch mutation.
 - **Resume trước commit:** mỗi blob được xác minh SHA và checkpoint ở `localStorage` trên thiết bị (metadata tên file/SHA, không phải nội dung ZIP/token). Khi mất mạng, mở lại PWA → **chọn lại cùng repo/branch và file ZIP** → phân tích lại → Push; file đã upload với SHA phù hợp sẽ được bỏ qua. Checkpoint chỉ hợp lệ trong 24 giờ và ràng buộc bởi fingerprint SHA-256 của repo, HEAD, mode, path và blob SHA.
@@ -552,7 +560,7 @@ Không cần `DATABASE_URL`, `GITHUB_APP_PRIVATE_KEY` hoặc `GITHUB_APP_ID`. C�
 - Session trong cookie 7 ngày (ngắn hơn refresh token GitHub). Đăng xuất xóa cookie của Zipverra; không thu hồi ngay token ở phía GitHub. Người dùng có thể thu hồi quyền ứng dụng từ GitHub Settings → Applications.
 - Mutation API yêu cầu origin chính xác với `APP_URL`, `Content-Type: application/json`; frontend không đọc hoặc truyền token GitHub. Tránh cài Zipverra trên domain không đáng tin.
 - Không thể vượt qua GitHub branch protection, ruleset, yêu cầu status checks hoặc organization policy; các repo đó phải dùng PR (tính năng tương lai).
-- ZIP tối đa 80 MiB; giải nén tối đa 160 MiB; tối đa 2,5 MB/file; tối đa 2.500 file; không hỗ trợ tạo branch mới, Git LFS, symlink Git hoặc submodule phức tạp. Xử lý ZIP trực tiếp trong trình duyệt để hạn chế giới hạn request 4,5 MB của Vercel Functions.
+- ZIP mặc định 120 MiB/240 MiB, nâng cao 200 MiB/400 MiB sau xác nhận; tối đa 2,5 MB/file; tối đa 2.500 file; không hỗ trợ tạo branch mới, Git LFS, symlink Git hoặc submodule phức tạp. Xử lý ZIP trực tiếp trong trình duyệt để hạn chế giới hạn request 4,5 MB của Vercel Functions.
 - Không ghi token ra logs, không lưu source ZIP trên server. PWA recovery journal giữ **metadata commit** cục bộ trong sessionStorage, không lưu access token.
 
 ## 7. Migration từ v1.4.0

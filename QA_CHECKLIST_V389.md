@@ -1,0 +1,21 @@
+# v3.8.9 — Large ZIP Acceptance Checklist
+
+- [ ] `npm ci`/`npm install`, `npm test`, `npm run build` succeeds on Vercel Preview.
+- [ ] Standard accepts ZIP <=120 MiB; 120 MiB + 1 byte requires Extended confirmation.
+- [ ] Extended accepts <=200 MiB after confirmation; 200 MiB + 1 byte is rejected safely.
+- [ ] Declared and decoded sizes capped at 240 MiB (Standard), 400 MiB (Extended).
+- [ ] Files above 2,500,000 bytes, over 2,500 source files, over 10,000 ZIP members are rejected.
+- [ ] Extended prompt Cancel leaves the existing selection unchanged; Accept activates only for selected ZIP.
+- [ ] Invalid replacement ZIP cannot leave an older Review eligible to Push.
+- [ ] Analyze displays framework/mismatch warnings using parsed manifest metadata.
+- [ ] Security warnings (.npmrc/.env, credential-looking strings) remain redacted and require explicit acknowledgement.
+- [ ] Diff loads allowed text file on demand; changed or unavailable ZIP bytes stop Diff safely.
+- [ ] Upload on real test repository works via Direct Push and PR; only one progress bar is visible.
+- [ ] Confirm Sync deletion still requires distinct consent and safe branch HEAD matching.
+- [ ] Interrupt network during blob uploads: checkpoint reuse works; errors do not create commit.
+- [ ] Expiring blob attestation is refreshed via server-side scan; invalid proof cannot commit.
+- [ ] GitHub action with uncertain result uses Verify/Recovery; no duplicate automatic commit.
+- [ ] Reset/change ZIP/repo/branch or logout releases archive Worker and current consent.
+- [ ] Test iPhone Safari and installed PWA in foreground: 80, 120 and 200 MiB realistic archives; memory pressure does not create fake success.
+- [ ] Test desktop Chrome/Edge, dark/light, 320–430px screens, reduced motion and screen-reader notice.
+- [ ] Confirm GitHub App permissions and branch protections still work as before.

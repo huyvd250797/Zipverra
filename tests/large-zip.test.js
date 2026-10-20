@@ -13,8 +13,8 @@ const changes = files.map(f => ({ path:f.path,kind:'add',mode:'100644' }));
 const base = { owner: 'test', repo:'repo', branch:'main', head:SHA1, mode:'merge', changes, files };
 
 test('v1.7 ZIP total expanded while each Git blob remains under Vercel request limit', () => {
-  assert.equal(LIMITS.zipBytes, 80 * 1024 * 1024);
-  assert.equal(LIMITS.unpackedBytes, 160 * 1024 * 1024);
+  assert.equal(LIMITS.zipBytes, 120 * 1024 * 1024);
+  assert.equal(LIMITS.unpackedBytes, 240 * 1024 * 1024);
   assert.equal(LIMITS.fileCount, 2500);
   assert.equal(LIMITS.archiveMembers, 10000);
   assert.equal(LIMITS.fileBytes, 2_500_000);
@@ -109,7 +109,7 @@ test('workflow is repo → ZIP → analysis → confirmation → auto Activity; 
   assert.match(page,/useState\('repositories'\)/);
   assert.match(page,/goToTab\('home'\)/);
   assert.match(page,/goToTab\('activity'\)/);
-  assert.match(page,/readArchiveOffThread/);
+  assert.match(page,/openArchiveOffThread/);
   assert.match(page,/uploadBlobsInBatches/);
   assert.match(page,/data-mobile-view="settings"/);
   assert.equal((page.match(/GitHub Account & App Access/g)||[]).length,1);

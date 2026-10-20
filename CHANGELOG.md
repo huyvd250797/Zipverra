@@ -1,3 +1,9 @@
+## v3.8.9 — Large Archive Support & Memory Optimization
+- Standard 120 MiB / Extended opt-in 200 MiB; per-profile expanded limits 240/400 MiB.
+- Persistent metadata-only ZIP Worker; on-demand SHA-verified file reads; no bulk file-buffer transfer to React.
+- Recheck/renew expiring signed blob proofs before Commit, fail closed if unsafe.
+- New v3.8.9 QA checklist and tests.
+
 ## v3.8.7 — Project Mismatch Severity Hotfix (17/10/2026)
 - Added a persistent red “Nghiêm trọng” severity badge, red title and subtle red surface to the critical project mismatch warning, including Light theme.
 - Kept acknowledgement status separate from severity, preserving all existing consent and Push behavior.

@@ -35,7 +35,7 @@ test('file selection triggers analysis but never a GitHub commit',()=>{
   const page=read('app/page.jsx');
   assert.match(page,/useEffect\(\(\) => \{\s*if \(!file \|\| !chosenRepo/);
   assert.match(page,/void analyze\(\)/);
-  assert.match(page,/checkZipCandidate\(next, LIMITS\.zipBytes\)/);
+  assert.match(page,/checkZipCandidate\(next, archiveCapacity\(\'extended\'\)\.zipBytes\)/);
   assert.match(page,/if \(!preview \|\| !selectedChanges\.length \|\| \(requiresConsent && !sensitiveConsent\) \|\| !confirmed/);
   assert.match(page,/onClick=\{push\}/);
   assert.match(page,/requestOnce\('commit', commitPayload\)/);

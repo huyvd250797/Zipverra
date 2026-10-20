@@ -3,14 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { encodeBase64 } from '../lib/base64.js';
-import { readArchiveOffThread } from '../lib/archive-worker-client.js';
-import { manifestFingerprint, validatedCheckpoint, makeCheckpoint, uploadBlobsInBatches, UPLOAD_CHECKPOINT_KEY } from '../lib/upload-batches.js';
+import { openArchiveOffThread } from '../lib/archive-worker-client.js';
+import { manifestFingerprint, validatedCheckpoint, makeCheckpoint, uploadBlobsInBatches, refreshExpiringAttestations, UPLOAD_CHECKPOINT_KEY } from '../lib/upload-batches.js';
 import { calculateChanges, countChanges } from '../lib/operations.js';
 import { compareProjectIdentity, packageNameFromArchive, packageNameFromText } from '../lib/project-identity.js';
 import { zipCommitMessage } from '../lib/paths.js';
 import { makeReleaseBranch } from '../lib/branch-names.js';
 import { scanSelectedChanges, reportSelectedSecurity, needsSensitiveConsent } from '../lib/source-security.js';
-import { LIMITS } from '../lib/constants.js';
+import { LIMITS, archiveCapacity } from '../lib/constants.js';
 import { deriveWorkflowStep, shouldPublishProgress, checkZipCandidate } from '../lib/workflow-ux.js';
 import { PUSH_STAGES, JOURNAL_KEY, withSafeRetry, validJournal } from '../lib/reliability.js';
 import { scheduleTabViewport } from '../lib/tab-scroll.js';
@@ -206,6 +206,9 @@ export default function Home() {
   const [releaseStrategy, setReleaseStrategy] = useState('direct');
   const [pendingPR, setPendingPR] = useState(null);
   const [file, setFile] = useState(null);
+  const [archiveMode, setArchiveMode] = useState('standard');
+  const archiveSessionRef = useRef(null);
+  const fileSelectionSeqRef = useRef(0);
   const [preview, setPreview] = useState(null);
   const [fileDetailsOpen, setFileDetailsOpen] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
@@ -230,6 +233,7 @@ export default function Home() {
   const archiveProgressAtRef = useRef(0);
   const uploadProgressAtRef = useRef(0);
   const lastSessionRefresh = useRef(0);
+  useEffect(() => () => { archiveSessionRef.current?.close(); archiveSessionRef.current = null; }, []);
   const pwa = usePwaReliability({ busy: busy || auth.loading, dirty: workspaceDirty || (Boolean(file || preview) && phase !== PUSH_STAGES.SUCCEEDED), pending: Boolean(pendingCommit || pendingPR) });
 
   useEffect(() => {
@@ -462,7 +466,8 @@ export default function Home() {
         const currentLogin = auth.user?.login?.toLowerCase();
         if (!data.authenticated || data.user?.login?.toLowerCase() !== currentLogin) {
           setAuth({ loading:false, authenticated:false, user:null });
-          setRepos([]);setInstallations([]);setOwner('');setRepo('');setFile(null);setPreview(null);setResult(null);setTransfer(null);
+          archiveSessionRef.current?.close();archiveSessionRef.current=null;
+          setRepos([]);setInstallations([]);setOwner('');setRepo('');setFile(null);setArchiveMode('standard');setPreview(null);setResult(null);setTransfer(null);
           setWorkspaceOpen(false);workspaceDirtyRef.current=false;setWorkspaceDirty(false);
           setStatus('Phiên GitHub đã thay đổi. Hãy đăng nhập lại trước khi thao tác tiếp.');
           setError('Phiên đăng nhập đã hết hạn hoặc tài khoản đã thay đổi. Vui lòng đăng nhập lại.');
@@ -507,7 +512,7 @@ export default function Home() {
       const response = await fetch('/api/auth/logout', { method: 'POST', cache: 'no-store' });
       if (!response.ok) throw new Error('Không thể đăng xuất.');
       setAuth({ loading: false, authenticated: false, user: null });
-      setFile(null); setMode('merge'); setReleaseStrategy('direct');
+      setFile(null); setArchiveMode('standard'); setMode('merge'); setReleaseStrategy('direct');
       setRepos([]); setOwner(''); setRepo(''); setBranch('main'); reset();
       setActiveTab('repositories'); setWorkspaceOpen(false);
       clearUploadCheckpoint();
@@ -565,6 +570,8 @@ export default function Home() {
     catch { setStatus('Không sao chép được SHA. Bạn có thể mở commit trên GitHub để xem.'); }
   }, [notify]);
   const reset = () => {
+    archiveSessionRef.current?.close();
+    archiveSessionRef.current = null;
     setPreview(null);
     setFileDetailsOpen(false);
     setConfirmed(false);
@@ -626,7 +633,7 @@ export default function Home() {
     setOwner(value.slice(0, index));
     setRepo(value.slice(index + 1));
     setBranch('main');
-    setFile(null); setMode('merge'); setReleaseStrategy('direct');
+    setFile(null); setArchiveMode('standard'); setMode('merge'); setReleaseStrategy('direct');
     if (fileInput.current) fileInput.current.value = '';
     reset();
     saveRecent(value);
@@ -639,12 +646,27 @@ export default function Home() {
     if (busy || pendingCommit || pendingPR) return;
     change(setBranch, nextBranch);
   }
-  function chooseFile(next) {
+  async function chooseFile(next) {
     if (busy || pendingCommit || pendingPR || !chosenRepo) return;
-    const candidateError = next ? checkZipCandidate(next, LIMITS.zipBytes) : null;
-    change(setFile, candidateError ? null : next || null);
-    if (candidateError) { setError(candidateError); setStatus('Hãy chọn một file .zip hợp lệ.'); notify('zip-invalid'); }
     if (fileInput.current) fileInput.current.value = '';
+    if (!next) return;
+    const selectionSeq=++fileSelectionSeqRef.current;
+    const selectedRepo=`${owner}/${repo}@${branch}`;
+    const candidateError = checkZipCandidate(next, archiveCapacity('extended').zipBytes);
+    if (candidateError) { change(setFile,null);setArchiveMode('standard');setError(candidateError); setStatus('Hãy chọn một file ZIP hợp lệ (tối đa 200 MiB).'); notify('zip-invalid'); return; }
+    let capacityMode = 'standard';
+    if (next.size > archiveCapacity('standard').zipBytes) {
+      const accepted = await askConfirmation({
+        title: 'Bật Extended Mode (200 MiB)?',
+        message: 'ZIP lớn có thể dùng nhiều RAM và mất thời gian trên iPhone. Hãy giữ ứng dụng ở foreground đến khi hoàn tất; nếu thiết bị thiếu bộ nhớ, quá trình sẽ dừng trước Commit.',
+        confirmLabel: 'Tiếp tục · 200 MiB', danger: false,
+      });
+      if (!accepted || selectionSeq!==fileSelectionSeqRef.current || selectedRepo!==`${owner}/${repo}@${branch}` || busy || pendingCommit || pendingPR) return;
+      capacityMode = 'extended';
+    }
+    // Every selected ZIP starts a fresh non-persistent capacity consent.
+    change(setFile, next);
+    setArchiveMode(capacityMode);
   }
   // A new ZIP is deliberately analyzed automatically. Security review and the Push
   // confirmation remain explicit; selecting a ZIP is never consent to mutate GitHub.
@@ -667,12 +689,18 @@ export default function Home() {
       const input = getInputs();
       if (!file) throw new Error('Hãy chọn file ZIP chứa source code.');
       setStatus('Đang phân tích ZIP trong Web Worker, kiểm tra file và tính Git SHA...');
-      const archive = await readArchiveOffThread(file, (percent) => {
+      // Keep compressed archive only in the Worker. The UI receives paths, SHAs,
+      // metadata and redacted security findings; content bytes are read on demand.
+      archiveSessionRef.current?.close();
+      archiveSessionRef.current = null;
+      const session = await openArchiveOffThread(file, (percent) => {
         const now = Date.now();
         if (shouldPublishProgress(archiveProgressAtRef.current, now, percent >= 100)) { archiveProgressAtRef.current = now; setProgress(Math.round(percent * 0.6)); }
       },
         typeof Worker !== 'undefined' ? () => new Worker(new URL('./workers/archive.worker.js', import.meta.url), { type: 'module' }) : null,
-        async (selected, onProgress) => (await import('../lib/archive.js')).readArchive(selected, onProgress));
+        archiveMode);
+      archiveSessionRef.current = session;
+      const archive = session.archive;
       setPhase(PUSH_STAGES.PREFLIGHT);
       setProgress(65);
       setStatus('Đang kiểm tra GitHub App installation và quyền ghi repository...');
@@ -713,7 +741,7 @@ export default function Home() {
       setProgress(100);
       setPhase(PUSH_STAGES.IDLE);
       notify(changes.length ? 'review-ready' : 'no-changes');
-    } catch (e) { setError(e.message); setErrorHint(e.hint || ''); setPreview(null); setSecurityDialogOpen(false); setStatus(''); setPhase(PUSH_STAGES.FAILED); notify('action-failed'); }
+    } catch (e) { archiveSessionRef.current?.close(); archiveSessionRef.current=null; setError(e.message); setErrorHint(e.hint || ''); setPreview(null); setSecurityDialogOpen(false); setStatus(''); setPhase(PUSH_STAGES.FAILED); notify('action-failed'); }
     finally { analyzingRef.current = false; setBusy(false); }
   }
   function finishVerified(outcome) {
@@ -807,7 +835,7 @@ export default function Home() {
 
   function startNextVersion() {
     if (busy || pendingCommit || pendingPR || phase !== PUSH_STAGES.SUCCEEDED) return;
-    setFile(null);
+    setFile(null);setArchiveMode('standard');
     if (fileInput.current) fileInput.current.value = '';
     reset();
     goToTab('home');
@@ -865,7 +893,8 @@ export default function Home() {
       let after = '';
       if (change.kind !== 'delete') {
         if (!isTextPreviewable(localFile)) throw new Error('File này lớn, dạng nhị phân hoặc không phù hợp để hiển thị text diff.');
-        after = decodePreview(localFile.data);
+        if (!archiveSessionRef.current) throw new Error('Phiên ZIP đã hết hạn. Hãy phân tích lại trước khi xem Diff.');
+        after = decodePreview(await archiveSessionRef.current.getFile(localFile.path));
         if (after === null) throw new Error('File không phải UTF-8 text.');
       }
       let before = '';
@@ -917,6 +946,7 @@ export default function Home() {
         changes: selectedChanges, files: preview.archive.files });
       const existing = validatedCheckpoint(loadUploadCheckpoint(), fingerprint, selectedChanges, Date.now(), true);
       const checkpoint = Object.assign(Object.create(null), existing);
+      if (!archiveSessionRef.current) throw new Error('Phiên ZIP đã đóng. Hãy phân tích ZIP lại trước khi Push.');
       const transferStarted = Date.now();
       uploadProgressAtRef.current = 0;
       const { blobShas, attestations, reused } = await uploadBlobsInBatches({
@@ -926,7 +956,7 @@ export default function Home() {
         concurrency: 2,
         batchSize: 12,
         upload: async (source) => {
-          const res = await api('blob', { owner: input.owner, repo: input.repo, path: source.path, content: encodeBase64(source.data), allowSensitiveUpload: requiresConsent && sensitiveConsent },
+          const res = await api('blob', { owner: input.owner, repo: input.repo, path: source.path, content: encodeBase64(await archiveSessionRef.current.getFile(source.path)), allowSensitiveUpload: requiresConsent && sensitiveConsent },
             (attempt) => setStatus(`GitHub chậm với ${source.path}. Retry an toàn (${attempt}/2)...`));
           return {sha:res.sha,proof:res.proof};
         },
@@ -942,6 +972,20 @@ export default function Home() {
           setTransfer({ ...transferEstimate(uploadedBytes, Math.max(0, totalBytes - (completedBytes - uploadedBytes)), now - transferStarted), completed, total, batch, totalBatches, reused: reusedCount, completedBytes, totalBytes });
           setStatus(`Git blobs: ${completed}/${total} · Batch ${batch}/${totalBatches}${reusedCount ? ` · Phục hồi ${reusedCount} file` : ''}`);
         },
+      });
+      // A large batch can outlive the 60-minute signed security proof.
+      // Refresh expiring proofs by re-reading/verifying bytes and re-scanning on server,
+      // never by extending their client-side expiry or bypassing validation.
+      setStatus('Đang kiểm tra thời hạn chứng nhận bảo mật trước Commit...');
+      await refreshExpiringAttestations({ changes:selectedChanges,files:preview.archive.files,blobShas,attestations,
+        onCheckpoint:(path,item)=>{checkpoint[path]=item;saveUploadCheckpoint(makeCheckpoint(fingerprint,checkpoint));},
+        upload:async source=>{
+          const res=await api('blob',{owner:input.owner,repo:input.repo,path:source.path,
+            content:encodeBase64(await archiveSessionRef.current.getFile(source.path)),
+            allowSensitiveUpload:requiresConsent && sensitiveConsent});
+          return {sha:res.sha,proof:res.proof};
+        },
+        onProgress:(done,total)=>setStatus(`Gia hạn chứng nhận an toàn: ${done}/${total} file...`),
       });
       if (reused) setStatus(`Đã tái sử dụng ${reused} Git blob từ lần upload trước; bắt đầu commit...`);
       const entries = selectedChanges.map((c) => ({ path: c.path, mode: c.mode, sha: c.kind === 'delete' ? null : blobShas.get(c.path), ...(c.kind !== 'delete' ? {proof: attestations.get(c.path)} : {}) }));
@@ -984,7 +1028,7 @@ export default function Home() {
     <div className="glow one"/><div className="glow two"/>
     <header className="topbar" role="banner">
       <button type="button" className="brand brand-restart" onClick={restartWorkspace} aria-label="Khởi động lại Zipverra về màn hình ban đầu" title="Khởi động lại ứng dụng và bỏ lựa chọn hiện tại"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span><em> Pro</em></strong><small>MOBILE GIT WORKSPACE</small></div></button>
-      <div className="header-actions">{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.8.8</span></div>
+      <div className="header-actions">{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.8.9</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} repoTools={activeTab === 'repositories' && auth.authenticated ? <button type="button" className={`repo-refresh-icon${loadingRepos ? ' is-loading' : ''}`} onClick={restartWorkspace} disabled={busy || loadingRepos || Boolean(pendingCommit || pendingPR)} aria-label="Khởi động lại ứng dụng, bỏ các lựa chọn và tải lại danh sách repository" title="Khởi động lại từ đầu"><Icon name="refresh" size={17}/></button> : null}/>
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
@@ -1031,7 +1075,8 @@ export default function Home() {
             <input ref={fileInput} id="file" className="visually-hidden" type="file" accept=".zip,application/zip,application/x-zip-compressed" disabled={busy || !chosenRepo} onChange={(e) => chooseFile(e.target.files?.[0])}/>
             <label htmlFor={chosenRepo ? 'file' : undefined} className={`drop-zone ${file ? 'picked' : ''} ${!chosenRepo ? 'locked' : ''}`}><span className="file-symbol"><Icon name={file ? 'file' : 'upload'} size={25}/></span><strong>{file ? file.name : chosenRepo ? 'Chạm để chọn file ZIP' : 'Chọn repo trước khi upload'}</strong><small>{file ? `${prettyBytes(file.size)} · Chạm để thay file` : 'Chọn từ ứng dụng Files'}</small></label>
             {file && <div className="file-detail"><Icon name="check" size={15}/> {busy && phase === PUSH_STAGES.ANALYZING ? 'Đang phân tích ZIP...' : preview ? 'Đã phân tích · Xem Review bên dưới' : 'Đã chọn ZIP'} · Commit: <strong>{commitMessage}</strong></div>}
-            <div className="limits"><span>80 MiB ZIP</span><span>2.500 file</span></div>
+            <div className="limits"><span>{archiveMode === 'extended' ? 'Extended · 200 MiB ZIP / 400 MiB giải nén' : 'Standard · 120 MiB ZIP / 240 MiB giải nén'}</span><span>2.500 file · 2,5 MB/file</span></div>
+            {archiveMode === 'extended' && <p className="archive-capacity-note" role="status">Extended Mode đã được chấp nhận cho ZIP hiện tại. Có thể tiêu thụ nhiều bộ nhớ trên iPhone; giữ app ở foreground. Chọn ZIP khác sẽ yêu cầu xác nhận lại.</p>}
             <details className="workflow-options"><summary><Icon name="settings" size={16}/> Tùy chọn nâng cao <span>{mode === 'sync' ? 'Sync' : 'Merge'} · {releaseStrategy === 'pr' ? 'Pull Request' : 'Direct Push'}</span></summary><div className="workflow-options-body">
             <div className="field"><label htmlFor="mode">Chế độ cập nhật</label><select id="mode" value={mode} disabled={busy} onChange={(e) => change(setMode, e.target.value)}><option value="merge">Merge — Thêm/sửa, giữ file cũ</option><option value="sync">Sync — Xóa file cũ không có trong ZIP</option></select>{mode === 'sync' && <small className="hint" role="status">Lưu ý: Sync có thể xóa file hiện có trên GitHub.</small>}</div>
             <div className="release-strategy" role="group" aria-label="Chiến lược cập nhật GitHub">
@@ -1125,7 +1170,7 @@ export default function Home() {
             <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
               profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
               onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.8.8</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.8.9</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -1136,7 +1181,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.8.8</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.8.9</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <ModalSheet open={Boolean(preview && securityDialogOpen && requiresConsent)} onClose={() => setSecurityDialogOpen(false)} title="Cảnh báo thông tin nhạy cảm" variant="sheet">
     <div className="sensitive-consent-modal" role="alert">
