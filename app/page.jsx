@@ -140,6 +140,15 @@ function Icon({ name, size = 20 }) {
   return <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{shapes[name] || shapes.file}</svg>;
 }
 
+const DESKTOP_TAB_ORDER = Object.freeze(['repositories','home','activity','history','settings']);
+const DESKTOP_TAB_META = Object.freeze({
+  repositories: {label:'Repositories',detail:'Kho mã nguồn',icon:'branch'},
+  home: {label:'Upload & Review',detail:'Cập nhật source',icon:'upload'},
+  activity: {label:'Activity',detail:'Tiến trình & xác minh',icon:'activity'},
+  history: {label:'History',detail:'Commit & rollback',icon:'history'},
+  settings: {label:'Settings',detail:'Tùy chỉnh ứng dụng',icon:'settings'},
+});
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState('repositories');
   const [notifications, setNotifications] = useState(INITIAL_NOTICES);
@@ -1026,14 +1035,51 @@ export default function Home() {
     <a className="polish-skip-link" href="#zipverra-main">Bỏ qua điều hướng, đến nội dung chính</a>
     <div className="shell pro-shell polish-shell" data-view-exiting={viewExiting ? "true" : undefined}>
     <div className="glow one"/><div className="glow two"/>
+    {/* Desktop: a persistent workspace navigation; mobile retains the original bottom tabs. */}
+    <aside className="desktop-workspace-nav" aria-label="Điều hướng desktop">
+      <button type="button" className="desktop-rail-top" onClick={restartWorkspace} aria-label="Khởi động lại Zipverra và bỏ lựa chọn hiện tại" title="Khởi động lại ứng dụng"><span className="desktop-rail-emblem" aria-hidden="true"><Icon name="branch" size={21}/></span><div><strong>Zipverra <span>Pro</span></strong><small>GITHUB WORKSPACE</small></div></button>
+      <div className="desktop-rail-label">WORKSPACE</div>
+      <nav className="desktop-rail-links" aria-label="Các khu vực ứng dụng">
+        {DESKTOP_TAB_ORDER.map(id => {
+          const item = DESKTOP_TAB_META[id];
+          return <button type="button" key={id} className={`desktop-rail-link${activeTab === id ? ' is-active' : ''}`} title={item.label} aria-label={`Mở ${item.label}`}
+            aria-current={activeTab === id ? 'page' : undefined} onClick={() => goToTab(id)}>
+            <Icon name={item.icon} size={19}/><span className="desktop-rail-link-copy"><strong>{item.label}</strong><small>{item.detail}</small></span>
+            {id === 'activity' && (pendingCommit || pendingPR) && <span className="desktop-rail-alert" aria-label="Có thao tác cần xác minh"/>}
+          </button>})}
+      </nav>
+      <div className="desktop-rail-bottom">
+        <span className="desktop-rail-label">GITHUB ACCOUNT</span>
+        <strong>{auth.user?.login ? `@${auth.user.login}` : 'Chưa đăng nhập'}</strong>
+        <span className="desktop-rail-branch"><Icon name="branch" size={14}/>{chosenRepo ? `${repo} · ${branch}` : 'Chọn repository để bắt đầu'}</span>
+        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.0</span>
+      </div>
+    </aside>
     <header className="topbar" role="banner">
-      <button type="button" className="brand brand-restart" onClick={restartWorkspace} aria-label="Khởi động lại Zipverra về màn hình ban đầu" title="Khởi động lại ứng dụng và bỏ lựa chọn hiện tại"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span><em> Pro</em></strong><small>MOBILE GIT WORKSPACE</small></div></button>
-      <div className="header-actions">{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.8.9</span></div>
+      <div className="desktop-topbar-path" aria-label="Khu vực đang mở"><span>WORKSPACE</span><Icon name="arrow" size={14}/><strong>{DESKTOP_TAB_META[activeTab]?.label || 'Repositories'}</strong></div>
+      <button type="button" className="brand brand-restart" onClick={restartWorkspace} aria-label="Khởi động lại Zipverra về màn hình ban đầu" title="Khởi động lại ứng dụng và bỏ lựa chọn hiện tại"><div className="brand-symbol"><Icon name="branch" size={25}/></div><div><strong>Zip<span>verra</span><em> Pro</em></strong><small>GIT WORKSPACE</small></div></button>
+      <div className="header-actions">{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.0</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} repoTools={activeTab === 'repositories' && auth.authenticated ? <button type="button" className={`repo-refresh-icon${loadingRepos ? ' is-loading' : ''}`} onClick={restartWorkspace} disabled={busy || loadingRepos || Boolean(pendingCommit || pendingPR)} aria-label="Khởi động lại ứng dụng, bỏ các lựa chọn và tải lại danh sách repository" title="Khởi động lại từ đầu"><Icon name="refresh" size={17}/></button> : null}/>
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
     {activeTab !== 'activity' && (error || busy) && <button type="button" className={`mobile-global-status ${error ? 'has-error' : ''}`} onClick={() => goToTab('activity')}><span>{error ? `Cần kiểm tra: ${error}` : `${status || 'Đang xử lý...'} · ${progress}%`}</span><Icon name="arrow" size={17}/></button>}
     <main id="zipverra-main" tabIndex={-1} aria-labelledby="zipverra-current-view" data-active-view={activeTab} className={viewExiting ? 'zip-view-exiting' : ''}>
+      {/* Desktop session summary keeps the destination visible without repeated long cards. */}
+      <section className="desktop-session-bar" aria-label="Phiên làm việc">
+        <div className="desktop-session-location"><span className="desktop-session-eyebrow">CURRENT SESSION</span>
+          <strong>{chosenRepo ? `${owner}/${repo}` : 'Chưa chọn repository'}</strong>
+          <span className="desktop-session-branch"><Icon name="branch" size={14}/>{chosenRepo ? branch : '—'}</span>
+        </div>
+        <div className="desktop-session-actions">
+          {activeTab === 'home' ? <>
+            <span className={`desktop-session-step${chosenRepo ? ' is-complete' : ' is-current'}`}>01 <b>Repository</b></span>
+            <span className={`desktop-session-step${file ? ' is-complete' : chosenRepo ? ' is-current' : ''}`}>02 <b>ZIP</b></span>
+            <span className={`desktop-session-step${preview ? ' is-current' : ''}`}>03 <b>Review & Push</b></span>
+          </> : <span className="desktop-session-helper">{activeTab === 'repositories' ? 'Chọn repository để bắt đầu cập nhật source' : activeTab === 'activity' ? 'Theo dõi thao tác GitHub và xác minh kết quả' : activeTab === 'history' ? 'Theo dõi lịch sử phiên bản và rollback' : 'Giao diện, kết nối và cấu hình'}</span>}
+          {activeTab === 'repositories' && chosenRepo && <button type="button" className="button primary desktop-session-cta" onClick={() => goToTab('home')}>Upload ZIP <Icon name="arrow" size={15}/></button>}
+          {activeTab === 'home' && !chosenRepo && <button type="button" className="button secondary desktop-session-cta" onClick={() => goToTab('repositories')}>Chọn repo <Icon name="arrow" size={15}/></button>}
+        </div>
+      </section>
       {activeTab === 'home' && <WorkflowStrip currentStep={flowStep} onRepo={() => goToTab('repositories')} onUpload={() => goToTab('home')} onReview={goToReview} onActivity={() => goToTab('activity')}/> }
       {activeTab === 'home' && <CurrentRepository owner={owner} repo={repo} branch={branch} busy={busy || Boolean(pendingCommit || pendingPR)} onChoose={() => goToTab('repositories')} onBranch={() => setBranchSheetOpen(true)}/> }
       {(pendingCommit || pendingPR) && activeTab !== 'activity' && <button type="button" className="mobile-recovery-shortcut" onClick={() => goToTab('activity')}>Có thao tác GitHub cần xác minh · Mở Activity <Icon name="arrow" size={15}/></button>}
@@ -1170,7 +1216,7 @@ export default function Home() {
             <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
               profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
               onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.8.9</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.0</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -1181,7 +1227,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.8.9</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.9.0</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <ModalSheet open={Boolean(preview && securityDialogOpen && requiresConsent)} onClose={() => setSecurityDialogOpen(false)} title="Cảnh báo thông tin nhạy cảm" variant="sheet">
     <div className="sensitive-consent-modal" role="alert">

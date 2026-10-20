@@ -2,7 +2,7 @@ export default function manifest() {
   return {
     name: 'Zipverra Pro — GitHub Workspace',
     short_name: 'Zipverra Pro',
-    description: 'Push to GitHub from Mobile. Select a repository, analyze ZIP source, and safely push to GitHub from your phone.',
+    description: 'Mobile-first GitHub workspace with desktop workbench, ZIP analysis, review and safe GitHub push.',
     id: '/',
     scope: '/',
     start_url: '/',

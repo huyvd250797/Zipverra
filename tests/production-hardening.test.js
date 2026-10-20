@@ -75,13 +75,13 @@ test('Activity tab scrolls to absolute page top on iPhone AFTER rendering, twice
   cleanup();
 });
 
-test('Desktop still aligns Activity panel, while other tabs go to top',()=>{
+test('Desktop tabs align to workbench top, including Activity',()=>{
   const v = viewport(false); let aligned=0;
   const element = {isConnected:true,scrollIntoView:(opt)=>{aligned++;assert.equal(opt.block,'start');}};
   positionTabViewport(v.win,v.doc,'activity',element);
-  assert.equal(aligned,1);assert.equal(v.calls.length,0);
+  assert.equal(aligned,0);assert.equal(v.calls.length,1);
   positionTabViewport(v.win,v.doc,'repositories',element);
-  assert.equal(v.calls.length,1);
+  assert.equal(v.calls.length,2);
 });
 
 test('Navigation scroll cleanup avoids stale animation and restores smooth-scroll preference',()=>{

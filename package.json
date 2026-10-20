@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.8.9",
+  "version": "3.9.0",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.8.9 — Large Archive Support & Memory Optimization: 120/200 MiB capacity profiles and lazy Worker reads",
+  "description": "Zipverra Pro v3.9.0 — Desktop Workspace UX: responsive sidebar, task-focused panels, and streamlined review",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

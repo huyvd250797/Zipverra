@@ -8,11 +8,11 @@ const css = read('app/styles/accessibility-visual-qa-v387.css');
 const modal = read('app/components/ModalSheet.jsx');
 const ui = read('app/components/ProfessionalUI.jsx');
 
-test('v3.8.9 app, public cache and manifest version align', () => {
-  assert.equal(JSON.parse(read('package.json')).version, '3.8.9');
-  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.8\.9'/);
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.8\.9/);
-  assert.match(page, /Zipverra · v3\.8\.9/);
+test('v3.9.0 app, public cache and manifest version align', () => {
+  assert.equal(JSON.parse(read('package.json')).version, '3.9.0');
+  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.9\.0'/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.0/);
+  assert.match(page, /Zipverra · v3\.9\.0/);
 });
 test('new accessibility CSS loads after existing premium polish', () => {
   assert.ok(root.indexOf('premium-interactions-v386.css') < root.indexOf('accessibility-visual-qa-v387.css'));

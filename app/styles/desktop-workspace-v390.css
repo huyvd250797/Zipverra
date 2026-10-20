@@ -1,0 +1,173 @@
+/* Zipverra Pro v3.9.0 — Desktop Workbench.
+   Responsive presentation only. All GitHub state, validation, consent and
+   commit code remain owned by the existing React workflow and API routes.
+   The desktop layout is isolated behind min-width breakpoints; mobile keeps
+   its original bottom navigation and single-column views. */
+.desktop-workspace-nav,.desktop-session-bar,.desktop-topbar-path{display:none}
+
+/* Tablet / desktop: display ONLY the current screen, while keeping React
+   state mounted. v3.8.9 exposed all panels concurrently above 760px. */
+@media (min-width:761px) {
+  .pro-shell main .content-grid [data-mobile-view]{display:none!important}
+  .pro-shell main[data-active-view="repositories"] .content-grid [data-mobile-view="repositories"],
+  .pro-shell main[data-active-view="home"] .content-grid [data-mobile-view="home"],
+  .pro-shell main[data-active-view="activity"] .content-grid [data-mobile-view="activity"],
+  .pro-shell main[data-active-view="history"] .content-grid [data-mobile-view="history"],
+  .pro-shell main[data-active-view="settings"] .content-grid [data-mobile-view="settings"]{display:block!important}
+
+  /* Preserves Workspace's own visibility state during repo navigation. */
+  .pro-shell main[data-active-view="repositories"] .repository-panel[style*="display: none"]{display:none!important}
+
+  .pro-shell main[data-active-view="repositories"] .content-grid,
+  .pro-shell main[data-active-view="history"] .content-grid,
+  .pro-shell main[data-active-view="settings"] .content-grid{grid-template-columns:minmax(0,1fr)}
+  .pro-shell main[data-active-view="repositories"] .side-column,
+  .pro-shell main[data-active-view="history"] .form-column,
+  .pro-shell main[data-active-view="settings"] .form-column,
+  .pro-shell main[data-active-view="activity"] .form-column{display:none}
+  .pro-shell main[data-active-view="home"] .repository-panel{display:none!important}
+  .pro-shell main[data-active-view="activity"] .content-grid{grid-template-columns:minmax(0,1fr)}
+  .pro-shell main[data-active-view="activity"] .side-column{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:18px;align-items:start}
+  .pro-shell main[data-active-view="activity"] .activity-panel,
+  .pro-shell main[data-active-view="activity"] .pro-journal-panel{margin:0}
+  .pro-shell main[data-active-view="history"] .side-column,
+  .pro-shell main[data-active-view="settings"] .side-column{display:block}
+  .pro-shell main[data-active-view="history"] .history-panel,
+  .pro-shell main[data-active-view="settings"] .settings-panel{max-width:1100px;margin-inline:auto}
+  .pro-shell main[data-active-view="settings"] .settings-panel{max-width:880px}
+
+  .pro-shell main:not(.zip-view-exiting) .content-grid [data-mobile-view]{animation:zip390-panel-in 250ms cubic-bezier(.2,.75,.2,1) both}
+  .pro-shell main.zip-view-exiting .content-grid [data-mobile-view]{animation:zip390-panel-out 160ms ease-in both!important;pointer-events:none}
+}
+@keyframes zip390-panel-in{from{opacity:0;transform:translate3d(0,7px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+@keyframes zip390-panel-out{from{opacity:1;transform:translate3d(0,0,0)}to{opacity:0;transform:translate3d(0,-4px,0)}}
+
+@media (min-width:761px) and (max-width:1099px){
+  /* Tablet / narrow PC has an icon rail, never an inaccessible hidden menu. */
+  .desktop-workspace-nav{display:flex;flex-direction:column;align-items:center;gap:9px;position:fixed;z-index:50;inset:0 auto 0 0;width:70px;padding:18px 8px;background:var(--pro-surface);border-right:1px solid var(--pro-border)}
+  .desktop-rail-top{display:flex;justify-content:center;border:0;background:transparent;color:var(--pro-text);padding:0 0 15px;width:100%;cursor:pointer}
+  .desktop-rail-top>div,.desktop-rail-label,.desktop-rail-link-copy,.desktop-rail-bottom{display:none!important}
+  .desktop-rail-emblem{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;color:var(--pro-accent);background:var(--pro-accent-surface)}
+  .desktop-rail-links{display:flex;flex-direction:column;gap:10px;width:100%}
+  .desktop-rail-link{display:flex;justify-content:center;align-items:center;width:100%;height:48px;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--pro-muted)}
+  .desktop-rail-link.is-active{background:var(--pro-accent-surface);border-color:var(--pro-border-strong);color:var(--pro-accent)}
+  .desktop-rail-link:focus-visible,.desktop-rail-top:focus-visible{outline:2px solid var(--pro-focus);outline-offset:2px}
+  .desktop-rail-alert{width:6px;height:6px;background:var(--pro-warning);border-radius:50%}
+  .pro-shell.polish-shell{max-width:none;width:100%;margin:0;padding-left:93px;padding-right:23px;overflow:clip}
+  .pro-shell .content-grid[data-active-view="home"]{grid-template-columns:minmax(0,1fr)}
+  .pro-shell main[data-active-view="activity"] .side-column{grid-template-columns:1fr}
+  .pro-shell .preview-panel{min-height:0}
+  .pro-shell .pro-view-intro{margin-top:8px}
+}
+
+@media (min-width:1100px){
+  :root{--zip390-rail:238px;--zip390-header:68px}
+  html{scroll-behavior:auto}
+  body{overflow-x:clip}
+  .pro-shell.polish-shell{max-width:none;width:100%;min-height:100dvh;margin:0;padding:0 clamp(20px,2.4vw,40px) 12px calc(var(--zip390-rail) + clamp(20px,2.4vw,40px));overflow:clip}
+  .pro-shell .glow{opacity:.055}
+  .pro-shell .topbar{position:sticky;z-index:35;top:0;margin:0 -4px 0;height:var(--zip390-header);padding:0 5px;background:color-mix(in srgb,var(--pro-bg) 93%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--pro-border)}
+  .pro-shell .topbar>.brand{display:none}
+  .desktop-topbar-path{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--pro-subtle);min-width:0}
+  .desktop-topbar-path>span{font-size:10px;font-weight:780;letter-spacing:1.2px}
+  .desktop-topbar-path>svg{color:var(--pro-accent)}
+  .desktop-topbar-path>strong{font-size:13px;color:var(--pro-text);font-weight:720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pro-shell .brand{gap:9px}
+  .pro-shell .brand-symbol{width:33px;height:33px;border-radius:10px}
+  .pro-shell .brand-symbol svg{width:19px;height:19px}
+  .pro-shell .brand strong{font-size:16px;letter-spacing:-.4px}
+  .pro-shell .brand small{font-size:8px;letter-spacing:1.15px}
+  .pro-shell .header-actions .version{padding:6px 10px;font-size:11px}
+  .pro-shell .pro-view-intro.mobile-context{padding:11px 0 12px;margin:0;border:0;min-height:57px}
+  .pro-shell .pro-view-intro h2{font-size:21px;font-weight:770;letter-spacing:-.6px}
+  .pro-shell .pro-view-indicators .mobile-connection{font-size:10px}
+  .pro-shell #zipverra-main{min-width:0;padding-bottom:12px}
+  .pro-shell .content-grid{gap:18px;min-width:0;align-items:start}
+  .pro-shell .form-column,.pro-shell .side-column{gap:16px}
+  .pro-shell .panel{border-radius:15px;padding:clamp(16px,1.55vw,24px);box-shadow:0 3px 15px rgba(0,0,0,.055)}
+  .pro-shell .step-heading{margin-bottom:15px;gap:10px}
+  .pro-shell .step-heading h2{font-size:17px}
+  .pro-shell .step-heading p{font-size:11.5px}
+  .pro-shell .step-number{min-width:32px;padding:8px 6px;font-size:11px}
+  .pro-shell footer{margin:8px 0 0;padding:11px 0 8px;font-size:10px;opacity:.7}
+
+  /* Persistent navigation rail: no full-page menu scrolling. */
+  .desktop-workspace-nav{display:flex;flex-direction:column;position:fixed;z-index:50;inset:0 auto 0 0;width:var(--zip390-rail);padding:23px 13px 16px;background:color-mix(in srgb,var(--pro-surface) 68%,var(--pro-bg));border-right:1px solid var(--pro-border);min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--pro-border) transparent}
+  .desktop-rail-top{display:flex;align-items:center;gap:10px;padding:1px 10px 28px;border:0;background:transparent;color:var(--pro-text);text-align:left;width:100%;cursor:pointer;border-radius:10px}
+  .desktop-rail-emblem{width:38px;height:38px;display:grid;place-items:center;flex:none;border-radius:12px;background:var(--pro-accent-surface);color:var(--pro-accent);border:1px solid var(--pro-border-strong)}
+  .desktop-rail-top strong{font-size:15px;letter-spacing:-.45px;white-space:nowrap}
+  .desktop-rail-top strong span{color:var(--pro-accent)}
+  .desktop-rail-top small{display:block;margin-top:4px;font-size:9px;font-weight:780;letter-spacing:1.25px;color:var(--pro-subtle)}
+  .desktop-rail-label{display:block;padding:0 12px 10px;font-size:10px;letter-spacing:1.2px;font-weight:800;color:var(--pro-subtle)}
+  .desktop-rail-links{display:grid;gap:5px}
+  .desktop-rail-link{display:flex;align-items:center;gap:12px;width:100%;min-height:57px;padding:9px 12px;border:1px solid transparent;border-radius:12px;background:transparent;color:var(--pro-muted);text-align:left;transition:background 170ms ease,border-color 170ms ease,color 170ms ease,transform 170ms ease;position:relative}
+  .desktop-rail-link>svg{flex:none;color:var(--pro-subtle);transition:color 170ms ease}
+  .desktop-rail-link-copy{display:flex;flex-direction:column;gap:3px;min-width:0}
+  .desktop-rail-link strong{font-size:12.5px;letter-spacing:-.1px;font-weight:730}
+  .desktop-rail-link small{font-size:10px;color:var(--pro-subtle)}
+  .desktop-rail-link:hover{background:var(--pro-surface-raised);color:var(--pro-text)}
+  .desktop-rail-link:active{transform:scale(.985)}
+  .desktop-rail-link.is-active{background:var(--pro-accent-surface);border-color:var(--pro-border-strong);color:var(--pro-text)}
+  .desktop-rail-link.is-active>svg{color:var(--pro-accent)}
+  .desktop-rail-link.is-active::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:3px;border-radius:0 4px 4px 0;background:var(--pro-accent)}
+  .desktop-rail-top:focus-visible,.desktop-rail-link:focus-visible,.desktop-session-cta:focus-visible{outline:2px solid var(--pro-focus);outline-offset:3px}
+  .desktop-rail-alert{width:7px;height:7px;margin-left:auto;border-radius:50%;background:var(--pro-warning)}
+  .desktop-rail-bottom{margin-top:auto;border-top:1px solid var(--pro-border);padding:18px 12px 0;display:grid;gap:5px;min-width:0}
+  .desktop-rail-bottom .desktop-rail-label{padding:0 0 5px}
+  .desktop-rail-bottom>strong{font-size:12px;overflow-wrap:anywhere;line-height:1.5}
+  .desktop-rail-branch{display:inline-flex;align-items:center;gap:6px;color:var(--pro-muted);font-size:11px;overflow-wrap:anywhere}
+  .desktop-rail-status{font-size:10.5px;color:var(--pro-subtle);margin-top:10px}
+  .desktop-rail-status.is-online{color:var(--pro-accent)}
+
+  /* Single-line target context replaces redundant panels above Upload. */
+  .desktop-session-bar{display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:66px;padding:10px 18px;margin:2px 0 15px;border:1px solid var(--pro-border);border-radius:14px;background:var(--pro-surface);color:var(--pro-text)}
+  .desktop-session-location{display:flex;flex-direction:column;gap:3px;min-width:0;max-width:40%}
+  .desktop-session-location strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .desktop-session-eyebrow{font-size:9px;font-weight:800;letter-spacing:1.2px;color:var(--pro-subtle)}
+  .desktop-session-branch{display:flex;align-items:center;gap:5px;color:var(--pro-muted);font-size:11px}
+  .desktop-session-actions{display:flex;align-items:center;justify-content:flex-end;gap:9px;flex-wrap:wrap}
+  .desktop-session-step{display:flex;gap:6px;align-items:center;padding:7px 10px;background:var(--pro-surface-2);border-radius:8px;border:1px solid var(--pro-border);font-size:10px;font-weight:650;color:var(--pro-subtle);white-space:nowrap}
+  .desktop-session-step b{font-size:11px;font-weight:760;color:var(--pro-muted)}
+  .desktop-session-step.is-current{color:var(--pro-accent);border-color:var(--pro-border-strong);background:var(--pro-accent-surface)}
+  .desktop-session-step.is-current b,.desktop-session-step.is-complete b{color:var(--pro-text)}
+  .desktop-session-step.is-complete{color:var(--pro-accent)}
+  .desktop-session-helper{font-size:11px;line-height:1.5;color:var(--pro-muted)}
+  .desktop-session-cta.button{min-height:35px;padding:7px 12px;font-size:11px}
+
+  /* Main task: compact configuration on left, roomy review on right. */
+  .pro-shell main[data-active-view="home"] .content-grid{grid-template-columns:minmax(305px,35%) minmax(0,1fr)}
+  .pro-shell main[data-active-view="home"] .upload-panel{position:sticky;top:calc(var(--zip390-header) + 14px)}
+  .pro-shell main[data-active-view="home"] .drop-zone{min-height:120px;padding:17px 12px}
+  .pro-shell main[data-active-view="home"] .drop-zone .file-symbol{width:35px;height:35px}
+  .pro-shell main[data-active-view="home"] .drop-zone .file-symbol svg{width:20px;height:20px}
+  .pro-shell main[data-active-view="home"] .drop-zone small{font-size:10.5px}
+  .pro-shell main[data-active-view="home"] .limits{margin:9px 0 11px}
+  .pro-shell main[data-active-view="home"] .file-detail{margin:8px 0 1px}
+  .pro-shell main[data-active-view="home"] .workflow-next{margin-top:12px}
+  .pro-shell main[data-active-view="home"] .workflow-options{margin-top:12px}
+  .pro-shell main[data-active-view="home"] .preview-panel{min-height:0;max-height:calc(100dvh - 236px);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:var(--pro-border-strong) transparent;scroll-margin-top:80px}
+  .pro-shell main[data-active-view="home"] .preview-panel .stat-grid>div{padding:9px 6px}
+  .pro-shell main[data-active-view="home"] .preview-panel .stat-grid strong{font-size:19px}
+  .pro-shell main[data-active-view="home"] .preview-panel .premium-review-files{scroll-margin-top:8px}
+  .pro-shell main[data-active-view="home"] .preview-panel .change-list{max-height:220px}
+  .pro-shell main[data-active-view="home"] .premium-review-confirm{scroll-margin-top:10px}
+  .pro-shell .preview-panel .step-heading--mobile-center{flex-direction:row;align-items:flex-start;text-align:left}
+  .pro-shell main[data-active-view="repositories"] .repository-panel{width:100%;max-width:1040px;margin-inline:auto}
+  .pro-shell main[data-active-view="repositories"] .workspace-panel{width:100%}
+  .pro-shell main[data-active-view="activity"] .side-column{grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr)}
+  .pro-shell main[data-active-view="activity"] .activity-panel,
+  .pro-shell main[data-active-view="activity"] .pro-journal-panel{min-width:0}
+  .pro-shell main[data-active-view="activity"] .pro-journal-panel{max-height:calc(100dvh - 236px);overflow-y:auto;scrollbar-width:thin}
+  .pro-shell main[data-active-view="history"] .history-panel{width:100%}
+}
+@media (min-width:1100px) and (max-width:1310px){
+  :root{--zip390-rail:206px}
+  .pro-shell main[data-active-view="home"] .content-grid{grid-template-columns:minmax(270px,39%) minmax(0,1fr)}
+  .desktop-session-step{padding:6px 7px;font-size:9px}
+  .desktop-session-step b{font-size:10px}
+  .desktop-rail-top{padding-inline:5px}
+}
+@media (prefers-reduced-motion:reduce){
+  .desktop-rail-link{transition:none!important}
+  .pro-shell main .content-grid [data-mobile-view]{animation:none!important}
+}

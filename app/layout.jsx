@@ -21,10 +21,11 @@ import './styles/premium-interactions-v386.css';
 import './styles/accessibility-visual-qa-v387.css';
 import './styles/smooth-motion-v388.css';
 import './styles/large-archive-v389.css';
+import './styles/desktop-workspace-v390.css';
 
 export const metadata = {
   title: 'Zipverra Pro — GitHub Workspace',
-  description: 'Push to GitHub from Mobile. Choose a repository, upload and verify a ZIP, then commit and track GitHub push from your phone.',
+  description: 'Mobile-first GitHub workspace with a streamlined desktop layout. Analyze ZIP, review changes and push safely to GitHub.',
   applicationName: 'Zipverra Pro',
   appleWebApp: { capable: true, title: 'Zipverra Pro', statusBarStyle: 'black-translucent' },
   icons: { icon: [{ url: '/icon.svg', type: 'image/svg+xml' }, { url: '/icon-192.png', type: 'image/png', sizes: '192x192' }], apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }] },

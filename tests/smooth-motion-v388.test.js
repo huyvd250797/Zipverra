@@ -7,10 +7,10 @@ const modal = read('app/components/ModalSheet.jsx');
 const page = read('app/page.jsx');
 const root = read('app/layout.jsx');
 
-test('v3.8.9 app, sw, cache and motion CSS are release-aligned',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.8.9');
-  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.8\.9'/);
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.8\.9/);
+test('v3.9.0 app, sw, cache and motion CSS are release-aligned',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.0');
+  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.9\.0'/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.0/);
   assert.ok(root.indexOf('accessibility-visual-qa-v387.css') < root.indexOf('smooth-motion-v388.css'));
 });
 test('native modal preserves content during prop-driven close and delays physical close',()=>{
