@@ -105,7 +105,7 @@ test('modal and help share the same lock without hiding security warnings',()=>{
   assert.match(css,/overscroll-behavior:contain/);
   assert.match(css,/-webkit-overflow-scrolling:touch/);
   assert.match(page,/\(requiresConsent && !sensitiveConsent\)/);
-  assert.match(page,/Sync có thể xóa file hiện có trên GitHub/);
+  assert.match(page,/Sync có thể xóa file trên GitHub/);
 });
 
 test('branch list is read-only and authorized by GitHub App Contents write, without PR permission',async()=>{

@@ -8,13 +8,13 @@ const read = name => readFileSync(new URL(`../${name}`, import.meta.url), 'utf8'
 const page = read('app/page.jsx');
 const css = read('app/styles/professional-copy-v397.css');
 
-test('v3.9.7 package, PWA and final stylesheet match', () => {
-  assert.equal(APP_VERSION, '3.9.7');
-  assert.equal(JSON.parse(read('package.json')).version, '3.9.7');
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.7/);
+test('v3.9.8 package, PWA and final stylesheet match', () => {
+  assert.equal(APP_VERSION, '3.9.8');
+  assert.equal(JSON.parse(read('package.json')).version, '3.9.8');
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.8/);
   const layout=read('app/layout.jsx');
   assert.ok(layout.indexOf('review-gate-hotfix-v396.css') < layout.indexOf('professional-copy-v397.css'));
-  assert.match(page, /Zipverra · v3\.9\.7/);
+  assert.match(page, /Zipverra · v3\.9\.8/);
 });
 test('Review keeps compact titles and removes redundant paragraphs', () => {
   assert.match(page, /<strong>File thay đổi<\/strong>/);

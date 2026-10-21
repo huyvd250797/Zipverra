@@ -1,3 +1,10 @@
+# v3.9.8 — Minimal Interface & Manual Repo Selection
+
+- Removed auto-select recent repository preference and automatic re-selection logic.
+- Removed repeated explanatory copy and relocated ZIP limits into Advanced Options.
+- Simplified initial Mobile Upload; kept manual repo shortcuts and all Push/security gates.
+- All server GitHub API routes preserved.
+
 # v3.9.7 — Professional UI & Concise Copy
 
 - Reduced repeated explanatory copy throughout Upload, Review, Risk Center and final Push confirmation.

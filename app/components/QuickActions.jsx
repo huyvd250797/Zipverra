@@ -4,7 +4,7 @@ import { quickActionRepos, quickProfile, profileDiffers } from '../../lib/quick-
 /** Inline Upload shortcuts: one tap to pick a repo; saved release modes never
  * activate silently. The existing Review and consent gates remain authoritative. */
 export default function QuickActions({ repos, favorites, recents, usage, selectedRepo, branch, mode, strategy,
-  profiles, disabled, autoRestore, onAutoRestoreChange, onChoose, onOpenPicker, onToggleFavorite, onSaveProfile, onApplyProfile }) {
+  profiles, disabled, onChoose, onOpenPicker, onToggleFavorite, onSaveProfile, onApplyProfile }) {
   const shortcuts = quickActionRepos({ repos, favorites, recents, usage, selected:selectedRepo });
   const profile = quickProfile(profiles, repos, selectedRepo);
   const differs = profileDiffers(profile, {branch, mode, strategy});
@@ -13,7 +13,7 @@ export default function QuickActions({ repos, favorites, recents, usage, selecte
   if (!repos?.length) return null;
   return <section className="zip393-quick-actions" aria-label="Truy cập nhanh và cấu hình repository">
     <div className="zip393-quick-heading">
-      <strong>Truy cập nhanh</strong>
+      <strong>Repo thường dùng</strong>
       <button className="zip393-quick-link" type="button" onClick={onOpenPicker} disabled={disabled}>Tất cả repo <span aria-hidden="true">↗</span></button>
     </div>
     {shortcuts.length > 0 ? <div className="zip393-shortcuts" role="group" aria-label="Repository thường dùng">
@@ -23,7 +23,7 @@ export default function QuickActions({ repos, favorites, recents, usage, selecte
         <span className="zip393-shortcut-icon" aria-hidden="true">{item.origin === 'pinned' ? '★' : item.origin === 'recent' ? '↺' : '⌁'}</span>
         <span className="zip393-shortcut-name"><small>{item.repo.split('/')[0]}</small><strong>{item.repo.split('/').slice(1).join('/')}</strong></span>
       </button>)}
-    </div> : <p className="zip393-quick-empty">Chọn repository lần đầu; những repo thường dùng sẽ xuất hiện ở đây.</p>}
+    </div> : <p className="zip393-quick-empty">Chưa có repo thường dùng</p>}
     {selectedRepo && authorized && <div className="zip393-profile-strip">
       <button type="button" className={`zip393-pin-button${pinned ? ' is-pinned' : ''}`} onClick={() => onToggleFavorite(selectedRepo)}
         disabled={disabled} aria-pressed={pinned} title={pinned ? 'Bỏ ghim repository' : 'Ghim repository'}>
@@ -38,10 +38,5 @@ export default function QuickActions({ repos, favorites, recents, usage, selecte
         title="Lưu lựa chọn hiện tại chỉ trên thiết bị này, không lưu token hay source">{profile ? 'Lưu lại' : 'Lưu Profile'}</button>}
       {profile && !differs && <span className="zip393-profile-current" aria-label="Đang sử dụng profile đã lưu">✓ Đúng Profile</span>}
     </div>}
-    <label className="zip393-restore-toggle" title="Chỉ tự chọn repo đã dùng gần đây có quyền GitHub, luôn giữ Merge + Direct và yêu cầu Review/Push thủ công">
-      <input type="checkbox" checked={autoRestore} disabled={disabled} onChange={e => onAutoRestoreChange(e.target.checked)}/>
-      <span>Tự chọn repo gần nhất khi mở app <small>(không tự áp dụng Sync/PR)</small></span>
-    </label>
-    <span className="zip393-quick-note">Đổi repo/áp dụng Profile sẽ không tự Push; mọi xác nhận bảo mật vẫn bắt buộc.</span>
   </section>;
 }

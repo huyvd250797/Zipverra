@@ -38,7 +38,7 @@ export default function BranchPrPanel({ owner, repo, branch, online, busy, api, 
       <span>Branch & Pull Requests <small>Tùy chọn nâng cao</small></span><span aria-hidden="true">{opened ? '▴' : '▾'}</span>
     </button>
     {opened && <div className="branch-pr-content">
-      <p className="branch-pr-note">Branch riêng và PR giúp review trước khi Merge vào <b>main</b>. ZIP Push thông thường vẫn trực tiếp lên branch đã chọn.</p>
+      
       <div className="branch-pr-tabs" role="group" aria-label="Chọn nội dung quản lý GitHub"><button type="button" className={section==='prs'?'active':''} aria-pressed={section==='prs'} onClick={()=>setSection('prs')}>Pull Requests{data?` · ${data.prs.length}`:''}</button><button type="button" className={section==='branches'?'active':''} aria-pressed={section==='branches'} onClick={()=>setSection('branches')}>Branches{data?` · ${data.branches.length}`:''}</button></div>
       <button type="button" className="button secondary full" onClick={load} disabled={!online || busy || loading || mergeBusy}>{loading ? 'Đang tải...' : 'Refresh branches & PRs'}</button>
       {error && <div className="branch-pr-error" role="alert">{error}</div>}
@@ -55,7 +55,7 @@ export default function BranchPrPanel({ owner, repo, branch, online, busy, api, 
       </>}
       {mergeCandidate && <div className="branch-pr-merge">
         <h3>Xác nhận merge PR #{mergeCandidate.number}</h3>
-        <p>Chỉ merge sau khi đã review diff, approvals và CI trên GitHub. GitHub vẫn thực thi branch protection và required checks. Zipverra sẽ kiểm tra SHA trước khi merge.</p>
+        <p>Kiểm tra CI, approvals và Diff trước khi Merge.</p>
         <p><b>{mergeCandidate.sourceBranch}</b> → <b>{mergeCandidate.baseBranch}</b></p>
         <label htmlFor="pr-merge-confirm">Nhập <b>MERGE</b> để xác nhận</label>
         <input id="pr-merge-confirm" value={mergeConfirm} onChange={e=>setMergeConfirm(e.target.value)} autoComplete="off" spellCheck={false} placeholder="MERGE" />

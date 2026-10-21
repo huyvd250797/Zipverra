@@ -62,7 +62,7 @@ test('security critical, sync deletion warning and explicit confirmation remain 
   const ui = read('app/components/PolishedWorkspace.jsx');
   assert.match(main, /\(requiresConsent && !sensitiveConsent\)/);
   assert.match(main, /mode === 'sync'/);
-  assert.match(main, /Sync có thể xóa file hiện có trên GitHub/);
+  assert.match(main, /Sync có thể xóa file trên GitHub/);
   assert.match(main, /!confirmed \|\| \(mode === 'sync'/);
   assert.match(main, /<ReviewReadiness state=\{pushReadiness\}/);
   assert.match(main, /disabled=\{!canSubmitPush\}/);

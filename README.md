@@ -1,3 +1,15 @@
+# Zipverra Pro v3.9.8 — Minimal Interface & Manual Repo Selection
+
+**Current release:** [RELEASE_V398.md](RELEASE_V398.md) · **QA:** [QA_CHECKLIST_V398.md](QA_CHECKLIST_V398.md). Previous: [RELEASE_V397.md](RELEASE_V397.md).
+
+- No automatic repository selection. Recent/pinned repos and Push Profiles work only after the user taps.
+- Removed redundant explanatory text; the default mobile Upload is shorter and has fewer disabled controls.
+- Warnings, consent gates, GitHub APIs and Commit/PR safeguards are unchanged.
+
+**Deploy:** Place contents of `Zipverra-v3.9.8/` in repository root; run `npm install`, `npm test`, `npm run build` and test on Vercel Preview/iPhone before production.
+
+---
+
 # Zipverra Pro v3.9.7 — Professional UI & Concise Copy
 
 **Current release:** [RELEASE_V397.md](RELEASE_V397.md) · **Acceptance checklist:** [QA_CHECKLIST_V397.md](QA_CHECKLIST_V397.md). Previous: [RELEASE_V396.md](RELEASE_V396.md).

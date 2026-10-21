@@ -80,7 +80,7 @@ test('modal scroll lock, security warnings and explicit push consent remain inta
   const page=read('app/page.jsx');
   assert.match(modal,/lockModalScroll\(document, window/);
   assert.match(modal,/data-modal-scroll-region/);
-  assert.match(page,/Sync có thể xóa file hiện có trên GitHub/);
+  assert.match(page,/Sync có thể xóa file trên GitHub/);
   assert.match(page,/\(requiresConsent && !sensitiveConsent\)/);
   assert.match(page,/requestOnce\('commit', commitPayload\)/);
 });

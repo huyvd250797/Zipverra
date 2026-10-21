@@ -11,8 +11,8 @@ const layout = read('app/layout.jsx');
 const safe = { hasPreview:true, selectedCount:20, critical:0, authenticated:true,
   online:true, busy:false, pending:false, confirmed:false, syncDeleteCount:0, syncConfirmed:false };
 
-test('v3.9.7 includes modal-motion override after all prior UI layers',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.7');
+test('v3.9.8 includes modal-motion override after all prior UI layers',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.8');
   assert.match(layout,/import '\.\/styles\/modal-motion-v360\.css'/);
   assert.ok(layout.indexOf('premium-workflow-v350.css') < layout.indexOf('modal-motion-v360.css'));
 });

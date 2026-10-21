@@ -57,7 +57,7 @@ export function RepositoryPickerSheet({ open, onClose, repos, selected, favorite
           <span aria-hidden="true">{selected.toLowerCase() === item.full_name.toLowerCase() ? '✓' : '›'}</span>
         </button>
       </div>)}
-      {options.length > 120 && <p className="zip-sheet-note">Hiển thị 120 repository. Nhập tên để lọc danh sách.</p>}
+      {options.length > 120 && <p className="zip-sheet-note">Hiển thị 120 repo · Tìm để lọc.</p>}
       {!options.length && <p className="zip-sheet-note">Không có repository phù hợp.</p>}
     </div>
   </ModalSheet>;
@@ -92,7 +92,7 @@ export function BranchPickerSheet({ open, onClose, owner, repo, current, online,
       onChange={e => setQuery(e.target.value)} placeholder="Tìm branch..." autoComplete="off"/></div>
     {status === 'loading' && <p className="zip-sheet-note" role="status">Đang tải branch từ GitHub…</p>}
     {status === 'error' && <p className="zip-sheet-error" role="alert">{error}</p>}
-    {status === 'offline' && <p className="zip-sheet-note">Thiết bị offline. Có thể nhập branch thủ công.</p>}
+    {status === 'offline' && <p className="zip-sheet-note">Offline · Nhập branch thủ công.</p>}
     {status === 'ready' && <div className="zip-branch-results" role="list" aria-label="Danh sách branch">
       {filtered.map(item => <div role="listitem" key={item.name}><button type="button"
         className={`zip-branch-option${current === item.name ? ' selected' : ''}`} disabled={disabled}

@@ -49,8 +49,6 @@
 .zip-repo-extra-tools .branch-pr-panel {margin-top:10px;}
 .pro-shell .repository-panel .repo-advanced,.pro-shell .repository-panel .pro-dash-details {margin:0;border-top:1px solid var(--zip-ui-stroke);border-bottom:0;padding:11px 2px;}
 .pro-shell .repository-panel .repo-advanced summary,.pro-shell .repository-panel .pro-dash-details summary {font-weight:700;color:var(--pro-muted);font-size:11px;}
-.zip-missing-repo {display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:12px;color:var(--pro-muted);margin-bottom:12px;}
-.zip-missing-repo button {background:transparent;border:0;padding:5px 2px;color:var(--pro-accent);font:inherit;font-weight:780;cursor:pointer;}
 
 /* Desktop/tablet gets a centered comfortable workspace rather than a giant hero. */
 @media (min-width:761px) {

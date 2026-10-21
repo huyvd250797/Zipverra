@@ -28,7 +28,7 @@ export default function RecoveryCenter({ push, pr, online, busy, authenticated, 
   const items = recoveryItems({ push, pr, rollback, authorized: authorizedRepos.map(r => r.full_name) });
   if (!items.length) return null;
   return <section className="pwa-recovery-center" aria-label="Recovery Center">
-    <div className="pwa-recovery-heading"><span>RECOVERY CENTER</span><h3>{items.length} thao tác cần xác minh</h3><p>Đọc lại kết quả từ GitHub trước khi thực hiện thao tác mới. Không tự tạo commit hoặc merge lại.</p></div>
+    <div className="pwa-recovery-heading"><span>RECOVERY CENTER</span><h3>{items.length} thao tác cần xác minh</h3><p>Kiểm tra kết quả GitHub trước khi tiếp tục.</p></div>
     <div className="pwa-recovery-list">{items.map(item => <div className="pwa-recovery-item" key={item.type}>
       <div><strong>{({ push: 'GitHub Push', pr: 'Pull Request', rollback: 'Safe Rollback' })[item.type]}</strong>
         <small>{item.repo} · {item.branch} · {item.sha.slice(0, 10)}</small></div>
@@ -37,6 +37,6 @@ export default function RecoveryCenter({ push, pr, online, busy, authenticated, 
         {item.type === 'rollback' ? 'Mở History' : item.type === 'pr' ? 'Kiểm tra / Tạo PR' : 'Xác minh Push'}
       </button>
     </div>)}</div>
-    <p className="pwa-recovery-footnote">Không lưu ZIP hoặc mã nguồn vào cache PWA. Các bản ghi phục hồi có thể mất nếu iOS xóa dữ liệu trình duyệt. Khi Rollback ở repo khác, hãy chọn đúng repo và branch trong Repos trước khi xác minh. Nút PR có thể tạo PR còn thiếu sau khi người dùng nhấn.</p>
+    
   </section>;
 }

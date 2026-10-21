@@ -34,7 +34,7 @@ export const RepositoryEmpty = memo(function RepositoryEmpty({ authenticated, lo
   return <div className="polish-empty" role="status">
     <span className="polish-empty-icon" aria-hidden="true">⌁</span>
     <strong>Chưa có repository được cấp quyền</strong>
-    <p>Kiểm tra installation của GitHub App, cấp Contents: Read &amp; write cho repository rồi làm mới danh sách.</p>
+    <p>Cấp quyền repository trong GitHub App.</p>
     <div className="polish-empty-actions">
       <a href="/api/auth/install" target="_blank" rel="noopener noreferrer" className="button secondary">Quản lý GitHub App ↗</a>
       <button type="button" className="button secondary" onClick={onRefresh}>Tải lại repo</button>

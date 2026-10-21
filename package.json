@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.9.7",
+  "version": "3.9.8",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.9.7 — Professional UI & Concise Copy: concise Review, readable risk hierarchy, unchanged GitHub safety gates",
+  "description": "Zipverra Pro v3.9.8 — Minimal Interface & Manual Repo Selection: concise workspace, no automatic repository restoration, unchanged GitHub safety gates",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

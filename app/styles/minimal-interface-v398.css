@@ -1,0 +1,27 @@
+/* v3.9.8 — Minimal Interface: remove redundant guidance, never hide security notices. */
+/* The repository selector and Quick Access already provide the first action.
+   Until a repository is selected, the disabled ZIP drop zone is redundant. */
+.pro-shell .upload-panel .drop-zone.locked { display:none !important; }
+/* Treat advanced metadata as optional, not as another tutorial underneath Upload. */
+.pro-shell .zip393-quick-empty {font-size:12px;line-height:1.5;}
+.pro-shell .zip393-quick-heading strong {font-size:13px;}
+.pro-shell .zip393-quick-actions {gap:10px;}
+.pro-shell .zip393-shortcut-name strong {font-size:12px;}
+.pro-shell .zip393-shortcut-name small {font-size:10px;}
+.pro-shell .zip393-shortcut {min-height:48px;}
+@media(max-width:760px){
+  /* The screen title already states the current stage; on a narrow screen
+     the five-step diagram otherwise repeats the same information. */
+  .pro-shell main[data-active-view="home"]>.pro-stepper{display:none!important}
+  .pro-shell main[data-active-view="home"] .zip393-shortcuts {grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;}
+  .pro-shell main[data-active-view="home"] .zip393-shortcut {justify-content:flex-start;padding:9px 12px;gap:10px;min-height:52px;}
+  .pro-shell main[data-active-view="home"] .zip393-shortcut-icon {font-size:15px;}
+  .pro-shell main[data-active-view="home"] .zip393-quick-actions {padding:13px;gap:10px;}
+  .pro-shell main[data-active-view="home"] .zip393-profile-strip{padding-top:10px;}
+}
+@media(max-width:340px){
+  .pro-shell main[data-active-view="home"] .zip393-shortcuts{grid-template-columns:1fr;}
+}
+@media(prefers-reduced-motion:reduce){
+  .pro-shell .zip393-shortcut {transition:none!important;}
+}

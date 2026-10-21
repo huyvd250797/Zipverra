@@ -1,17 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { quickActionRepos, quickProfile, profileDiffers, lastAuthorizedRepo, QUICK_RESTORE_KEY } from '../lib/quick-actions.js';
+import { quickActionRepos, quickProfile, profileDiffers } from '../lib/quick-actions.js';
 import { APP_VERSION } from '../lib/pwa-reliability.js';
 const read=name=>readFileSync(new URL(`../${name}`,import.meta.url),'utf8');
 const repos=['team/Finzaro','team/Zipverra','team/SendInt','team/TestPilot','team/Extra'].map(full_name=>({full_name}));
 const now=Date.now();
 
-test('v3.9.7 version and CSS cascade are aligned',()=>{
-  assert.equal(APP_VERSION,'3.9.7');
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.7');
-  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.7/);
-  assert.match(read('app/page.jsx'),/Zipverra · v3\.9\.7/);
+test('v3.9.8 version and CSS cascade are aligned',()=>{
+  assert.equal(APP_VERSION,'3.9.8');
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.8');
+  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.8/);
+  assert.match(read('app/page.jsx'),/Zipverra · v3\.9\.8/);
   const layout=read('app/layout.jsx');
   assert.ok(layout.indexOf('one-screen-v392.css') < layout.indexOf('quick-actions-v393.css'));
 });
@@ -46,22 +46,16 @@ test('profile difference is shown before explicit user action',()=>{
   assert.equal(profileDiffers(null,{branch:'main',mode:'merge',strategy:'direct'}),false);
 });
 
-test('opt-in restore accepts only the latest authorized repo and never falls back to invalid entries',()=>{
-  assert.equal(lastAuthorizedRepo(repos,['bad/private','team/Zipverra']),'team/Zipverra');
-  assert.equal(lastAuthorizedRepo(repos,['bad/private']),null);
-  assert.equal(lastAuthorizedRepo(repos,[]),null);
-  assert.equal(lastAuthorizedRepo([],[repos[0].full_name]),null);
-  assert.match(QUICK_RESTORE_KEY,/quickRestoreLastRepo/);
-});
-
-test('restoration preference is account-scoped, opt-in, and restores only safe defaults',()=>{
+test('last-repository auto-restore is fully removed from source and UI',()=>{
   const page=read('app/page.jsx');
-  assert.match(page,/accountStorageKey\(QUICK_RESTORE_KEY,auth\.user\)/);
-  assert.match(page,/!== 'enabled'\) return/);
-  assert.match(page,/lastAuthorizedRepo\(repos,recent\)/);
-  assert.match(page,/if \(owner \|\| repo \|\| file \|\| preview \|\| busy \|\| pendingCommit \|\| pendingPR\) return/);
-  assert.match(page,/setMode\('merge'\);setReleaseStrategy\('direct'\)/);
-  assert.doesNotMatch(page.slice(page.indexOf('function setQuickRestorePreference'),page.indexOf('function saveProfile')),/\bpush\(/);
+  const actions=read('app/components/QuickActions.jsx');
+  const helpers=read('lib/quick-actions.js');
+  const css=read('app/styles/quick-actions-v393.css');
+  assert.doesNotMatch(page,/lastAuthorizedRepo|QUICK_RESTORE_KEY|setQuickRestorePreference|autoRestoredAccountRef|quickRestoreEnabled/);
+  assert.doesNotMatch(actions,/autoRestore|onAutoRestoreChange|Tự chọn repo gần nhất|Đổi repo\/áp dụng Profile/);
+  assert.doesNotMatch(helpers,/lastAuthorizedRepo|QUICK_RESTORE_KEY/);
+  assert.doesNotMatch(css,/zip393-restore-toggle|zip393-quick-note/);
+  assert.match(actions,/onClick=\{\(\) => onChoose\(item\.repo\)\}/);
 });
 
 test('Upload shortcuts share the existing safe picker and profile callbacks, not new Push action',()=>{
