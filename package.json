@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.9.5",
+  "version": "3.9.6",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.9.5 — Zero-Scroll QA & Performance Polish: virtual Review list, measured workspaces, keyboard-safe Push dock",
+  "description": "Zipverra Pro v3.9.6 — Review Safety & Mobile Visual Hotfix: risk-first sheets, compact action dock, readable Review",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

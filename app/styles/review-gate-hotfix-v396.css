@@ -1,0 +1,177 @@
+/* v3.9.6 — Review Gate UI Hotfix.
+ * Mobile keeps one compact bottom bar; the primary Push button only appears
+ * inside a dedicated confirmation sheet after review signals are acknowledged. */
+.zip396-action-dock{min-width:0}
+.zip396-dock-header{display:grid;gap:8px;min-width:0}
+.zip396-dock-state{display:inline-flex;align-items:center;justify-content:center;min-height:34px;padding:7px 11px;border-radius:999px;font-size:11px;font-weight:760;letter-spacing:.01em;max-width:100%}
+.zip396-dock-state--warning{color:#f3bf74;background:rgba(238,173,84,.14);border:1px solid rgba(238,173,84,.35)}
+.zip396-dock-state--ready{color:#38c69c;background:rgba(48,198,148,.12);border:1px solid rgba(48,198,148,.28)}
+.zip396-dock-state--info{color:var(--pro-muted);background:rgba(135,154,171,.09);border:1px solid rgba(135,154,171,.2)}
+.zip396-mobile-only{display:none}
+.zip396-mobile-note{margin:0;color:var(--pro-muted);font-size:11px;line-height:1.5}
+.zip396-mobile-cta{min-height:46px;margin:0}
+.zip396-mobile-cta--warning{appearance:none;width:100%;border:1px solid rgba(239,184,99,.42);border-radius:13px;background:rgba(239,184,99,.10);color:#f2be72;font:inherit;font-weight:780;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 13px;text-align:center}
+.zip396-desktop-only{display:grid;gap:9px}
+.zip396-sheet{display:grid;gap:14px;padding-bottom:2px}
+.zip396-sheet-summary{display:grid;gap:5px;padding:13px 14px;border:1px solid var(--pro-border);border-radius:15px;background:var(--pro-surface-2)}
+.zip396-sheet-summary strong{font-size:15px;line-height:1.35;color:var(--pro-text)}
+.zip396-sheet-summary small{font-size:12px;line-height:1.55;color:var(--pro-muted);overflow-wrap:anywhere}
+.zip396-sheet-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.zip396-metric{display:flex;align-items:center;justify-content:center;text-align:center;min-height:42px;padding:8px 9px;border-radius:13px;border:1px solid var(--pro-border);background:var(--pro-surface-2);font-size:12px;font-weight:760}
+.zip396-metric--good{color:var(--pro-good,#67d6a2)}
+.zip396-metric--warn{color:var(--pro-warning,#e6c06b)}
+.zip396-metric--bad{color:var(--pro-danger,#f29aa4)}
+.zip396-sheet-alert{display:grid;gap:10px;padding:14px;border-radius:16px;border:1px solid rgba(239,184,99,.42);background:rgba(239,184,99,.10)}
+.zip396-sheet-alert strong{font-size:15px;line-height:1.35;color:var(--pro-text)}
+.zip396-sheet-alert p{margin:0;color:var(--pro-muted);font-size:13px;line-height:1.6}
+.zip396-sheet-readiness .polish-readiness{margin:0}
+.zip396-sheet-consent.confirm-row{align-items:flex-start;gap:10px;margin:0;padding:13px 14px;border-radius:14px;border:1px solid var(--pro-border);background:var(--pro-surface-2);font-size:13px;line-height:1.55}
+.zip396-sheet-consent input{min-width:20px;min-height:20px;width:20px;height:20px;margin-top:1px}
+.zip396-sheet-push{min-height:50px;margin:0}
+.review-risk-severity{display:inline-flex;align-items:center;width:max-content;max-width:100%;padding:5px 10px;border-radius:999px;background:rgba(240,89,109,.14);border:1px solid rgba(240,89,109,.34);color:#ffb0b8;font-size:11px;font-weight:800;letter-spacing:.02em}
+.pro-shell .review-select-summary{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:12px 14px;border:1px solid var(--pro-border);border-radius:15px;background:var(--pro-accent-surface)}
+.pro-shell .review-select-summary>div{display:grid;gap:4px;min-width:0}
+.pro-shell .review-select-summary strong{font-size:14px;line-height:1.4}
+.pro-shell .review-select-summary small{font-size:12px;line-height:1.55}
+.pro-shell .review-select-summary>span{font-size:12px;font-weight:780;white-space:nowrap}
+.pro-shell .review-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;margin-top:12px}
+.pro-shell .review-toolbar .review-bulk{display:flex;gap:8px;flex-wrap:wrap}
+.pro-shell .diff-filters{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;margin-bottom:12px}
+.pro-shell .diff-filter{min-height:40px;padding:8px 12px;border-radius:12px}
+.pro-shell .premium-review-skip-note{margin:10px 1px 14px;color:var(--pro-muted);font-size:12px;line-height:1.6}
+.pro-shell .premium-review-confirm{gap:12px;padding:14px 15px}
+.pro-shell .premium-decision-heading strong{font-size:15px}
+.pro-shell .premium-decision-heading small{font-size:12px;line-height:1.55}
+@media (max-width:760px){
+  .zip396-mobile-only{display:grid;gap:8px}
+  .zip396-desktop-only{display:none!important}
+  .pro-shell main[data-active-view="home"][data-review-ready="true"] .zip392-action-dock{
+    left:max(10px,env(safe-area-inset-left,0px));right:max(10px,env(safe-area-inset-right,0px));
+    bottom:calc(80px + env(safe-area-inset-bottom,0px));padding:12px 12px 13px;gap:10px;
+    max-height:none;overflow:visible;
+  }
+  .zip396-dock-header{gap:9px}
+  .zip396-dock-state{justify-content:flex-start;font-size:11.5px;line-height:1.35;padding:8px 11px;border-radius:12px}
+  .pro-shell main[data-active-view="home"][data-review-ready="true"]{padding-bottom:calc(var(--zip395-dock-height,150px) + 90px + env(safe-area-inset-bottom,0px))}
+  .pro-shell main[data-active-view="home"][data-review-ready="true"] .preview-panel{height:clamp(220px,42dvh,480px);max-height:clamp(220px,42dvh,480px)}
+  .review-risk-center{margin:10px 0 14px;padding:14px;gap:12px;border-radius:18px}
+  .review-risk-head{align-items:flex-start;gap:10px}
+  .review-risk-emblem{width:34px;height:34px;flex-basis:34px}
+  .review-risk-heading strong{font-size:17px;line-height:1.25}
+  .review-risk-heading small,.review-risk-item-content small{font-size:13px;line-height:1.62}
+  .review-risk-count{font-size:12px;padding:8px 11px;border-radius:11px}
+  .review-risk-item{padding:16px;gap:14px}
+  .review-risk-item-top{gap:11px}
+  .review-risk-item-content strong{font-size:16px;line-height:1.45}
+  .review-risk-state{font-size:11.5px;padding:6px 9px;border-radius:9px}
+  .review-risk-link,.review-risk-diagnostics-link{font-size:13.5px;min-height:40px;padding:9px 2px}
+  .review-risk-approval{padding:13px;border-radius:13px;font-size:13px;line-height:1.6}
+  .pro-shell .review-select-summary{padding:13px 14px;gap:10px}
+  .pro-shell .review-select-summary strong{font-size:14px}
+  .pro-shell .review-select-summary small{font-size:12px}
+  .pro-shell .review-toolbar{grid-template-columns:1fr;gap:9px}
+  .pro-shell .review-toolbar .review-bulk button{flex:1;min-width:0}
+  .pro-shell .diff-filters{gap:7px}
+  .pro-shell .premium-review-confirm{padding:14px}
+  .pro-shell .premium-review-skip-note{font-size:12px;margin-top:11px}
+}
+@media (min-width:761px){
+  .zip396-mobile-only{display:none!important}
+}
+@media (max-width:380px){
+  .zip396-sheet-metrics{grid-template-columns:1fr}
+  .zip396-sheet-summary strong{font-size:14px}
+  .zip396-sheet-alert strong{font-size:14px}
+}
+
+/* No floating, sticky "Go to Push" inside the file list. The list should only
+ * reveal a contextual action at the end. */
+.pro-shell .review-return-bar{position:static!important;top:auto!important;z-index:auto!important;box-shadow:none!important}
+.zip396-review-risk-banner{display:none}
+.zip396-risk-sheet{display:grid;gap:16px;padding-bottom:6px}
+.zip396-risk-lead{display:grid;gap:6px;padding:16px;border:1px solid var(--pro-border-strong);border-radius:16px;background:var(--pro-surface-2)}
+.zip396-risk-lead strong{font-size:17px;line-height:1.35;color:var(--pro-text)}
+.zip396-risk-lead small{font-size:12.5px;line-height:1.55;color:var(--pro-muted);overflow-wrap:anywhere}
+.zip396-risk-lead--critical{background:rgba(241,85,105,.08);border-color:rgba(241,85,105,.4)}
+.zip396-risk-sheet-done{min-height:48px;margin:0}
+@media(max-width:760px){
+  /* One prominent risk entry-point; the full explanatory cards live in a
+   * taller native sheet instead of a cramped 37dvh scroll viewport. */
+  .pro-shell main[data-active-view="home"] .preview-panel>.review-risk-center{display:none!important}
+  .pro-shell main[data-active-view="home"] .zip396-review-risk-banner{
+    appearance:none;display:flex;align-items:center;width:100%;min-width:0;gap:12px;
+    text-align:left;padding:15px 14px;margin:13px 0;
+    border:1px solid var(--pro-border-strong);border-radius:17px;
+    color:var(--pro-text);background:var(--pro-surface-2);font:inherit;
+    box-shadow:0 2px 8px rgba(0,0,0,.05);cursor:pointer;
+  }
+  .zip396-review-risk-banner--critical{background:rgba(242,91,113,.10)!important;border-color:rgba(242,91,113,.65)!important;box-shadow:inset 3px 0 0 rgba(242,91,113,.95),0 5px 18px rgba(161,46,69,.12)!important}
+  .zip396-review-risk-banner--pending{background:rgba(234,175,82,.10)!important;border-color:rgba(234,175,82,.47)!important}
+  .zip396-review-risk-banner--clear{border-color:rgba(53,193,148,.3)!important}
+  .zip396-review-risk-banner-icon{display:grid;place-items:center;flex:0 0 40px;width:40px;height:40px;border-radius:12px;background:rgba(143,159,176,.11);color:var(--pro-warning)}
+  .zip396-review-risk-banner--critical .zip396-review-risk-banner-icon{background:rgba(242,91,113,.17);color:#ff9da8}
+  .zip396-review-risk-banner--clear .zip396-review-risk-banner-icon{color:var(--pro-accent)}
+  .zip396-review-risk-banner-text{min-width:0;display:grid;gap:5px;flex:1}
+  .zip396-review-risk-banner-text strong{font-size:15.5px;line-height:1.3;letter-spacing:-.01em}
+  .zip396-review-risk-banner-text small{font-size:12.5px;line-height:1.48;color:var(--pro-muted)}
+  .zip396-review-risk-banner-arrow{flex:0 0 22px;color:var(--pro-muted)}
+  .zip396-risk-sheet .review-risk-center{margin:0;padding:15px;gap:15px;border-radius:17px}
+  .zip396-risk-sheet .review-risk-head{display:grid;grid-template-columns:38px minmax(0,1fr);align-items:start;gap:10px}
+  .zip396-risk-sheet .review-risk-emblem{width:38px;height:38px;flex-basis:38px}
+  .zip396-risk-sheet .review-risk-heading strong{font-size:17px;line-height:1.3}
+  .zip396-risk-sheet .review-risk-heading small{font-size:13px;line-height:1.55}
+  .zip396-risk-sheet .review-risk-count{grid-column:2;justify-self:start;margin:0;font-size:12px;padding:7px 10px}
+  .zip396-risk-sheet .review-risk-item-top{display:grid;grid-template-columns:27px minmax(0,1fr);align-items:start;gap:11px}
+  .zip396-risk-sheet .review-risk-item-content{width:100%;gap:8px;min-width:0}
+  .zip396-risk-sheet .review-risk-item-content strong{font-size:16px;line-height:1.4}
+  .zip396-risk-sheet .review-risk-item-content small{font-size:13.5px;line-height:1.65;overflow-wrap:break-word}
+  .zip396-risk-sheet .review-risk-item-icon{width:27px;height:27px;flex-basis:27px}
+  .zip396-risk-sheet .review-risk-state{grid-column:2;justify-self:start;margin:0;padding:7px 10px;font-size:12px}
+  .zip396-risk-sheet .review-risk-approval{font-size:13.5px;line-height:1.65;padding:15px}
+  .zip396-risk-sheet .review-risk-approval input{width:22px;height:22px;flex-basis:22px}
+  .zip396-risk-sheet .review-risk-items{border-radius:15px}
+  .zip396-risk-sheet .review-risk-item{padding:17px 15px;gap:15px}
+  .zip396-risk-sheet .review-risk-link{min-height:44px;font-size:13.5px;line-height:1.5}
+  .zip396-risk-sheet .review-risk-diagnostics-link{min-height:44px;font-size:13px}
+  .zip396-risk-sheet .review-risk-clean{font-size:13px;line-height:1.7}
+  .pro-shell main[data-active-view="home"] .premium-review-files .review-return-bottom{margin:14px 12px}
+  .pro-shell main[data-active-view="home"] .review-return-bottom .button{min-height:46px;font-size:13px;line-height:1.45}
+  .pro-shell main[data-active-view="home"] .premium-review-confirm{display:none}
+  /* The confirmation dock should be a small next-step CTA, never a prominent
+     always-ready Push button. Risk selection takes precedence. */
+  .pro-shell main[data-active-view="home"][data-review-ready="true"] .zip396-action-dock{gap:8px;padding:10px 12px 12px}
+  .pro-shell main[data-active-view="home"] .zip396-dock-header>.zip392-dock-context span{font-size:11px}
+  .pro-shell main[data-active-view="home"] .zip396-dock-header .zip396-dock-state{min-height:30px}
+  .pro-shell main[data-active-view="home"] .zip396-mobile-note{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+ .zip396-review-risk-banner,.zip396-mobile-cta{transition:none!important;animation:none!important}
+}
+@media(max-width:760px){
+  /* Keep the floating element to ONE compact next action rather than showing
+     the final destructive Commit button or repeating the same risk copy. */
+  .pro-shell main[data-active-view="home"] .zip396-action-dock{
+    width:auto!important;max-width:calc(100vw - 20px)!important;
+    box-sizing:border-box;min-height:0;padding:9px 11px!important;
+    gap:0!important;border-radius:14px;
+  }
+  .pro-shell main[data-active-view="home"] .zip396-dock-header{display:none!important}
+  .pro-shell main[data-active-view="home"] .zip396-mobile-cta{min-height:47px;font-size:13px;line-height:1.3}
+  .pro-shell main[data-active-view="home"] .zip396-mobile-only{gap:0}
+  .pro-shell main[data-active-view="home"] .zip396-review-risk-banner-text strong{font-size:15px}
+}
+@media(max-width:760px){
+  /* Align the single CTA above native five-tab nav and iPhone safe-area. */
+  .pro-shell main[data-active-view="home"][data-review-ready="true"] .zip396-action-dock{
+    bottom:calc(86px + env(safe-area-inset-bottom,0px))!important;
+  }
+}
+/* WCAG-oriented contrast corrections for light surfaces. */
+html[data-theme="light"] .zip396-mobile-cta--warning{color:#855000;background:#fff4df;border-color:#c88b29}
+html[data-theme="light"] .zip396-review-risk-banner--critical .zip396-review-risk-banner-icon,
+html[data-theme="light"] .review-risk-severity{color:#a92342}
+html[data-theme="light"] .zip396-dock-state--warning{color:#875300;background:#fff4df;border-color:#c88b29}
+html[data-theme="light"] .zip396-risk-sheet .review-risk-state:not(.review-risk-state--done){color:#875300}
+html[data-theme="light"] .zip396-metric--good{color:#087451}
+html[data-theme="light"] .zip396-metric--warn{color:#875300}
+html[data-theme="light"] .zip396-metric--bad{color:#a92342}

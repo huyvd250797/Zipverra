@@ -7,11 +7,11 @@ const page=read('app/page.jsx');
 const css=read('app/styles/one-screen-v392.css');
 const layout=read('app/layout.jsx');
 
-test('v3.9.5 runtime, PWA cache, shell and final CSS layer match',()=>{
-  assert.equal(APP_VERSION,'3.9.5');
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.5');
-  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.5/);
-  assert.match(page,/Zipverra · v3\.9\.5/);
+test('v3.9.6 runtime, PWA cache, shell and final CSS layer match',()=>{
+  assert.equal(APP_VERSION,'3.9.6');
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.6');
+  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.6/);
+  assert.match(page,/Zipverra · v3\.9\.6/);
   assert.ok(layout.indexOf('smart-compact-v391.css') < layout.indexOf('one-screen-v392.css'));
 });
 
@@ -43,7 +43,7 @@ test('selected ZIP condenses into a summary while retaining a real user-activate
 
 test('Review uses one dock and exactly one Push invocation, with original readiness gate',()=>{
   assert.equal((page.match(/onClick=\{push\}/g)||[]).length,1);
-  assert.match(page,/className="zip392-action-dock" data-mobile-view="home"/);
+  assert.match(page,/className="zip392-action-dock zip396-action-dock" data-mobile-view="home"/);
   assert.match(page,/className="confirm-row zip392-dock-consent"/);
   assert.match(page,/disabled=\{!canSubmitPush\} aria-describedby="push-readiness-help" onClick=\{push\}/);
   assert.match(page,/const canSubmitPush = pushReadiness\.ready/);

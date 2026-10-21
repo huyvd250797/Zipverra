@@ -1,4 +1,4 @@
-/* v3.9.5 — Zero-Scroll QA & Performance Polish. Mobile-first, no hidden confirmation. */
+/* v3.9.6 — Zero-Scroll QA & Performance Polish. Mobile-first, no hidden confirmation. */
 :root { --zip395-touch:44px; }
 /* The persistent action dock already carries status/version context. The
    footer has no action and must not create a second scrollbar in Review. */

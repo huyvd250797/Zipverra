@@ -10,7 +10,7 @@ const utf8 = value => new TextEncoder().encode(value);
 const FILE = 'tests/source-security.test.js';
 const ready = { hasPreview:true, selectedCount:2, authenticated:true, online:true, confirmed:true };
 
-test('v3.9.5 fake key fixture avoids triggering older Zipverra scanners on our own source',()=>{
+test('v3.9.6 fake key fixture avoids triggering older Zipverra scanners on our own source',()=>{
   const findings=scanSourceFile(FILE,utf8(read(FILE)));
   assert.equal(findings.filter(f=>f.severity==='critical').length,0);
   // Test source still creates the key header dynamically at runtime for scanner regression.
@@ -59,7 +59,7 @@ test('High-risk path is advisory in Analyze, but traversal or .git writes are ne
 test('UI prompts for explicit choice and still uses server-enforced consent for Push and PR',()=>{
   const page=read('app/page.jsx');
   const component=read('app/components/PremiumWorkflow.jsx');
-  assert.match(page,/setSecurityDialogOpen\(needsSensitiveConsent\(selectedReport\.findings\)\)/);
+  assert.match(page,/const sensitiveWarning=needsSensitiveConsent\(selectedReport\.findings\);\s*setSecurityDialogOpen\(sensitiveWarning\)/);
   assert.match(page,/Không, kiểm tra lại/);
   assert.match(page,/Có, tôi hiểu rủi ro · Tiếp tục/);
   assert.match(page,/allowSensitiveUpload: requiresConsent && sensitiveConsent/);

@@ -1,3 +1,11 @@
+# v3.9.6 — Review Safety & Mobile Visual Hotfix
+
+- Removed sticky Review-to-Push toolbar overlapping the file list on iPhone.
+- Risk Center opens in a dedicated, readable mobile sheet. Risk summary prominently visible in Review; high-confidence suspected project mismatch triggers the sheet automatically.
+- Final Push action moved behind a separate mobile confirmation sheet; fixed bottom action never directly commits to GitHub. Existing server and client checks preserved.
+- Increased spacing, typography and touch targets in Review and risk details without disabling checks or introducing new API routes.
+- Updated PWA public-cache version; added regression tests, release notes and QA checklist.
+
 # v3.9.5 — Zero-Scroll QA & Performance Polish
 
 - Virtualized Review change list, adaptive mobile dock and measured desktop workspace.

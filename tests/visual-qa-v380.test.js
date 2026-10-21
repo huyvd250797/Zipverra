@@ -8,11 +8,11 @@ const page = read('app/page.jsx');
 const css = read('app/styles/visual-qa-v380.css');
 const layout = read('app/layout.jsx');
 
-test('v3.9.5 consistent runtime, service worker cache, footer and stylesheet order',()=>{
-  assert.equal(JSON.parse(read('package.json')).version, '3.9.5');
-  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.9\.5'/);
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.5/);
-  assert.match(page, /Zipverra · v3\.9\.5/);
+test('v3.9.6 consistent runtime, service worker cache, footer and stylesheet order',()=>{
+  assert.equal(JSON.parse(read('package.json')).version, '3.9.6');
+  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.9\.6'/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.6/);
+  assert.match(page, /Zipverra · v3\.9\.6/);
   assert.ok(layout.indexOf('modal-motion-v360.css') < layout.indexOf('visual-qa-v380.css'));
 });
 
@@ -30,7 +30,7 @@ test('return actions use gated original consent instead of duplicating commit co
   assert.match(page, /setFileDetailsOpen\(false\)/);
   assert.match(page, /decisionRef\.current/);
   assert.match(page, /decision\.focus\(\{ preventScroll: true \}\)/);
-  assert.match(page, /className="review-return-bar"/);
+  assert.doesNotMatch(page, /className="review-return-bar"/);
   assert.match(page, /className="review-return-bottom"/);
   assert.equal((page.match(/onClick=\{push\}/g)||[]).length,1);
   assert.match(page, /disabled=\{!canSubmitPush\}/);

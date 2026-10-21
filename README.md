@@ -1,3 +1,19 @@
+# Zipverra Pro v3.9.6 — Review Safety & Mobile Visual Hotfix
+
+**Current release:** [RELEASE_V396.md](RELEASE_V396.md) · **Acceptance checklist:** [QA_CHECKLIST_V396.md](QA_CHECKLIST_V396.md). Previous release: [RELEASE_V395.md](RELEASE_V395.md).
+
+## v3.9.6 — Important UI fixes
+
+- **No sticky "Tới xác nhận & Push" midway through file Review.** The duplicated navigation row is removed; the existing bottom-of-list action remains available.
+- **Full-size mobile risk review:** an unmistakable warning summary opens a dedicated native Bottom Sheet to read Security, Project Mismatch and Sync Delete approvals in context. A probable cross-project upload opens this risk sheet automatically unless the more urgent sensitive-file consent sheet is active.
+- **Safe mobile commit:** the persistent bottom bar shows only a compact "Review warnings" or "Open confirmation" action; the actual Push button appears only in the final confirmation sheet and is still subject to the original server-backed and client gates. PC keeps its existing action row.
+- **Improved visual hierarchy:** larger text and readable two-column risk rows, breathing room between alerts and secondary details, and safe positioning above the mobile navigation bar.
+- All GitHub App API route sources remain unchanged. GitHub preflight, SHA comparison, Security consent, Sync Delete and uncertain-push recovery remain enforced.
+
+**Deploy:** Extract the ZIP and push the **contents of `Zipverra-v3.9.6/`** into the repository root. Keep existing environment variables. Run `npm install`, `npm test`, `npm run build`, and verify the deployed app on iOS Safari/PWA before production. The ZIP is a Release Candidate until real-device and GitHub E2E checks pass.
+
+---
+
 # Zipverra Pro v3.9.5 — Zero-Scroll QA & Performance Polish
 
 **Current release:** [RELEASE_V395.md](RELEASE_V395.md) · **Acceptance checklist:** [QA_CHECKLIST_V395.md](QA_CHECKLIST_V395.md). Previous release: [RELEASE_V394.md](RELEASE_V394.md).
