@@ -1,3 +1,9 @@
+## v3.9.4 — Adaptive Sheets & Smooth Flow
+- Bottom Sheet on mobile, repository/branch picker and Diff as desktop Side Panels.
+- Touch grip swipe-to-dismiss with snap-back, keyboard-aware visual viewport and scroll isolation.
+- Diff displays in overlay rather than expanding Review; only local Review scrolling on navigation.
+- All GitHub write/API contracts and security consent conditions unchanged.
+
 # v3.9.2 — One-Screen Upload & Review
 
 - Open straight in Upload with authenticated repo and branch selectors in context.

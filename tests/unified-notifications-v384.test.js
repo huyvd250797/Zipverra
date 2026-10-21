@@ -6,10 +6,10 @@ import { createInteractionNotice, shouldAnnounceEvent } from '../lib/interaction
 const source = name => readFileSync(new URL(`../${name}`, import.meta.url), 'utf8');
 const notice = (id, event = 'network-online') => ({ id, event, duration: 4500, tone: 'info' });
 
-test('v3.9.3 bundles a dedicated notification layer without changing GitHub endpoints', () => {
-  assert.equal(JSON.parse(source('package.json')).version, '3.9.3');
+test('v3.9.4 bundles a dedicated notification layer without changing GitHub endpoints', () => {
+  assert.equal(JSON.parse(source('package.json')).version, '3.9.4');
   assert.match(source('app/layout.jsx'), /notifications-v384\.css/);
-  assert.match(source('lib/pwa-reliability.js'), /APP_VERSION = '3\.9\.3'/);
+  assert.match(source('lib/pwa-reliability.js'), /APP_VERSION = '3\.9\.4'/);
   assert.match(source('app/page.jsx'), /<ConfirmationDialog request=\{confirmRequest\} onAnswer=\{answerConfirmation\}/);
   assert.match(source('app/components/WorkspacePanel.jsx'), /<ConfirmationDialog request=\{confirmRequest\} onAnswer=\{answerConfirmation\}/);
 });

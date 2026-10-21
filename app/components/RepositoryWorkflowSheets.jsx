@@ -36,7 +36,7 @@ export function RepositoryPickerSheet({ open, onClose, repos, selected, favorite
     if (selected.toLowerCase() !== name.toLowerCase()) window.requestAnimationFrame(() => onChoose(name));
   };
   const searching = query.trim().length > 0;
-  return <ModalSheet open={open} onClose={onClose} title="Chọn repository">
+  return <ModalSheet open={open} onClose={onClose} title="Chọn repository" variant="picker">
     {!searching && (quick.frequent.length > 0 || quick.recent.length > 0 || quick.pinned.length > 0) &&
       <UiCard className="zip-repo-quick-picks" aria-label="Chọn repository nhanh">
         <RepoQuickGroup title="Dùng nhiều" items={quick.frequent} selected={selected} disabled={disabled} onSelect={select}/>
@@ -86,7 +86,7 @@ export function BranchPickerSheet({ open, onClose, owner, repo, current, online,
   const validManual = validBranchName(manual.trim());
   const filtered = useMemo(() => branches.filter(item => item.name.toLocaleLowerCase().includes(query.trim().toLocaleLowerCase())), [branches,query]);
   const select = name => { onClose(); if (name !== current) window.requestAnimationFrame(() => onChoose(name)); };
-  return <ModalSheet open={open} onClose={onClose} title="Chọn branch">
+  return <ModalSheet open={open} onClose={onClose} title="Chọn branch" variant="picker">
     <p className="zip-sheet-kicker">{owner}/{repo}</p>
     <div className="zip-repo-search"><UiInput type="search" aria-label="Lọc branch" value={query}
       onChange={e => setQuery(e.target.value)} placeholder="Tìm branch..." autoComplete="off"/></div>

@@ -294,6 +294,7 @@ export default function Home() {
       pendingSameTabScroll.current = scheduleTabViewport(window, document, tab, activityRef.current);
     }
     setRepoSheetOpen(false); setBranchSheetOpen(false);
+    if (tab !== activeTab) { diffRequestRef.current += 1; setDiffViewer(null); }
     window.clearTimeout(viewTimerRef.current);
     if (tab !== activeTab && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
       setViewExiting(true);
@@ -636,7 +637,7 @@ export default function Home() {
     if (panel.scrollHeight > panel.clientHeight + 2) {
       const offset = target.getBoundingClientRect().top - panel.getBoundingClientRect().top;
       panel.scrollTo({ top: Math.max(0, panel.scrollTop + offset - 10), behavior: reduced ? 'instant' : 'smooth' });
-    } else target.scrollIntoView({ behavior: reduced ? 'instant' : 'smooth', block: 'nearest' });
+    } // No document scroll fallback: the Review region owns its own viewport.
   };
   const showReviewDiagnostics = () => {
     const details = diagnosticsRef.current;
@@ -937,7 +938,7 @@ export default function Home() {
     if (activeTab !== 'home') { goToTab('home'); return; }
     // For large reviews, only scroll the independent Review panel.
     previewRef.current?.scrollTo?.({ top: 0, behavior: 'smooth' });
-    if (window.matchMedia?.('(max-width: 760px)').matches) window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Leave the document at its current position; the review surface is bounded.
   }
 
   // A file list can contain thousands of paths. Return to the single, gated
@@ -1124,7 +1125,7 @@ export default function Home() {
         <span className="desktop-rail-label">GITHUB ACCOUNT</span>
         <strong>{auth.user?.login ? `@${auth.user.login}` : 'Chưa đăng nhập'}</strong>
         <span className="desktop-rail-branch"><Icon name="branch" size={14}/>{chosenRepo ? `${repo} · ${branch}` : 'Chọn repository để bắt đầu'}</span>
-        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.3</span>
+        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.4</span>
       </div>
     </aside>
     <header className="topbar" role="banner">
@@ -1133,7 +1134,7 @@ export default function Home() {
       <div className="header-actions"><span className="desktop-header-help">
         {activeTab === 'repositories' && auth.authenticated && <button type="button" className="repo-refresh-icon desktop-context-refresh" onClick={restartWorkspace} disabled={busy || loadingRepos || Boolean(pendingCommit || pendingPR)} aria-label="Khởi động lại và tải lại repository" title="Làm mới ứng dụng"><Icon name="refresh" size={17}/></button>}
         <ContextualHelp tab={activeTab}/>
-      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.3</span></div>
+      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.4</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} repoTools={activeTab === 'repositories' && auth.authenticated ? <button type="button" className={`repo-refresh-icon${loadingRepos ? ' is-loading' : ''}`} onClick={restartWorkspace} disabled={busy || loadingRepos || Boolean(pendingCommit || pendingPR)} aria-label="Khởi động lại ứng dụng, bỏ các lựa chọn và tải lại danh sách repository" title="Khởi động lại từ đầu"><Icon name="refresh" size={17}/></button> : null}/>
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
@@ -1267,7 +1268,7 @@ export default function Home() {
               <div className="change-list review-list" role="region" tabIndex={0} aria-label="Danh sách thay đổi · Cuộn trong vùng này để xem thêm file">{shownChanges.length ? shownChanges.slice(0,visibleLimit).map((item) => <div className={`change-row review-row ${excludedPaths.includes(item.path) ? 'excluded' : ''}`} key={item.path}><label className="review-check"><input type="checkbox" checked={!excludedPaths.includes(item.path)} disabled={busy} onChange={() => updateSelection(item.path)} aria-label={`Chọn ${item.path} để push`}/></label><span className={`change-mark ${item.kind}`}>{item.kind === 'add' ? 'A' : item.kind === 'modify' ? 'M' : 'D'}</span><span title={item.path} className="change-path">{item.path}</span><button type="button" className="review-diff-button" disabled={busy} onClick={() => inspectChange(item)} aria-label={`Xem diff ${item.path}`}>Diff</button></div>) : <div className="empty-change">{preview.changes.length ? 'Không có file thuộc bộ lọc này.' : 'Không có thay đổi để commit.'}</div>}</div>
               {shownChanges.length > visibleLimit && <button type="button" className="button secondary full review-more" onClick={() => setVisibleLimit(v => v + 100)}>Hiển thị thêm {Math.min(100,shownChanges.length-visibleLimit)} file · {shownChanges.length-visibleLimit} còn lại</button>}
               <div className="review-return-bottom"><button type="button" className="button secondary full" onClick={goToDecision}><Icon name="check" size={16}/> Thu gọn danh sách · Quay lại xác nhận & Push</button></div>
-              {diffViewer && <div className="inline-diff" aria-live="polite"><div className="inline-diff-heading"><strong>Diff · {diffViewer.path}</strong><button type="button" onClick={() => {diffRequestRef.current++;setDiffViewer(null);}} aria-label="Đóng diff">✕</button></div>{diffViewer.loading ? <p>Đang tải file từ commit đang review…</p> : diffViewer.message ? <p>{diffViewer.message}</p> : <div className="inline-diff-lines">{diffViewer.lines.map((line,index)=><div key={index} className={`diff-line diff-${line.kind}`}><span>{line.kind==='add'?'+':line.kind==='delete'?'−':' '}</span><code>{line.text || ' '}</code></div>)}</div>}</div>}
+
               </>}
               </details>
               <details ref={diagnosticsRef} className="premium-review-diagnostics" defaultOpen={false} key={`${preview.remote.head}-diagnostics`}>
@@ -1318,7 +1319,7 @@ export default function Home() {
             <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
               profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
               onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.3</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.4</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -1329,8 +1330,22 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.9.3</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.9.4</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
+  <ModalSheet open={Boolean(preview && diffViewer && activeTab === 'home')} title={`Diff · ${diffViewer?.path || ''}`}
+    onClose={() => { diffRequestRef.current += 1; setDiffViewer(null); }} variant="diff">
+    <div className="zip394-diff-viewer" aria-live="polite">
+      <p className="zip394-diff-context">So sánh file trong ZIP với commit đang Review. Chỉ xem; không thay đổi lựa chọn file hoặc xác nhận Push.</p>
+      {diffViewer?.loading ? <p role="status" className="zip394-diff-status">Đang tải file từ commit đang review…</p>
+        : diffViewer?.message ? <p role="status" className="zip394-diff-status">{diffViewer.message}</p>
+        : <div className="zip394-diff-lines inline-diff-lines" role="region" aria-label="Nội dung Diff">
+          {diffViewer?.lines?.map((line,index)=><div key={index} className={`diff-line diff-${line.kind}`}>
+            <span aria-hidden="true">{line.kind==='add'?'+':line.kind==='delete'?'−':' '}</span>
+            <code>{line.text || ' '}</code>
+          </div>)}
+        </div>}
+    </div>
+  </ModalSheet>
   <ModalSheet open={Boolean(preview && securityDialogOpen && requiresConsent)} onClose={() => setSecurityDialogOpen(false)} title="Cảnh báo thông tin nhạy cảm" variant="sheet">
     <div className="sensitive-consent-modal" role="alert">
       <div className="sensitive-consent-alert"><Icon name="shield" size={26}/><div><strong>Security Scan phát hiện rủi ro · Không tự động Push</strong><p>Phát hiện {securityReport?.critical || 0} Critical / {sensitiveFindings.length} cảnh báo nhạy cảm trong {new Set(sensitiveFindings.map(f => f.path)).size} file được chọn.</p></div></div>

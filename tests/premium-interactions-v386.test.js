@@ -9,11 +9,11 @@ const toast = read('app/components/InteractionFeedback.jsx');
 const risk = read('app/components/ReviewRiskCenter.jsx');
 const modal = read('app/components/ModalSheet.jsx');
 
-test('v3.9.3 runtime, PWA cache and branded version are consistent', () => {
-  assert.equal(JSON.parse(read('package.json')).version, '3.9.3');
-  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.9\.3'/);
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.3/);
-  assert.match(read('app/page.jsx'), /v3\.9\.3/);
+test('v3.9.4 runtime, PWA cache and branded version are consistent', () => {
+  assert.equal(JSON.parse(read('package.json')).version, '3.9.4');
+  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.9\.4'/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.4/);
+  assert.match(read('app/page.jsx'), /v3\.9\.4/);
 });
 test('polish CSS is loaded last without removing dedicated risk and notification layers', () => {
   const deps = ['notifications-v384.css','review-risk-v385.css','premium-interactions-v386.css'];

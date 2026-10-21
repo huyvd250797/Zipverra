@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.9.3",
+  "version": "3.9.4",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.9.3 — Quick Action & Smart Defaults: fast repo shortcuts, opt-in last repo, explicit per-repo Push Profiles",
+  "description": "Zipverra Pro v3.9.4 — Adaptive Sheets & Smooth Flow: mobile keyboard-safe sheets, desktop side panels, non-reflow Diff viewer",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
