@@ -8,10 +8,10 @@ const read = file => readFileSync(new URL(`../${file}`, import.meta.url),'utf8')
 const page = read('app/page.jsx');
 const css = read('app/styles/review-gate-hotfix-v396.css');
 
-test('v3.9.6 version and latest styles are synchronized', () => {
-  assert.equal(APP_VERSION,'3.9.6');
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.6');
-  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.6/);
+test('v3.9.7 version and latest styles are synchronized', () => {
+  assert.equal(APP_VERSION,'3.9.7');
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.7');
+  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.7/);
   const layout=read('app/layout.jsx');
   assert.ok(layout.indexOf('zero-scroll-v395.css') < layout.indexOf('review-gate-hotfix-v396.css'));
 });
@@ -51,7 +51,7 @@ test('all risk approvals stay independent and ephemeral', () => {
 test('mobile Review exposes a legible risk summary and full-height sheet', () => {
   assert.match(page,/className=\{`zip396-review-risk-banner/);
   assert.match(page,/className="zip396-risk-sheet"/);
-  assert.match(page,/title="Kiểm tra rủi ro trước Push"/);
+  assert.match(page,/title="Đánh giá rủi ro"/);
   assert.match(css,/\.preview-panel>\.review-risk-center\{display:none!important\}/);
   assert.match(css,/\.zip396-risk-sheet \.review-risk-item-top\{display:grid;grid-template-columns:27px minmax\(0,1fr\)/);
   assert.match(css,/\.zip396-risk-sheet \.review-risk-state\{grid-column:2/);

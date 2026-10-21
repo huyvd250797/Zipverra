@@ -51,7 +51,7 @@ export const ReviewReadiness = memo(function ReviewReadiness({ state, selectedCo
     <div className="polish-readiness-meta">
       <span>{selectedCount}/{totalCount} file</span>
       <span>{strategy === 'pr' ? 'Pull Request' : 'Direct Push'}</span>
-      <span>{state.ready ? 'Ready to push' : 'Review required'}</span>
+      <span>{state.ready ? 'Sẵn sàng' : 'Cần kiểm tra'}</span>
     </div>
   </section>;
 });

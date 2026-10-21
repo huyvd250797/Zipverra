@@ -1,6 +1,18 @@
+# Zipverra Pro v3.9.7 — Professional UI & Concise Copy
+
+**Current release:** [RELEASE_V397.md](RELEASE_V397.md) · **Acceptance checklist:** [QA_CHECKLIST_V397.md](QA_CHECKLIST_V397.md). Previous: [RELEASE_V396.md](RELEASE_V396.md).
+
+- Review and risk explanations now use concise, consistent labels; essential warnings and required acknowledgments are preserved.
+- Mobile bottom CTA stays risk-first. Final Push is only in the dedicated confirmation sheet.
+- The UI uses clearer type, spacing and grouping, without changing GitHub mutation endpoints.
+
+**Deploy:** Extract `Zipverra-v3.9.7/` contents at repository root. Run `npm install`, `npm test`, `npm run build`, then check Vercel Preview and iPhone Safari/PWA before production.
+
+---
+
 # Zipverra Pro v3.9.6 — Review Safety & Mobile Visual Hotfix
 
-**Current release:** [RELEASE_V396.md](RELEASE_V396.md) · **Acceptance checklist:** [QA_CHECKLIST_V396.md](QA_CHECKLIST_V396.md). Previous release: [RELEASE_V395.md](RELEASE_V395.md).
+**Historical release:** [RELEASE_V396.md](RELEASE_V396.md) · **Acceptance checklist:** [QA_CHECKLIST_V396.md](QA_CHECKLIST_V396.md). Previous release: [RELEASE_V395.md](RELEASE_V395.md).
 
 ## v3.9.6 — Important UI fixes
 

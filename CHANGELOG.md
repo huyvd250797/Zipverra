@@ -1,3 +1,10 @@
+# v3.9.7 — Professional UI & Concise Copy
+
+- Reduced repeated explanatory copy throughout Upload, Review, Risk Center and final Push confirmation.
+- Standardized typography, spacing, labels and state presentation on mobile and PC.
+- Preserved prominent Critical/Mismatch/Sync risk warnings, all consent gates and GitHub APIs.
+- PWA version updated; 456/456 automated tests and additional CSS/viewport checks passed.
+
 # v3.9.6 — Review Safety & Mobile Visual Hotfix
 
 - Removed sticky Review-to-Push toolbar overlapping the file list on iPhone.

@@ -14,7 +14,7 @@ export const ReviewRiskCenter = memo(function ReviewRiskCenter({
       <span className="review-risk-emblem" aria-hidden="true"><StatusGlyph kind={status === 'clear' || status === 'acknowledged' ? 'success' : summary.hasCritical ? 'critical' : 'warning'} size={20}/></span>
       <div className="review-risk-heading">
         <strong>Đánh giá rủi ro</strong>
-        <small aria-live="polite">{status === 'clear' ? 'Không phát hiện cảnh báo theo các quy tắc hiện có' : pendingCount ? `${pendingCount}/${requiredCount} xác nhận cần hoàn tất` : status === 'acknowledged' ? `Đã hoàn tất ${requiredCount} xác nhận rủi ro` : `${items.length} lưu ý · Không yêu cầu xác nhận thêm`}</small>
+        <small aria-live="polite">{status === 'clear' ? 'Không có cảnh báo bắt buộc' : pendingCount ? `${pendingCount}/${requiredCount} chưa xác nhận` : status === 'acknowledged' ? `Đã xác nhận ${requiredCount}/${requiredCount}` : `${items.length} cảnh báo cần xem`}</small>
       </div>
       <span className={`review-risk-count review-risk-count--${status}`}>{pendingCount ? `${pendingCount} cần xử lý` : status === 'clear' ? 'Không cảnh báo' : status === 'acknowledged' ? 'Đã xác nhận' : 'Cần xem'}</span>
     </header>
@@ -28,16 +28,16 @@ export const ReviewRiskCenter = memo(function ReviewRiskCenter({
             <small>{item.detail}</small>
           </div>
           <span className={`review-risk-state${item.required && item.approved ? ' review-risk-state--done' : ''}`}>
-            {item.required ? (item.approved ? 'Đã chấp nhận' : 'Cần xác nhận') : 'Lưu ý'}
+            {item.required ? (item.approved ? 'Đã xác nhận' : 'Chưa xác nhận') : 'Lưu ý'}
           </span>
         </div>
         {item.kind === 'security' && <button type="button" className="review-risk-link" onClick={item.required ? onSecurityDecision : onShowDetails} disabled={busy}>
-          {item.required ? (item.approved ? 'Xem lại quyết định Có / Không' : 'Xem cảnh báo và chọn Có / Không') : 'Xem chi tiết Security Scan'} <span aria-hidden="true">→</span>
+          {item.required ? (item.approved ? 'Xem lại xác nhận' : 'Kiểm tra bảo mật') : 'Chi tiết bảo mật'} <span aria-hidden="true">→</span>
         </button>}
-        {item.kind === 'identity' && item.required && <label className="review-risk-approval"><input type="checkbox" checked={item.approved} disabled={busy} onChange={event => onMismatchConsent(event.target.checked)}/><span>Tôi đã kiểm tra <b>{owner}/{repo}</b> · <b>{branch}</b>, hiểu nguy cơ nhầm dự án và vẫn muốn tiếp tục.</span></label>}
-        {item.kind === 'sync' && <label className="review-risk-approval"><input type="checkbox" checked={item.approved} disabled={busy} onChange={event => onSyncConsent(event.target.checked)}/><span>Tôi đồng ý xóa {item.count} file trên branch đích.</span></label>}
+        {item.kind === 'identity' && item.required && <label className="review-risk-approval"><input type="checkbox" checked={item.approved} disabled={busy} onChange={event => onMismatchConsent(event.target.checked)}/><span>Tôi đã kiểm tra <b>{owner}/{repo}</b> · <b>{branch}</b> và chấp nhận nguy cơ nhầm dự án.</span></label>}
+        {item.kind === 'sync' && <label className="review-risk-approval"><input type="checkbox" checked={item.approved} disabled={busy} onChange={event => onSyncConsent(event.target.checked)}/><span>Tôi đồng ý xóa {item.count} file trên GitHub.</span></label>}
       </div>)}
-    </div> : <p className="review-risk-clean">Không phát hiện rủi ro theo bộ quy tắc hiện có. Vẫn cần kiểm tra source trước khi Push.</p>}
-    {items.length > 0 && <button type="button" className="review-risk-diagnostics-link" disabled={busy} onClick={onShowDetails}>Chi tiết Security Scan & ZIP Analyzer <span aria-hidden="true">↗</span></button>}
+    </div> : <p className="review-risk-clean">Không có cảnh báo cần xử lý.</p>}
+    {items.length > 0 && <button type="button" className="review-risk-diagnostics-link" disabled={busy} onClick={onShowDetails}>Chi tiết kỹ thuật <span aria-hidden="true">↗</span></button>}
   </section>;
 });

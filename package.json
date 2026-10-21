@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.9.6",
+  "version": "3.9.7",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.9.6 — Review Safety & Mobile Visual Hotfix: risk-first sheets, compact action dock, readable Review",
+  "description": "Zipverra Pro v3.9.7 — Professional UI & Concise Copy: concise Review, readable risk hierarchy, unchanged GitHub safety gates",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

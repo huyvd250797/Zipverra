@@ -1,0 +1,108 @@
+/* Zipverra v3.9.7 — Professional UI & Concise Copy.
+ * Final presentation layer; never overrides authorization or mutation logic. */
+:root{
+  --zip397-gap:14px;
+  --zip397-subtle:color-mix(in srgb,var(--pro-muted) 92%,var(--pro-text));
+  --zip397-outline:color-mix(in srgb,var(--pro-border-strong) 64%,var(--pro-border));
+}
+.pro-shell .zip392-source-compact,
+.pro-shell .zip392-target-switch button,
+.pro-shell .workflow-options,
+.pro-shell .premium-review-files,
+.pro-shell .premium-review-diagnostics{border-radius:15px}
+.pro-shell .zip392-source-copy strong{font-size:13px;font-weight:720;line-height:1.35;letter-spacing:-.01em}
+.pro-shell .zip392-source-copy small{font-size:11.5px;line-height:1.4;color:var(--zip397-subtle)}
+.pro-shell .zip392-target-switch strong{font-size:13px;line-height:1.35;letter-spacing:-.01em}
+.pro-shell .zip392-target-switch small{font-size:10px;letter-spacing:.08em}
+.pro-shell .zip392-target-switch button{padding:10px 12px;gap:9px;min-height:62px}
+.pro-shell .zip392-replace-zip{font-size:12px;font-weight:720;min-width:78px}
+.pro-shell .workflow-options > summary{min-height:46px;font-size:13px;font-weight:730}
+.pro-shell .premium-review-files-trigger{padding:14px 15px;min-height:58px}
+.pro-shell .premium-review-files-trigger strong{font-size:14px;line-height:1.35;letter-spacing:-.01em}
+.pro-shell .premium-review-files-trigger small{font-size:12px;line-height:1.35}
+.pro-shell .premium-review-overview{border-radius:15px}
+.pro-shell .premium-review-overview strong{letter-spacing:-.02em}
+.pro-shell .review-risk-center{border-radius:18px;gap:12px}
+.pro-shell .review-risk-items{border-radius:15px}
+.pro-shell .review-risk-item{gap:13px}
+.pro-shell .review-risk-item-content strong{line-height:1.36;letter-spacing:-.012em}
+.pro-shell .review-risk-item-content small{line-height:1.52}
+.pro-shell .review-risk-severity{font-size:11px;padding:5px 9px}
+.pro-shell .review-risk-approval{line-height:1.55}
+.pro-shell .review-risk-head{align-items:center}
+.pro-shell .review-risk-heading{gap:3px}
+.pro-shell .zip396-risk-sheet{gap:14px}
+.zip397-risk-destination{display:grid;gap:5px;padding:12px 14px;border:1px solid var(--zip397-outline);background:var(--pro-surface-2);border-radius:14px;min-width:0}
+.zip397-risk-destination span{color:var(--zip397-subtle);font-size:10px;text-transform:uppercase;letter-spacing:.08em;font-weight:800}
+.zip397-risk-destination strong{color:var(--pro-text);font-size:13px;font-weight:720;overflow-wrap:anywhere;line-height:1.45}
+.zip397-final-status{display:flex;align-items:center;gap:9px;color:var(--zip397-subtle);font-size:12px;font-weight:700;padding:0 2px}
+.zip397-final-status svg{flex:0 0 auto;color:var(--pro-accent)}
+.pro-shell .zip396-sheet{gap:13px}
+.pro-shell .zip396-sheet-summary{padding:14px 15px;gap:4px}
+.pro-shell .zip396-sheet-summary strong{font-size:16px;font-weight:780}
+.pro-shell .zip396-sheet-summary small{font-size:12px}
+.pro-shell .zip396-sheet-metrics{gap:8px}
+.pro-shell .zip396-metric{min-height:43px;border-radius:12px;font-size:12px;font-weight:780}
+.pro-shell .zip396-sheet-consent.confirm-row{padding:14px 15px;font-size:13px;line-height:1.55}
+.pro-shell .zip396-sheet-push{font-size:14px;font-weight:780;min-height:50px}
+.pro-shell .zip396-sheet-alert{padding:15px;gap:12px}
+.pro-shell .zip396-sheet-alert p{font-size:13px;line-height:1.5}
+.pro-shell .review-select-summary{gap:12px}
+.pro-shell .review-select-summary strong{font-size:13.5px}
+.pro-shell .review-select-summary small{font-size:11.5px}
+.pro-shell .premium-review-diagnostics>summary{font-size:12.5px;line-height:1.4}
+.pro-shell .review-risk-link,.pro-shell .review-risk-diagnostics-link{min-height:44px;font-size:13px}
+.pro-shell .zip396-review-risk-banner{transition:border-color .18s ease,background-color .18s ease}
+.pro-shell :is(.zip396-review-risk-banner,.zip396-mobile-cta,.zip396-sheet-push,.zip396-risk-sheet-done):focus-visible{outline:2px solid var(--pro-focus);outline-offset:3px}
+@media(max-width:760px){
+  /* One scan-friendly title and subtitle per card; no unreadable micro labels. */
+  .pro-shell main[data-active-view="home"] .upload-panel{padding:14px 15px}
+  .pro-shell main[data-active-view="home"] .zip392-target-switch{gap:10px;margin-bottom:11px}
+  .pro-shell main[data-active-view="home"] .zip392-target-switch button{min-height:58px;padding:9px 11px;border-radius:12px}
+  .pro-shell main[data-active-view="home"] .zip392-target-switch strong{font-size:12.5px}
+  .pro-shell main[data-active-view="home"] .zip392-target-switch small{font-size:10px}
+  .pro-shell main[data-active-view="home"] .zip392-source-compact{padding:9px 10px;gap:10px;border-radius:13px}
+  .pro-shell main[data-active-view="home"] .zip392-source-copy{gap:9px}
+  .pro-shell main[data-active-view="home"] .zip392-source-copy strong{font-size:12.5px}
+  .pro-shell main[data-active-view="home"] .zip392-source-copy small{font-size:11px}
+  .pro-shell main[data-active-view="home"] .zip392-replace-zip{min-height:44px}
+  .pro-shell main[data-active-view="home"] .workflow-options{margin-top:10px}
+  .pro-shell main[data-active-view="home"] .content-grid{gap:13px}
+  .pro-shell main[data-active-view="home"][data-review-ready="true"] .preview-panel{padding:14px 13px;}
+  .pro-shell main[data-active-view="home"] .premium-review-overview{padding:13px 14px;margin-bottom:11px}
+  .pro-shell main[data-active-view="home"] .premium-review-overview strong{font-size:19px;line-height:1.22}
+  .pro-shell main[data-active-view="home"] .preview-panel .stat-grid{gap:9px;margin:9px 0 13px}
+  .pro-shell main[data-active-view="home"] .preview-panel .stat-grid>div{border-radius:13px;padding:11px 5px}
+  .pro-shell main[data-active-view="home"] .preview-panel .stat-grid>div strong{font-size:22px}
+  .pro-shell main[data-active-view="home"] .preview-panel .stat-grid>div span{font-size:12px}
+  .pro-shell main[data-active-view="home"] .zip396-review-risk-banner{gap:12px;padding:14px;border-radius:16px;margin:13px 0 15px}
+  .pro-shell main[data-active-view="home"] .zip396-review-risk-banner-text{gap:4px}
+  .pro-shell main[data-active-view="home"] .zip396-review-risk-banner-text strong{font-size:15px;line-height:1.36}
+  .pro-shell main[data-active-view="home"] .zip396-review-risk-banner-text small{font-size:12px;line-height:1.4}
+  .pro-shell main[data-active-view="home"] .zip396-review-risk-banner-icon{flex-basis:40px}
+  .pro-shell main[data-active-view="home"] .premium-review-files{margin:13px 0}
+  .pro-shell main[data-active-view="home"] .premium-review-files-trigger{min-height:56px;padding:14px}
+  .pro-shell main[data-active-view="home"] .premium-review-files-trigger strong{font-size:14px}
+  .pro-shell main[data-active-view="home"] .premium-review-files-trigger small{font-size:12px}
+  .pro-shell main[data-active-view="home"] .premium-review-diagnostics{margin-top:13px}
+  .pro-shell main[data-active-view="home"][data-review-ready="true"] .zip396-action-dock{border-radius:16px;padding:10px 12px!important}
+  .pro-shell main[data-active-view="home"] .zip396-mobile-cta{font-size:14px;min-height:49px;border-radius:12px}
+  .zip396-risk-sheet .review-risk-center{padding:13px 14px;gap:15px}
+  .zip396-risk-sheet .review-risk-item{padding:15px 14px;gap:12px}
+  .zip396-risk-sheet .review-risk-item-content strong{font-size:15.5px}
+  .zip396-risk-sheet .review-risk-item-content small{font-size:13px;line-height:1.55}
+  .zip396-risk-sheet .review-risk-approval{font-size:13px;line-height:1.58;padding:13px}
+  .zip396-risk-sheet .review-risk-state{font-size:11.5px}
+  .zip396-risk-sheet .review-risk-heading small{font-size:12px}
+  .zip396-risk-sheet .review-risk-diagnostics-link{font-size:12.5px}
+  .pro-shell main[data-active-view="home"] .review-select-summary{margin-top:12px}
+  .pro-shell main[data-active-view="home"] .diff-filters{gap:8px;margin-block:14px}
+  .pro-shell main[data-active-view="home"] .review-toolbar{gap:12px;margin-block:12px}
+  .pro-shell main[data-active-view="home"] .review-bulk button{min-height:44px}
+}
+@media(max-width:360px){
+ .pro-shell main[data-active-view="home"] .zip392-target-switch{grid-template-columns:minmax(0,1fr) minmax(78px,32%)}
+ .pro-shell main[data-active-view="home"] .zip392-target-switch button{padding:8px}
+ .pro-shell main[data-active-view="home"] .zip392-target-switch strong{font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){.pro-shell .zip396-review-risk-banner{transition:none}}
