@@ -7,10 +7,10 @@ const page = read('app/page.jsx');
 const css = read('app/styles/desktop-workspace-v390.css');
 const layout = read('app/layout.jsx');
 
-test('v3.9.0 desktop workbench is a responsive layer loaded after prior mobile styles',()=>{
-  assert.equal(APP_VERSION,'3.9.0');
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.0');
-  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.0/);
+test('v3.9.1 desktop workbench is a responsive layer loaded after prior mobile styles',()=>{
+  assert.equal(APP_VERSION,'3.9.1');
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.1');
+  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.1/);
   assert.ok(layout.indexOf('large-archive-v389.css') < layout.indexOf('desktop-workspace-v390.css'));
   assert.match(css,/\.desktop-workspace-nav,\.desktop-session-bar,\.desktop-topbar-path\{display:none\}/);
   assert.match(css,/@media \(min-width:1100px\)/);

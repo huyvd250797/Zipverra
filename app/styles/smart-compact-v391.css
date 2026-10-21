@@ -1,0 +1,208 @@
+/* Zipverra Pro v3.9.1 — Smart Compact Layout
+ * Layout-only layer: single desktop task context, vertical-height aware density.
+ * No GitHub authorization, upload, confirmation or modal scroll-lock changes.
+ * v3.9.2 will address the separate One-Screen Review / fixed Push action.
+ */
+.desktop-header-help {display:none}
+
+/* Desktop/tablet: one actionable destination/step context replaces 3 repeated
+   above-the-fold strips. The original workflow and repository controls remain
+   mounted for mobile. Help is deliberately re-homed to the desktop topbar. */
+@media (min-width:761px) {
+  :root {--zip391-topbar:52px;--zip391-context:55px}
+  .pro-shell .topbar {
+    position:sticky;top:0;z-index:38;
+    height:var(--zip391-topbar);min-height:var(--zip391-topbar);
+    margin:0 -3px;padding:0 5px;
+    background:color-mix(in srgb,var(--pro-bg) 95%,transparent);
+    backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--pro-border);
+  }
+  .pro-shell .topbar>.brand {display:none}
+  .desktop-topbar-path {display:flex;align-items:center;gap:9px;min-width:0;color:var(--pro-subtle)}
+  .desktop-topbar-path>span {font-weight:750;font-size:10px;letter-spacing:1px}
+  .desktop-topbar-path>strong {color:var(--pro-text);font-size:13px;font-weight:740;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .desktop-header-help {display:flex;align-items:center}
+  .desktop-header-help .compact-help-trigger {width:40px;height:40px;min-width:40px;min-height:40px}
+  .pro-shell .header-actions {gap:8px}
+  .pro-shell .header-actions .version {padding:4px 7px;font-size:10px}
+
+  /* Repeated view introduction + five-step strip + destination card no longer
+     consume height; all their useful actions are in the live context bar. */
+  .pro-shell .pro-view-intro.mobile-context,
+  .pro-shell main[data-active-view="home"]>.pro-stepper,
+  .pro-shell main[data-active-view="home"]>.mobile-quick-card {display:none!important}
+
+  .pro-shell .desktop-session-bar {
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    position:sticky;top:var(--zip391-topbar);z-index:34;
+    min-height:var(--zip391-context);height:auto;
+    margin:0 0 12px;padding:7px 12px;
+    background:var(--pro-surface);border:1px solid var(--pro-border);
+    border-top:0;border-radius:0 0 12px 12px;
+    box-shadow:0 5px 12px rgba(0,0,0,.035);
+  }
+  .desktop-session-location {display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto;max-width:56%}
+  .desktop-session-eyebrow {font-size:9px;letter-spacing:.9px;font-weight:770;color:var(--pro-subtle)}
+  .desktop-session-target {display:flex;align-items:center;gap:7px;min-width:0}
+  .desktop-target-repo,.desktop-target-branch {
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    min-height:36px;min-width:0;padding:5px 8px;
+    border:1px solid transparent;border-radius:9px;
+    color:var(--pro-text);background:var(--pro-surface-2);
+    font:inherit;font-size:11px;cursor:pointer;
+  }
+  .desktop-target-repo {flex:0 1 auto;max-width:67%}
+  .desktop-target-repo strong {min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11.5px}
+  .desktop-target-branch {flex:0 1 auto;max-width:32%;color:var(--pro-muted)}
+  .desktop-target-branch span:first-child {min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .desktop-target-repo>svg,.desktop-target-repo>span:last-child {flex:none;color:var(--pro-accent)}
+  .desktop-target-branch>span:last-child {flex:none;color:var(--pro-subtle)}
+  .desktop-target-repo:hover:not(:disabled),.desktop-target-branch:hover:not(:disabled) {border-color:var(--pro-border-strong);background:var(--pro-accent-surface)}
+  .desktop-target-repo:disabled,.desktop-target-branch:disabled {opacity:.55;cursor:not-allowed}
+  .desktop-target-repo:focus-visible,.desktop-target-branch:focus-visible,.desktop-session-step:focus-visible {
+    outline:2px solid var(--pro-focus);outline-offset:2px;
+  }
+  .desktop-session-actions {display:flex;flex:0 0 auto;align-items:center;gap:5px;flex-wrap:nowrap}
+  .desktop-session-step {
+    display:inline-flex;align-items:center;justify-content:center;gap:5px;
+    min-height:36px;padding:5px 9px;
+    border-radius:9px;border:1px solid var(--pro-border);
+    color:var(--pro-subtle);background:var(--pro-surface-2);
+    font:inherit;font-size:10px;white-space:nowrap;cursor:pointer;
+  }
+  .desktop-session-step b {font-weight:740;font-size:11px;color:var(--pro-muted)}
+  .desktop-session-step.is-complete>span {color:var(--pro-accent)}
+  .desktop-session-step.is-current {background:var(--pro-accent-surface);border-color:var(--pro-border-strong);color:var(--pro-accent)}
+  .desktop-session-step.is-current b {color:var(--pro-text)}
+  .desktop-session-step:hover:not(:disabled) {border-color:var(--pro-border-strong)}
+  .desktop-session-step:disabled {cursor:not-allowed;opacity:.48}
+  .desktop-session-cta.button {min-height:36px;margin:0;padding:7px 12px}
+  .pro-shell main[data-active-view="activity"] .desktop-session-bar,
+  .pro-shell main[data-active-view="history"] .desktop-session-bar,
+  .pro-shell main[data-active-view="settings"] .desktop-session-bar,
+  .pro-shell main[data-active-view="repositories"] .desktop-session-bar[data-has-repo="false"] {display:none}
+  .pro-shell .content-grid {gap:12px;align-items:start}
+  .pro-shell .form-column,.pro-shell .side-column {gap:12px}
+  .pro-shell .panel {padding:clamp(12px,1.2vw,18px);border-radius:13px;box-shadow:0 2px 12px rgba(0,0,0,.045)}
+  .pro-shell .step-heading {margin-bottom:10px}
+  .pro-shell .step-heading h2 {font-size:16px}
+  .pro-shell main[data-active-view="home"] .upload-panel {top:calc(var(--zip391-topbar) + var(--zip391-context) + 12px)}
+  .pro-shell main[data-active-view="home"] .drop-zone {min-height:94px;padding:11px 12px;gap:4px}
+  .pro-shell main[data-active-view="home"] .drop-zone .file-symbol {width:32px;height:32px;margin-bottom:0}
+  .pro-shell main[data-active-view="home"] .drop-zone .file-symbol svg {width:18px;height:18px}
+  .pro-shell main[data-active-view="home"] .limits {margin:7px 0 9px}
+  .pro-shell main[data-active-view="home"] .workflow-next {margin-top:9px}
+  .pro-shell main[data-active-view="home"] .workflow-options {margin-top:8px}
+  .pro-shell main[data-active-view="home"] .preview-panel {
+    min-height:0;max-height:calc(100dvh - var(--zip391-topbar) - var(--zip391-context) - 35px);
+    overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;
+    scroll-margin-top:calc(var(--zip391-topbar) + var(--zip391-context) + 10px);
+  }
+  .pro-shell main[data-active-view="home"] .preview-panel .stat-grid>div {padding:7px 5px}
+  .pro-shell main[data-active-view="home"] .preview-panel .stat-grid strong {font-size:17px}
+  .pro-shell .premium-review-overview {padding:9px 12px;margin-bottom:8px}
+  .pro-shell .premium-review-files {margin:9px 0}
+  .pro-shell .premium-review-files-trigger {min-height:44px;padding:9px 12px}
+  .pro-shell .premium-review-confirm {margin-top:10px;padding:10px}
+  .pro-shell .premium-review-confirm .push-button {min-height:44px}
+  .pro-shell footer {margin-top:6px;padding:8px 0;font-size:10px}
+}
+@media (min-width:761px) and (max-width:1099px) {
+  .pro-shell.polish-shell {padding-left:84px;padding-right:15px}
+  .pro-shell main[data-active-view="home"] .content-grid {grid-template-columns:minmax(0,1fr)}
+  .pro-shell main[data-active-view="home"] .upload-panel {position:static}
+  .pro-shell main[data-active-view="home"] .preview-panel {max-height:none;overflow:visible}
+  .pro-shell .desktop-session-location {max-width:57%}
+  .desktop-session-step {padding:5px 7px}
+}
+@media (min-width:1100px) {
+  .pro-shell.polish-shell {padding-right:clamp(14px,2vw,28px);padding-left:calc(var(--zip390-rail) + clamp(14px,2vw,28px));padding-bottom:6px}
+  .pro-shell main[data-active-view="home"] .content-grid {grid-template-columns:minmax(260px,34%) minmax(0,1fr)}
+  .pro-shell .desktop-workspace-nav {padding-top:17px}
+  .pro-shell .desktop-rail-top {padding-bottom:16px}
+  .pro-shell .desktop-rail-link {min-height:49px}
+  .pro-shell .desktop-rail-links {gap:3px}
+  .pro-shell .desktop-rail-bottom {padding-top:12px}
+}
+@media (min-width:1100px) and (max-width:1240px) {
+  .pro-shell main[data-active-view="home"] .content-grid {grid-template-columns:minmax(275px,38%) minmax(0,1fr)}
+  .desktop-session-location {max-width:48%}
+}
+@media (min-width:761px) and (max-height:740px) {
+  .pro-shell main[data-active-view="home"] .drop-zone {min-height:78px;padding:9px}
+  .pro-shell .step-heading {margin-bottom:8px}
+  .pro-shell main[data-active-view="home"] .preview-panel {
+    max-height:calc(100dvh - var(--zip391-topbar) - var(--zip391-context) - 24px)
+  }
+  .pro-shell .desktop-rail-link {min-height:43px}
+}
+
+/* Mobile: compact whitespace, not the safety checks or inputs. Preserve 44px
+   tap targets and the true five-stage workflow; do not rely on tiny buttons. */
+@media (max-width:760px) {
+  .desktop-header-help {display:none!important}
+  .pro-shell .topbar {min-height:48px;padding-top:2px;padding-bottom:2px}
+  .pro-shell .topbar .brand {gap:6px}
+  .pro-shell .topbar .brand-symbol {width:32px;height:32px}
+  .pro-shell .topbar .brand-symbol svg {width:18px;height:18px}
+  .pro-shell .topbar .brand strong {font-size:16px}
+  .pro-shell .topbar .brand small {font-size:8px}
+  .pro-shell .topbar .version {font-size:10px;padding:4px 6px}
+  .pro-shell .pro-view-intro.mobile-context {min-height:43px;margin:0 0 5px;padding:2px 0 5px}
+  .pro-shell .pro-view-intro h2 {font-size:18px;line-height:1.2;margin:0}
+  .pro-shell main[data-active-view="home"] .pro-stepper {margin-bottom:5px;gap:0}
+  .pro-shell main[data-active-view="home"] .pro-stepper-summary {
+    position:absolute!important;width:1px!important;height:1px!important;
+    padding:0!important;margin:-1px!important;overflow:hidden!important;
+    clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important;
+  }
+  .pro-shell main[data-active-view="home"] .pro-stepper-nav.pro-workflow {--premium-node:30px}
+  .pro-shell main[data-active-view="home"] .pro-workflow-step {min-height:44px}
+  .pro-shell main[data-active-view="home"] .mobile-quick-card {padding:8px 10px;margin-bottom:7px;min-height:0;gap:8px}
+  .pro-shell main[data-active-view="home"] .mobile-quick-card .pro-repository-symbol {display:none}
+  .pro-shell main[data-active-view="home"] .mobile-quick-card>div:nth-child(2) {min-width:0;flex:1}
+  .pro-shell main[data-active-view="home"] .mobile-quick-card strong {display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pro-shell main[data-active-view="home"] .mobile-quick-card small {font-size:10px}
+  .pro-shell .mobile-quick-card .zip-current-actions {gap:4px;flex-shrink:0}
+  .pro-shell .mobile-quick-card .zip-current-actions .button {min-height:44px;padding:8px 8px;font-size:10px}
+  .pro-shell main[data-active-view="home"] .upload-panel {padding:12px}
+  .pro-shell main[data-active-view="home"] .upload-panel .step-heading {margin-bottom:8px}
+  .pro-shell main[data-active-view="home"] .upload-panel .step-heading h2 {font-size:17px}
+  .pro-shell main[data-active-view="home"] .upload-panel .drop-zone {min-height:108px;padding:10px;gap:4px}
+  .pro-shell main[data-active-view="home"] .upload-panel .drop-zone .file-symbol {width:32px;height:32px;margin-bottom:0}
+  .pro-shell main[data-active-view="home"] .upload-panel .drop-zone .file-symbol svg {width:18px;height:18px}
+  .pro-shell main[data-active-view="home"] .upload-panel .limits {margin:5px 0 7px}
+  .pro-shell main[data-active-view="home"] .upload-panel .workflow-options {margin-top:7px}
+  .pro-shell main[data-active-view="home"] .upload-panel .workflow-next {margin-top:8px}
+  .pro-shell .zip-mobile-hub {padding:12px;gap:8px}
+  .pro-shell .zip-hub-repo,.pro-shell .zip-hub-branch {min-height:48px}
+  .pro-shell .zip-hub-primary {min-height:48px}
+  .pro-shell .premium-review-overview {padding:10px 12px;margin-bottom:8px}
+  .pro-shell .preview-panel .stat-grid {gap:6px;margin:7px 0 8px}
+  .pro-shell .preview-panel .stat-grid>div {padding:9px 4px}
+  .pro-shell .preview-panel .stat-grid strong {font-size:20px}
+  .pro-shell .premium-review-files {margin:9px 0}
+  .pro-shell .premium-review-files-trigger {min-height:48px;padding:10px 12px}
+  .pro-shell .mobile-bottom-nav {padding-top:4px}
+  .pro-shell .mobile-nav-item {min-height:54px}
+}
+@media (max-width:380px) {
+  .pro-shell main[data-active-view="home"] .mobile-quick-card {gap:4px}
+  .pro-shell .mobile-quick-card .zip-current-actions {flex-direction:row;align-items:center}
+  .pro-shell .mobile-quick-card .zip-current-actions .button {padding-inline:6px}
+}
+@media (max-width:760px) and (max-height:720px) {
+  .pro-shell main[data-active-view="home"] .upload-panel .drop-zone {min-height:88px}
+  .pro-shell main[data-active-view="home"] .upload-panel .limits {margin:4px 0}
+}
+@media (prefers-reduced-motion:reduce) {
+  .desktop-target-repo,.desktop-target-branch,.desktop-session-step {transition:none!important;transform:none!important}
+}
+@media (min-width:761px) {
+  .desktop-header-help {gap:2px}
+  .desktop-context-refresh {display:grid;place-items:center;width:40px;height:40px;min-width:40px;min-height:40px;padding:0;border:0;background:transparent;color:var(--pro-muted);cursor:pointer}
+  .desktop-context-refresh:disabled {opacity:.5;cursor:not-allowed}
+  .desktop-context-refresh:hover:not(:disabled) {color:var(--pro-accent)}
+  .desktop-context-refresh:focus-visible {outline:2px solid var(--pro-focus);outline-offset:2px}
+}

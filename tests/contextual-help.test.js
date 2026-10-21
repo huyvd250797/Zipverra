@@ -34,7 +34,9 @@ test('one shared help trigger is mounted in the screen header and not repeated a
   const page = read('app/page.jsx');
   assert.equal((ui.match(/<ContextualHelp tab=/g) || []).length, 1);
   assert.match(ui, /<ContextualHelp tab=\{activeTab\}\/>/);
-  assert.doesNotMatch(page, /<ContextualHelp/);
+  assert.equal((page.match(/<ContextualHelp tab=/g) || []).length, 1);
+  assert.match(page, /desktop-header-help/);
+  assert.match(read('app/styles/smart-compact-v391.css'), /\.desktop-header-help \{display:none\}/);
   assert.match(page, /<UXViewIntro activeTab=\{activeTab\}/);
 });
 

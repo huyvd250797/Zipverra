@@ -74,7 +74,7 @@ export function CurrentRepository({ owner, repo, branch, busy, onChoose, onBranc
   return <section className="mobile-quick-card" aria-label="Repository hiện tại">
     <span className="pro-repository-symbol" aria-hidden="true">⌘</span>
     <div><span className="mobile-quick-label">PUSH DESTINATION</span>
-      <strong>{owner && repo ? `${owner}/${repo}` : 'Chưa chọn repository'}</strong>
+      <strong title={owner && repo ? `${owner}/${repo}` : 'Chưa chọn repository'}>{owner && repo ? `${owner}/${repo}` : 'Chưa chọn repository'}</strong>
       <small><span className="pro-branch-dot" aria-hidden="true"/>{branch || 'main'}</small></div>
     <div className="zip-current-actions"><button type="button" className="button secondary" onClick={onBranch} disabled={busy} aria-label={`Thay đổi branch ${branch}`}>Branch</button><button type="button" className="button secondary" onClick={onChoose} disabled={busy} aria-label="Thay đổi repository">Đổi repo <span aria-hidden="true">→</span></button></div>
   </section>;

@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.9.0",
+  "version": "3.9.1",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.9.0 — Desktop Workspace UX: responsive sidebar, task-focused panels, and streamlined review",
+  "description": "Zipverra Pro v3.9.1 — Smart Compact Layout: responsive context bar, less page scrolling, preserved GitHub review guards",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

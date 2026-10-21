@@ -1,6 +1,6 @@
-# Zipverra Pro v3.9.0 — Desktop Workspace UX
+# Zipverra Pro v3.9.1 — Smart Compact Layout
 
-**Release details:** [RELEASE_V389.md](RELEASE_V389.md) · **Acceptance checklist:** [QA_CHECKLIST_V389.md](QA_CHECKLIST_V389.md).
+**Current release:** [RELEASE_V391.md](RELEASE_V391.md) · **Acceptance checklist:** [QA_CHECKLIST_V391.md](QA_CHECKLIST_V391.md). Previous desktop baseline: [RELEASE_V390.md](RELEASE_V390.md).
 
 **Standard:** 120 MiB ZIP / 240 MiB uncompressed. **Extended:** 200 MiB / 400 MiB, one-time consent per ZIP. The 2.5 MB/file, 2,500 source-file and GitHub branch safety constraints are unchanged. Browser Web Worker retains the compressed archive and returns only SHA/path/size/scan metadata. Bytes are read on demand and checksum validated before upload or Diff. Proof refresh is mandatory before Commit if evidence is expiring. Avoid backgrounding iPhone while working with large archives.
 
@@ -63,10 +63,10 @@
 
 ## Deployment to GitHub + Vercel
 
-1. Extract the archive and push the **contents of `Zipverra-v3.9.0/`** into the root of the existing application repository; do not push the outer folder as a nested app.
+1. Extract the archive and push the **contents of `Zipverra-v3.9.1/`** into the root of the existing application repository; do not push the outer folder as a nested app.
 2. Keep your existing Vercel variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`. Update `APP_URL` only if the deployed domain has changed.
 3. Build on Vercel or another networked CI with `npm install --no-audit --no-fund`, `npm test`, `npm run build` using Node 22. Existing GitHub Actions workflow runs tests/build on push and PR.
-4. Verify `/api/version` displays `3.9.0`, and refresh the app to apply the public PWA service-worker cache version. Old public cache entries are removed after activation; private API/auth responses are never cached.
+4. Verify `/api/version` displays `3.9.1`, and refresh the app to apply the public PWA service-worker cache version. Old public cache entries are removed after activation; private API/auth responses are never cached.
 5. Test on an authorized throwaway repository: select ZIP with hundreds of files, check the quick confirmation flow without opening details, expand and scroll the file list, return to confirmation, then separately verify Sync delete acknowledgement, Critical consent dialog (No/Yes) and PR behavior. Test rollback/Recovery after interrupted operations before using production repositories.
 6. Test actual iPhone Safari and installed standalone PWA keyboard, modal focus and scroll, dynamic safe area, dark/light, reduced motion, and Wi-Fi interruption before labeling production validated.
 
