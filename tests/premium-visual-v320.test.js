@@ -16,18 +16,18 @@ function contrast(a,b) {
   return (hi+.05)/(lo+.05);
 }
 
-test('v3.9.2 metadata, PWA, and premium layer are connected in cascade order',()=>{
-  assert.equal(JSON.parse(read('package.json')).version, '3.9.2');
-  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.9\.2'/);
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.2/);
-  assert.match(page, /v3\.9\.2/);
+test('v3.9.3 metadata, PWA, and premium layer are connected in cascade order',()=>{
+  assert.equal(JSON.parse(read('package.json')).version, '3.9.3');
+  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.9\.3'/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.3/);
+  assert.match(page, /v3\.9\.3/);
   const layout = read('app/layout.jsx');
   assert.ok(layout.indexOf("import './styles/repository-workflow.css';") >= 0);
   assert.ok(layout.indexOf("import './styles/premium-visual-v320.css';") > layout.indexOf("import './styles/repository-workflow.css';"));
   assert.match(layout, /themeColor: '#0B111B'/);
 });
 
-test('v3.9.2 keyboard focus excludes programmatic -1 landmarks, preserves controls',()=>{
+test('v3.9.3 keyboard focus excludes programmatic -1 landmarks, preserves controls',()=>{
   assert.match(theme, /\[tabindex\]:not\(\[tabindex="-1"\]\)/);
   assert.match(premium,/main#zipverra-main:focus-visible/);
   assert.match(premium,/outline:none!important/);

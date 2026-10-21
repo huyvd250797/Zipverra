@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.9.2",
+  "version": "3.9.3",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.9.2 — One-Screen Upload & Review: inline repo/branch, bounded Review, fixed mobile Push controls",
+  "description": "Zipverra Pro v3.9.3 — Quick Action & Smart Defaults: fast repo shortcuts, opt-in last repo, explicit per-repo Push Profiles",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

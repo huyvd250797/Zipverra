@@ -1,4 +1,4 @@
-# Zipverra Pro v3.9.2 — One-Screen Upload & Review
+# Zipverra Pro v3.9.3 — Quick Action & Smart Defaults
 
 **Current release:** [RELEASE_V392.md](RELEASE_V392.md) · **Acceptance checklist:** [QA_CHECKLIST_V392.md](QA_CHECKLIST_V392.md). Previous compact baseline: [RELEASE_V391.md](RELEASE_V391.md).
 
@@ -63,10 +63,10 @@
 
 ## Deployment to GitHub + Vercel
 
-1. Extract the archive and push the **contents of `Zipverra-v3.9.2/`** into the root of the existing application repository; do not push the outer folder as a nested app.
+1. Extract the archive and push the **contents of `Zipverra-v3.9.3/`** into the root of the existing application repository; do not push the outer folder as a nested app.
 2. Keep your existing Vercel variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`. Update `APP_URL` only if the deployed domain has changed.
 3. Build on Vercel or another networked CI with `npm install --no-audit --no-fund`, `npm test`, `npm run build` using Node 22. Existing GitHub Actions workflow runs tests/build on push and PR.
-4. Verify `/api/version` displays `3.9.2`, and refresh the app to apply the public PWA service-worker cache version. Old public cache entries are removed after activation; private API/auth responses are never cached.
+4. Verify `/api/version` displays `3.9.3`, and refresh the app to apply the public PWA service-worker cache version. Old public cache entries are removed after activation; private API/auth responses are never cached.
 5. Test on an authorized throwaway repository: select ZIP with hundreds of files, check the quick confirmation flow without opening details, expand and scroll the file list, return to confirmation, then separately verify Sync delete acknowledgement, Critical consent dialog (No/Yes) and PR behavior. Test rollback/Recovery after interrupted operations before using production repositories.
 6. Test actual iPhone Safari and installed standalone PWA keyboard, modal focus and scroll, dynamic safe area, dark/light, reduced motion, and Wi-Fi interruption before labeling production validated.
 
@@ -672,6 +672,10 @@ For PR features, open GitHub App Settings → **Permissions & events** → **Rep
 ## v3.8.4 — Unified Notification System
 See [RELEASE_V384.md](RELEASE_V384.md) for changes, test results and release validation.
 
+
+## v3.9.3 Quick Action & Smart Defaults
+
+Upload now includes up to four **authorized** repository shortcuts (Pinned → Recent → Frequent), quick pinning, and **save/apply Push Profile** controls. You can opt in to selecting your most recent authorized repo on the next launch; this only restores the destination with **main / Merge / Direct**, never a saved ZIP, Sync/PR mode or consent. Applying a saved release profile is always explicit and a Sync profile displays an additional warning. All preferences are scoped to the currently signed-in GitHub account and this device. See `RELEASE_V393.md` and `QA_CHECKLIST_V393.md`.
 
 ## v3.9.2 One-Screen Upload & Review
 - Mobile: choose repository and branch inline in Upload; after ZIP analysis, the upload area condenses into a source strip, with Review scrolling within its own panel and a fixed, consent-gated Commit/PR dock above bottom navigation.

@@ -24,6 +24,7 @@ import './styles/large-archive-v389.css';
 import './styles/desktop-workspace-v390.css';
 import './styles/smart-compact-v391.css';
 import './styles/one-screen-v392.css';
+import './styles/quick-actions-v393.css';
 
 export const metadata = {
   title: 'Zipverra Pro — GitHub Workspace',

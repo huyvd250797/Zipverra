@@ -32,6 +32,8 @@ import { summarizeReviewRisks } from '../lib/review-risk-center.js';
 import { activityPresentation, reviewDisclosureDefaultOpen } from '../lib/premium-workflow.js';
 import { WorkspaceLaunchpad, RepositoryEmpty, ReviewReadiness, ActivityEmpty, PushOutcome } from './components/PolishedWorkspace.jsx';
 import SourceZipDownload from './components/SourceZipDownload.jsx';
+import QuickActions from './components/QuickActions.jsx';
+import { QUICK_RESTORE_KEY, lastAuthorizedRepo } from '../lib/quick-actions.js';
 import { RepositoryPickerSheet, BranchPickerSheet } from './components/RepositoryWorkflowSheets.jsx';
 import { reviewReadiness, themeChoice, resolveTheme } from '../lib/ux-polish.js';
 import MobileViewportGuard from './components/MobileViewportGuard.jsx';
@@ -195,6 +197,8 @@ export default function Home() {
   const [dashboardError, setDashboardError] = useState('');
   const [loadingRepos, setLoadingRepos] = useState(false);
   const [recents, setRecents] = useState([]);
+  const [quickRestoreEnabled, setQuickRestoreEnabled] = useState(false);
+  const autoRestoredAccountRef = useRef(null);
   const [favorites, setFavorites] = useState([]);
   const [repositoryUsage, setRepositoryUsage] = useState([]);
   const [excludedPaths, setExcludedPaths] = useState([]);
@@ -335,7 +339,10 @@ export default function Home() {
     setProProfiles([]); setProActivity([]); setProDashboard(null); setDashboardError('');
     // Never show another GitHub account's local repo history or usage counts.
     setRecents([]); setFavorites([]); setRepositoryUsage([]);
+    autoRestoredAccountRef.current = null;
+    setQuickRestoreEnabled(false);
     if (!auth.authenticated || !auth.user?.login) return;
+    try { setQuickRestoreEnabled(localStorage.getItem(accountStorageKey(QUICK_RESTORE_KEY,auth.user)) === 'enabled'); } catch { /* local storage optional */ }
     try {
       const recentKey = accountStorageKey(RECENTS_KEY, auth.user);
       const favoriteKey = accountStorageKey(FAVORITES_KEY, auth.user);
@@ -371,6 +378,36 @@ export default function Home() {
     } catch { /* invalid local cache must not break the PWA */ }
   }, [auth.authenticated,auth.user?.login]);
 
+  function setQuickRestorePreference(enabled) {
+    if (!auth.authenticated || !auth.user?.login) return;
+    const next = Boolean(enabled);
+    setQuickRestoreEnabled(next);
+    try { localStorage.setItem(accountStorageKey(QUICK_RESTORE_KEY,auth.user), next ? 'enabled' : 'disabled'); } catch { /* optional preference */ }
+    // Preference applies on the next app launch; never change the active target mid-review.
+  }
+
+  useEffect(() => {
+    if (!auth.authenticated || !auth.user?.login || !repos.length || loadingRepos) return;
+    const login = auth.user.login.toLowerCase();
+    if (autoRestoredAccountRef.current === login) return;
+    autoRestoredAccountRef.current = login;
+    if (owner || repo || file || preview || busy || pendingCommit || pendingPR) return;
+    try {
+      if (localStorage.getItem(accountStorageKey(QUICK_RESTORE_KEY,auth.user)) !== 'enabled') return;
+      const recent = JSON.parse(localStorage.getItem(accountStorageKey(RECENTS_KEY,auth.user)) || '[]');
+      const name = lastAuthorizedRepo(repos,recent);
+      if (!name) return;
+      const [nextOwner,nextRepo] = name.split('/');
+      // Destination only: never restore Sync, PR, a ZIP, a Review or consent.
+      setOwner(nextOwner);setRepo(nextRepo);setBranch('main');
+      setMode('merge');setReleaseStrategy('direct');
+      setStatus(`Đã chọn lại ${name} (Merge · Direct Push). Kiểm tra repo/branch trước khi chọn ZIP.`);
+    } catch { /* a missing/corrupt preference must not block the app */ }
+  // Only reevaluate after the authorized list arrives; never change destination
+  // just because the user selected a different repo or opened a new tab.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth.authenticated, auth.user?.login, repos, loadingRepos]);
+
   function saveProfile(value) {
     if (!auth.authenticated || !auth.user?.login) return;
     const next=upsertProfile(proProfilesRef.current,value);
@@ -382,23 +419,52 @@ export default function Home() {
     proProfilesRef.current=next;setProProfiles(next);
     try{localStorage.setItem(accountStorageKey(PRO_PROFILES_KEY,auth.user),JSON.stringify(next));}catch{}
   }
-  function applyProfile(profile) {
-    if (!canLeaveWorkspace('', true)) return;
-    workspaceDirtyRef.current = false;setWorkspaceOpen(false);
-    if (!auth.authenticated || `${owner}/${repo}`.toLowerCase()!==profile.repo.toLowerCase() || busy || pendingCommit || pendingPR) return;
-    setBranch(profile.branch);setMode(profile.mode);setReleaseStrategy(profile.strategy);
-    setFile(null); if(fileInput.current)fileInput.current.value=''; reset(); goToTab('home');
-  }
-  function selectAndApplyProfile(profile) {
-    if (!canLeaveWorkspace('', true)) return;
-    workspaceDirtyRef.current = false;
+  async function applyProfile(profile) {
+    // A saved profile is a proposal, never an implicit change of destination or
+    // a security consent. Validate against the currently authorized repo list.
     if (!auth.authenticated || busy || pendingCommit || pendingPR ||
-        !repos.some(r=>r.full_name.toLowerCase()===profile.repo.toLowerCase())) return;
+        `${owner}/${repo}`.toLowerCase() !== profile?.repo?.toLowerCase() ||
+        !repos.some(r => r.full_name.toLowerCase() === profile.repo.toLowerCase())) return false;
+    if (file && phase !== PUSH_STAGES.SUCCEEDED && !await askConfirmation({
+      title:'Áp dụng Push Profile?',
+      message:'Đổi branch hoặc chế độ sẽ bỏ ZIP và bản Review chưa Push. Bạn sẽ cần phân tích ZIP lại.',
+      confirmLabel:'Áp dụng Profile',danger:true,
+    })) return false;
+    if (profile.mode === 'sync' && mode !== 'sync' && !await askConfirmation({
+      title:'Profile dùng chế độ Sync',
+      message:'Sync có thể xóa các file đang có trên GitHub nhưng không nằm trong ZIP. Các xác nhận Review/Sync vẫn bắt buộc.',
+      confirmLabel:'Chọn Sync',danger:true,
+    })) return false;
+    if (busy || pendingCommit || pendingPR || !canLeaveWorkspace('',true)) return false;
+    workspaceDirtyRef.current=false;setWorkspaceOpen(false);
+    setBranch(profile.branch);setMode(profile.mode);setReleaseStrategy(profile.strategy);
+    setFile(null);if(fileInput.current)fileInput.current.value='';
+    reset();goToTab('home');
+    setStatus(`Đã áp dụng Profile: ${profile.branch} · ${profile.mode === 'sync'?'Sync':'Merge'} · ${profile.strategy === 'pr'?'Pull Request':'Direct Push'}. Hãy chọn ZIP và Review trước khi Push.`);
+    return true;
+  }
+  async function selectAndApplyProfile(profile) {
+    if (!auth.authenticated || busy || pendingCommit || pendingPR ||
+        !repos.some(r=>r.full_name.toLowerCase()===profile?.repo?.toLowerCase())) return false;
+    if (file && phase !== PUSH_STAGES.SUCCEEDED && !await askConfirmation({
+      title:'Đổi repository và áp dụng Profile?',
+      message:'ZIP và bản Review chưa Push sẽ bị bỏ. Cấu hình trong Profile sẽ được áp dụng cho repository mới.',
+      confirmLabel:'Đổi và áp dụng',danger:true,
+    })) return false;
+    if (profile.mode === 'sync' && !await askConfirmation({
+      title:'Profile dùng chế độ Sync',
+      message:'Sync có thể xóa file cũ trên GitHub. Các bước xác nhận Review và Push vẫn bắt buộc.',
+      confirmLabel:'Chọn Sync',danger:true,
+    })) return false;
+    if (busy || pendingCommit || pendingPR || !canLeaveWorkspace('',true)) return false;
+    workspaceDirtyRef.current=false;
     const [nextOwner,nextRepo]=profile.repo.split('/');
     setOwner(nextOwner);setRepo(nextRepo);setBranch(profile.branch);
     setMode(profile.mode);setReleaseStrategy(profile.strategy);
     setWorkspaceOpen(false);setFile(null);if(fileInput.current)fileInput.current.value='';
     reset();saveRecent(profile.repo);goToTab('home');
+    setStatus(`Đã chọn ${profile.repo} · ${profile.branch}; hãy Review ZIP trước khi Push.`);
+    return true;
   }
   function logLocalAction(value) {
     if (!auth.authenticated || !auth.user?.login) return;
@@ -1058,7 +1124,7 @@ export default function Home() {
         <span className="desktop-rail-label">GITHUB ACCOUNT</span>
         <strong>{auth.user?.login ? `@${auth.user.login}` : 'Chưa đăng nhập'}</strong>
         <span className="desktop-rail-branch"><Icon name="branch" size={14}/>{chosenRepo ? `${repo} · ${branch}` : 'Chọn repository để bắt đầu'}</span>
-        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.2</span>
+        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.3</span>
       </div>
     </aside>
     <header className="topbar" role="banner">
@@ -1067,7 +1133,7 @@ export default function Home() {
       <div className="header-actions"><span className="desktop-header-help">
         {activeTab === 'repositories' && auth.authenticated && <button type="button" className="repo-refresh-icon desktop-context-refresh" onClick={restartWorkspace} disabled={busy || loadingRepos || Boolean(pendingCommit || pendingPR)} aria-label="Khởi động lại và tải lại repository" title="Làm mới ứng dụng"><Icon name="refresh" size={17}/></button>}
         <ContextualHelp tab={activeTab}/>
-      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.2</span></div>
+      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.3</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} repoTools={activeTab === 'repositories' && auth.authenticated ? <button type="button" className={`repo-refresh-icon${loadingRepos ? ' is-loading' : ''}`} onClick={restartWorkspace} disabled={busy || loadingRepos || Boolean(pendingCommit || pendingPR)} aria-label="Khởi động lại ứng dụng, bỏ các lựa chọn và tải lại danh sách repository" title="Khởi động lại từ đầu"><Icon name="refresh" size={17}/></button> : null}/>
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
@@ -1138,6 +1204,13 @@ export default function Home() {
                 <span><small>BRANCH</small><strong>{chosenRepo ? branch : '—'}</strong></span><span aria-hidden="true">⌄</span>
               </button>
             </div>
+            {auth.authenticated && !loadingRepos && !preview && <QuickActions
+              repos={repos} favorites={favorites} recents={recents} usage={repositoryUsage}
+              selectedRepo={chosenRepo ? `${owner}/${repo}` : ''} branch={branch} mode={mode} strategy={releaseStrategy}
+              profiles={proProfiles} disabled={busy || Boolean(pendingCommit || pendingPR)}
+              autoRestore={quickRestoreEnabled} onAutoRestoreChange={setQuickRestorePreference}
+              onChoose={chooseRepo} onOpenPicker={() => setRepoSheetOpen(true)}
+              onToggleFavorite={toggleFavorite} onSaveProfile={saveProfile} onApplyProfile={applyProfile}/>}
             {preview && <div className="zip392-source-compact" role="status">
               <div className="zip392-source-copy"><Icon name="file" size={16}/><span title={file?.name || ''}><strong>{file?.name}</strong><small>{prettyBytes(file?.size || 0)} · {selectedChanges.length} thay đổi · {mode === 'sync' ? 'Sync' : 'Merge'} / {releaseStrategy === 'pr' ? 'PR' : 'Direct Push'}</small></span></div>
               <button type="button" className="zip392-replace-zip" disabled={busy || Boolean(pendingCommit || pendingPR)} onClick={() => fileInput.current?.click()} aria-label="Chọn ZIP khác">Thay ZIP</button>
@@ -1245,7 +1318,7 @@ export default function Home() {
             <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
               profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
               onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.2</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.3</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -1256,7 +1329,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.9.2</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.9.3</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <ModalSheet open={Boolean(preview && securityDialogOpen && requiresConsent)} onClose={() => setSecurityDialogOpen(false)} title="Cảnh báo thông tin nhạy cảm" variant="sheet">
     <div className="sensitive-consent-modal" role="alert">
