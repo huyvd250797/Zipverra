@@ -6,8 +6,8 @@ const read = path => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'
 const page = read('app/page.jsx'), ui = read('app/components/ProfessionalUI.jsx');
 const styles = read('app/styles/premium-workflow-v350.css');
 
-test('v3.9.1 loads Premium Workflow last, preserving preceding visual layers',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.1');
+test('v3.9.2 loads Premium Workflow last, preserving preceding visual layers',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.2');
   const layout=read('app/layout.jsx');
   assert.match(layout,/premium-workflow-v350\.css/);
   assert.ok(layout.indexOf('mobile-layout-v340.css')<layout.indexOf('premium-workflow-v350.css'));
@@ -64,7 +64,7 @@ test('only user action sends Push and Review auto-scroll does not automatically 
   assert.match(page,/requestOnce\('commit', commitPayload\)/);
   assert.match(page,/if \(!preview \|\| activeTab !== 'home'\) return/);
   assert.match(page,/window\.requestAnimationFrame/);
-  assert.match(page,/window\.cancelAnimationFrame/);
+  assert.match(page,/previewRef\.current\?\.scrollTo/);
   assert.match(page,/onClick=\{goToReview\}/);
 });
 test('Mobile confirmation is reachable, scroll area stable, animation respects reduced motion',()=>{

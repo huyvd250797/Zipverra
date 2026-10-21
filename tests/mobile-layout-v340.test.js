@@ -9,12 +9,12 @@ const page=read('app/page.jsx');
 const hub=read('app/components/PolishedWorkspace.jsx');
 const css=read('app/styles/mobile-layout-v340.css');
 
-test('v3.9.1 ships its mobile layout layer last and PWA version matches',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.1');
+test('v3.9.2 ships its mobile layout layer last and PWA version matches',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.2');
   const layout=read('app/layout.jsx');
   assert.match(layout,/import '\.\/styles\/mobile-layout-v340\.css'/);
   assert.ok(layout.indexOf('unified-components-v330.css')<layout.indexOf('mobile-layout-v340.css'));
-  assert.match(read('lib/pwa-reliability.js'),/APP_VERSION = '3\.9\.1'/);
+  assert.match(read('lib/pwa-reliability.js'),/APP_VERSION = '3\.9\.2'/);
   for(const name of ['icon-192.png','icon-512.png','apple-touch-icon.png'])assert.ok(existsSync(join(root,'public',name)),name);
 });
 test('Repos uses one authorized repo and branch hub, not duplicated pickers',()=>{
@@ -31,7 +31,7 @@ test('Repos uses one authorized repo and branch hub, not duplicated pickers',()=
 test('Repos owns a single persistent Source ZIP Download, separate from Upload',()=>{
   assert.equal((page.match(/<SourceZipDownload\b/g)||[]).length,1);
   assert.match(page,/className="panel repository-panel"[\s\S]*?<SourceZipDownload/);
-  assert.match(page,/className="panel upload-panel"/);
+  assert.match(page,/panel upload-panel\$\{preview \? ' zip392-reviewed'/);
   assert.match(page,/className="zip-missing-repo"/);
   assert.match(page,/className=\{`drop-zone/);
 });

@@ -11,8 +11,8 @@ const layout = read('app/layout.jsx');
 const safe = { hasPreview:true, selectedCount:20, critical:0, authenticated:true,
   online:true, busy:false, pending:false, confirmed:false, syncDeleteCount:0, syncConfirmed:false };
 
-test('v3.9.1 includes modal-motion override after all prior UI layers',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.1');
+test('v3.9.2 includes modal-motion override after all prior UI layers',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.2');
   assert.match(layout,/import '\.\/styles\/modal-motion-v360\.css'/);
   assert.ok(layout.indexOf('premium-workflow-v350.css') < layout.indexOf('modal-motion-v360.css'));
 });
@@ -20,10 +20,11 @@ test('quick confirmation precedes file listing and diagnostic detail',()=>{
   const overview=page.indexOf('<ReviewSummary selected=');
   const risk=page.indexOf('<ReviewRiskCenter');
   const confirm=page.indexOf('className="premium-review-confirm"');
-  const button=page.indexOf('className="button primary full push-button"');
   const files=page.indexOf('className="premium-review-files"');
   const diagnostics=page.indexOf('className="premium-review-diagnostics"');
-  assert.ok(overview > 0 && overview < risk && risk < confirm && confirm < button && button < files && files < diagnostics);
+  const dock=page.indexOf('className="zip392-action-dock"');
+  assert.ok(overview > 0 && overview < risk && risk < confirm && confirm < files && files < diagnostics && diagnostics < dock);
+  assert.equal((page.match(/onClick=\{push\}/g)||[]).length,1, 'One Push handler only');
   assert.match(page, /\['SECURITY', 'SYNC', 'CONFIRM', 'READY'\]/);
   assert.match(page, /\{fileDetailsOpen && <>/);
 });

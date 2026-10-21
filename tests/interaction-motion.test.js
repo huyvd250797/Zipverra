@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs';
 import { createInteractionNotice, shouldAnnounceEvent } from '../lib/interaction-feedback.js';
 const read = path => readFileSync(new URL(`../${path}`, import.meta.url),'utf8');
 
-test('v3.9.1 has separate optional motion layer loaded last',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.1');
+test('v3.9.2 has separate optional motion layer loaded last',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.2');
   const layout=read('app/layout.jsx');
   assert.ok(layout.indexOf('pro-design-system.css') < layout.indexOf('pro-motion.css'));
   for(const css of ['--motion-quick','--motion-enter','--motion-steady','--motion-curve','pro-toast-region','pro-skeleton','pro-enter','pro-toast-enter','prefers-reduced-motion:reduce'])
@@ -80,5 +80,5 @@ test('tab transitions preserve main workflow state, data-mobile-view and five ta
   assert.match(page,/<UXViewIntro activeTab=\{activeTab\} key=\{activeTab\}/);
   assert.match(page,/data-active-view=\{activeTab\}/);
   assert.equal((page.match(/\{id:'(?:repositories|home|activity|history|settings)',label:/g)||[]).length,5);
-  assert.match(page,/matchMedia\('\(prefers-reduced-motion: reduce\)'\)/);
+  assert.match(page,/matchMedia\?\.\('\(prefers-reduced-motion: reduce\)'\)/);
 });

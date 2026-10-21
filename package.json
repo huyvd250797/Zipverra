@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.9.1",
+  "version": "3.9.2",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.9.1 — Smart Compact Layout: responsive context bar, less page scrolling, preserved GitHub review guards",
+  "description": "Zipverra Pro v3.9.2 — One-Screen Upload & Review: inline repo/branch, bounded Review, fixed mobile Push controls",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

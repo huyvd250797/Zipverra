@@ -106,7 +106,7 @@ test('Web Worker error does not silently fall back and mask a corrupt archive', 
 test('workflow is repo → ZIP → analysis → confirmation → auto Activity; App Access in Settings', () => {
   const page=readFileSync(new URL('../app/page.jsx',import.meta.url),'utf8');
   const css=readFileSync(new URL('../app/globals.css',import.meta.url),'utf8');
-  assert.match(page,/useState\('repositories'\)/);
+  assert.match(page,/useState\('home'\)/); // v3.9.2 opens directly in Upload; GitHub login is still explicit
   assert.match(page,/goToTab\('home'\)/);
   assert.match(page,/goToTab\('activity'\)/);
   assert.match(page,/openArchiveOffThread/);

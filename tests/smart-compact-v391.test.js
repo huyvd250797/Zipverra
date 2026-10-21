@@ -7,11 +7,11 @@ const page = read('app/page.jsx');
 const css = read('app/styles/smart-compact-v391.css');
 const layout = read('app/layout.jsx');
 
-test('v3.9.1 package, runtime and PWA cache are aligned', () => {
-  assert.equal(APP_VERSION, '3.9.1');
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.1');
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.1/);
-  assert.match(page,/Zipverra · v3\.9\.1/);
+test('v3.9.2 package, runtime and PWA cache are aligned', () => {
+  assert.equal(APP_VERSION, '3.9.2');
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.2');
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.2/);
+  assert.match(page,/Zipverra · v3\.9\.2/);
 });
 test('Smart Compact CSS loads after desktop, archive, modal and mobile layers', () => {
   for(const previous of ['mobile-layout-v340.css','modal-motion-v360.css','large-archive-v389.css','desktop-workspace-v390.css']){
@@ -19,7 +19,7 @@ test('Smart Compact CSS loads after desktop, archive, modal and mobile layers', 
   }
 });
 test('desktop context target can change repo and branch without hidden mobile controls', () => {
-  assert.match(page,/className="desktop-target-repo"[^>]+onClick=\{\(\) => goToTab\('repositories'\)\}/);
+  assert.match(page,/className="desktop-target-repo"[^>]+onClick=\{\(\) => setRepoSheetOpen\(true\)\}/);
   assert.match(page,/className="desktop-target-branch"[^>]+onClick=\{\(\) => setBranchSheetOpen\(true\)\}/);
   assert.match(page,/aria-label=\{`Đổi branch \$\{branch\}`\}/);
   assert.match(css,/\.pro-shell main\[data-active-view="home"\]>\.mobile-quick-card \{display:none!important\}/);
@@ -28,7 +28,7 @@ test('desktop stages trigger existing navigation and file picker, respecting gua
   assert.match(page, /desktop-session-step[^\n]*onClick=\{\(\) => fileInput\.current\?\.click\(\)\}/);
   assert.match(page, /disabled=\{!chosenRepo \|\| busy \|\| Boolean\(pendingCommit \|\| pendingPR\)\}/);
   assert.match(page, /desktop-session-step[^\n]*disabled=\{!preview \|\| busy\} onClick=\{goToReview\}/);
-  assert.match(page, /onClick=\{\(\) => goToTab\('repositories'\)\}/);
+  assert.match(page, /onClick=\{\(\) => setRepoSheetOpen\(true\)\}/);
 });
 test('desktop preserves repository refresh and one visible contextual help per breakpoint', () => {
   assert.match(page,/className="repo-refresh-icon desktop-context-refresh" onClick=\{restartWorkspace\}/);

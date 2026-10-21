@@ -1,3 +1,11 @@
+# v3.9.2 — One-Screen Upload & Review
+
+- Open straight in Upload with authenticated repo and branch selectors in context.
+- Collapse analyzed ZIP to source summary; bind Review scrolling to its own viewport.
+- Move the **single** security-gated manual Commit/PR action to a persistent responsive dock.
+- Preserve all security, Sync/PR, proof, Recovery and GitHub server routes.
+- 407/407 automated tests; production build and device QA remain to be completed on Vercel Preview.
+
 ## v3.8.9 — Large Archive Support & Memory Optimization
 - Standard 120 MiB / Extended opt-in 200 MiB; per-profile expanded limits 240/400 MiB.
 - Persistent metadata-only ZIP Worker; on-demand SHA-verified file reads; no bulk file-buffer transfer to React.

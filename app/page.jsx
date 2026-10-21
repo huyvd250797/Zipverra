@@ -151,7 +151,7 @@ const DESKTOP_TAB_META = Object.freeze({
 });
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState('repositories');
+  const [activeTab, setActiveTab] = useState('home');
   const [notifications, setNotifications] = useState(INITIAL_NOTICES);
   const noticeSequence = useRef(0);
   const { ask: askConfirmation, request: confirmRequest, answer: answerConfirmation } = useConfirmationDialog();
@@ -509,11 +509,6 @@ export default function Home() {
     return () => { active = false; };
   }, [auth.authenticated]);
 
-  useEffect(() => {
-    if (!preview || activeTab !== 'home' || !window.matchMedia('(max-width: 760px)').matches) return;
-    const motion = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
-    previewRef.current?.scrollIntoView({ behavior: motion, block: 'start' });
-  }, [preview]);
 
   async function logout() {
     if (!canLeaveWorkspace('', true)) return;
@@ -567,11 +562,21 @@ export default function Home() {
   }), [securityReport, preview?.insights, preview?.identity, mode, stats?.delete, requiresConsent,
     sensitiveConsent, projectMismatchConfirmed, syncConfirmed]);
   const diagnosticsRef = useRef(null);
+  // Scroll only the Review viewport, never the full Upload page when it is bounded.
+  const scrollReviewTo = (target) => {
+    const panel = previewRef.current;
+    if (!target || !panel) return;
+    const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    if (panel.scrollHeight > panel.clientHeight + 2) {
+      const offset = target.getBoundingClientRect().top - panel.getBoundingClientRect().top;
+      panel.scrollTo({ top: Math.max(0, panel.scrollTop + offset - 10), behavior: reduced ? 'instant' : 'smooth' });
+    } else target.scrollIntoView({ behavior: reduced ? 'instant' : 'smooth', block: 'nearest' });
+  };
   const showReviewDiagnostics = () => {
     const details = diagnosticsRef.current;
     if (!details) return;
     details.open = true;
-    window.requestAnimationFrame(() => details.scrollIntoView({ behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches ? 'auto' : 'smooth', block: 'start' }));
+    window.requestAnimationFrame(() => scrollReviewTo(details));
   };
   const canSubmitPush = pushReadiness.ready && (preview?.identity?.severity !== 'critical' || projectMismatchConfirmed);
   const copyCommitSha = useCallback(async (sha) => {
@@ -851,22 +856,22 @@ export default function Home() {
     goToTab('home');
     // The chooser is initiated only by a separate user tap (iOS Safari requirement).
   }
-  // Only scroll on a newly completed analysis. Changing tabs later never jumps the viewport.
+  // The Review becomes a bounded workspace as soon as analysis completes.
+  // Never scroll the whole iPhone document to a second tall page.
   useEffect(() => {
     if (!preview || activeTab !== 'home') return;
-    let secondFrame = 0;
-    const firstFrame = window.requestAnimationFrame(() => {
-      secondFrame = window.requestAnimationFrame(() => {
-        const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-        previewRef.current?.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' });
-      });
-    });
-    return () => { window.cancelAnimationFrame(firstFrame); window.cancelAnimationFrame(secondFrame); };
-  }, [preview]);
+    if (window.matchMedia?.('(max-width: 760px)').matches) {
+      window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    } else {
+      previewRef.current?.scrollTo?.({ top: 0, behavior: 'instant' });
+    }
+  }, [preview, activeTab]);
   function goToReview() {
     if (!preview) return;
-    goToTab('home');
-    window.requestAnimationFrame(() => previewRef.current?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }));
+    if (activeTab !== 'home') { goToTab('home'); return; }
+    // For large reviews, only scroll the independent Review panel.
+    previewRef.current?.scrollTo?.({ top: 0, behavior: 'smooth' });
+    if (window.matchMedia?.('(max-width: 760px)').matches) window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   // A file list can contain thousands of paths. Return to the single, gated
@@ -877,8 +882,8 @@ export default function Home() {
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
       const decision = decisionRef.current;
       if (!decision?.isConnected) return;
-      const reduced = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-      decision.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'center' });
+      // The submit dock is always visible in the active workspace.
+      // Focus it without moving the outer document or pushing the mobile dock.
       decision.focus({ preventScroll: true });
     }));
   }
@@ -1053,7 +1058,7 @@ export default function Home() {
         <span className="desktop-rail-label">GITHUB ACCOUNT</span>
         <strong>{auth.user?.login ? `@${auth.user.login}` : 'Chưa đăng nhập'}</strong>
         <span className="desktop-rail-branch"><Icon name="branch" size={14}/>{chosenRepo ? `${repo} · ${branch}` : 'Chọn repository để bắt đầu'}</span>
-        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.1</span>
+        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.2</span>
       </div>
     </aside>
     <header className="topbar" role="banner">
@@ -1062,18 +1067,18 @@ export default function Home() {
       <div className="header-actions"><span className="desktop-header-help">
         {activeTab === 'repositories' && auth.authenticated && <button type="button" className="repo-refresh-icon desktop-context-refresh" onClick={restartWorkspace} disabled={busy || loadingRepos || Boolean(pendingCommit || pendingPR)} aria-label="Khởi động lại và tải lại repository" title="Làm mới ứng dụng"><Icon name="refresh" size={17}/></button>}
         <ContextualHelp tab={activeTab}/>
-      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.1</span></div>
+      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.2</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} repoTools={activeTab === 'repositories' && auth.authenticated ? <button type="button" className={`repo-refresh-icon${loadingRepos ? ' is-loading' : ''}`} onClick={restartWorkspace} disabled={busy || loadingRepos || Boolean(pendingCommit || pendingPR)} aria-label="Khởi động lại ứng dụng, bỏ các lựa chọn và tải lại danh sách repository" title="Khởi động lại từ đầu"><Icon name="refresh" size={17}/></button> : null}/>
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
     {activeTab !== 'activity' && (error || busy) && <button type="button" className={`mobile-global-status ${error ? 'has-error' : ''}`} onClick={() => goToTab('activity')}><span>{error ? `Cần kiểm tra: ${error}` : `${status || 'Đang xử lý...'} · ${progress}%`}</span><Icon name="arrow" size={17}/></button>}
-    <main id="zipverra-main" tabIndex={-1} aria-labelledby="zipverra-current-view" data-active-view={activeTab} className={viewExiting ? 'zip-view-exiting' : ''}>
+    <main id="zipverra-main" tabIndex={-1} aria-labelledby="zipverra-current-view" data-active-view={activeTab} data-review-ready={Boolean(preview && activeTab === 'home') ? 'true' : 'false'} className={viewExiting ? 'zip-view-exiting' : ''}>
       {/* Desktop session summary keeps the destination visible without repeated long cards. */}
       <section className="desktop-session-bar" data-has-repo={chosenRepo ? 'true' : 'false'} aria-label="Thanh ngữ cảnh phiên làm việc">
         <div className="desktop-session-location">
           <span className="desktop-session-eyebrow">REPOSITORY / BRANCH</span>
           <div className="desktop-session-target">
-            <button type="button" className="desktop-target-repo" disabled={busy || Boolean(pendingCommit || pendingPR)} onClick={() => goToTab('repositories')} title="Chọn hoặc đổi repository" aria-label={chosenRepo ? `Đổi repository ${owner}/${repo}` : 'Chọn repository'}>
+            <button type="button" className="desktop-target-repo" disabled={busy || Boolean(pendingCommit || pendingPR)} onClick={() => setRepoSheetOpen(true)} title="Chọn hoặc đổi repository" aria-label={chosenRepo ? `Đổi repository ${owner}/${repo}` : 'Chọn repository'}>
               <Icon name="branch" size={15}/><strong>{chosenRepo ? `${owner}/${repo}` : 'Chọn repository'}</strong><span aria-hidden="true">⌄</span>
             </button>
             {chosenRepo && <button type="button" className="desktop-target-branch" disabled={busy || Boolean(pendingCommit || pendingPR)} onClick={() => setBranchSheetOpen(true)} title={`Đổi branch ${branch}`} aria-label={`Đổi branch ${branch}`}><span>{branch}</span><span aria-hidden="true">⌄</span></button>}
@@ -1081,7 +1086,7 @@ export default function Home() {
         </div>
         <div className="desktop-session-actions">
           {activeTab === 'home' ? <>
-            <button type="button" className={`desktop-session-step${chosenRepo ? ' is-complete' : ' is-current'}`} onClick={() => goToTab('repositories')}><span>01</span><b>Repo</b></button>
+            <button type="button" className={`desktop-session-step${chosenRepo ? ' is-complete' : ' is-current'}`} onClick={() => setRepoSheetOpen(true)}><span>01</span><b>Repo</b></button>
             <button type="button" className={`desktop-session-step${file ? ' is-complete' : chosenRepo ? ' is-current' : ''}`} disabled={!chosenRepo || busy || Boolean(pendingCommit || pendingPR)} onClick={() => fileInput.current?.click()}><span>02</span><b>ZIP</b></button>
             <button type="button" className={`desktop-session-step${preview ? ' is-current' : ''}`} disabled={!preview || busy} onClick={goToReview}><span>03</span><b>Review</b></button>
           </> : activeTab === 'repositories' && chosenRepo ? <button type="button" className="button primary desktop-session-cta" onClick={() => goToTab('home')}>Upload ZIP <Icon name="arrow" size={15}/></button> : null}
@@ -1122,12 +1127,25 @@ export default function Home() {
           </article>
           {workspaceOpen && <WorkspacePanel key={`${owner}/${repo}@${branch}`} authenticated={auth.authenticated} owner={owner} repo={repo} branch={branch} online={online} busy={busy} onBack={()=>{workspaceDirtyRef.current=false;setWorkspaceOpen(false);goToTab('repositories');}} onDirtyChange={onWorkspaceDirtyChange} api={api} onCommit={(outcome)=>{reset();logLocalAction({kind:'quick-edit',state:'success',repo:`${owner}/${repo}`,sha:outcome?.sha,message:'Quick Edit saved'});}} />}
 
-          <article className="panel upload-panel" data-mobile-view="home">
+          <article className={`panel upload-panel${preview ? ' zip392-reviewed' : ''}`} data-mobile-view="home">
             <StepTitle n="02" title="Upload ZIP" desc="Giải nén trong Web Worker, không chặn thao tác điện thoại."/>
-            {!chosenRepo && <div className="zip-missing-repo" role="status">Chưa chọn repository. <button type="button" onClick={() => goToTab('repositories')}>Chọn repo →</button></div>}
+            {!auth.loading && !auth.authenticated && <a className="button primary full zip392-login" href="/api/auth/login"><Icon name="github" size={17}/> Kết nối GitHub để chọn repository</a>}
+            <div className="zip392-target-switch" role="group" aria-label="Đích cập nhật source">
+              <button type="button" className="zip392-target-repo" disabled={!auth.authenticated || busy || Boolean(pendingCommit || pendingPR)} onClick={() => setRepoSheetOpen(true)} title="Chọn hoặc đổi repository">
+                <Icon name="branch" size={16}/><span><small>REPOSITORY</small><strong>{chosenRepo ? `${owner}/${repo}` : 'Chọn repository'}</strong></span><span aria-hidden="true">⌄</span>
+              </button>
+              <button type="button" className="zip392-target-branch" disabled={!chosenRepo || busy || Boolean(pendingCommit || pendingPR)} onClick={() => setBranchSheetOpen(true)} title="Chọn branch">
+                <span><small>BRANCH</small><strong>{chosenRepo ? branch : '—'}</strong></span><span aria-hidden="true">⌄</span>
+              </button>
+            </div>
+            {preview && <div className="zip392-source-compact" role="status">
+              <div className="zip392-source-copy"><Icon name="file" size={16}/><span title={file?.name || ''}><strong>{file?.name}</strong><small>{prettyBytes(file?.size || 0)} · {selectedChanges.length} thay đổi · {mode === 'sync' ? 'Sync' : 'Merge'} / {releaseStrategy === 'pr' ? 'PR' : 'Direct Push'}</small></span></div>
+              <button type="button" className="zip392-replace-zip" disabled={busy || Boolean(pendingCommit || pendingPR)} onClick={() => fileInput.current?.click()} aria-label="Chọn ZIP khác">Thay ZIP</button>
+            </div>}
+            {!chosenRepo && <div className="zip-missing-repo" role="status">Chưa chọn repository. <button type="button" onClick={() => setRepoSheetOpen(true)}>Chọn repo →</button></div>}
             <input ref={fileInput} id="file" className="visually-hidden" type="file" accept=".zip,application/zip,application/x-zip-compressed" disabled={busy || !chosenRepo} onChange={(e) => chooseFile(e.target.files?.[0])}/>
             <label htmlFor={chosenRepo ? 'file' : undefined} className={`drop-zone ${file ? 'picked' : ''} ${!chosenRepo ? 'locked' : ''}`}><span className="file-symbol"><Icon name={file ? 'file' : 'upload'} size={25}/></span><strong>{file ? file.name : chosenRepo ? 'Chạm để chọn file ZIP' : 'Chọn repo trước khi upload'}</strong><small>{file ? `${prettyBytes(file.size)} · Chạm để thay file` : 'Chọn từ ứng dụng Files'}</small></label>
-            {file && <div className="file-detail"><Icon name="check" size={15}/> {busy && phase === PUSH_STAGES.ANALYZING ? 'Đang phân tích ZIP...' : preview ? 'Đã phân tích · Xem Review bên dưới' : 'Đã chọn ZIP'} · Commit: <strong>{commitMessage}</strong></div>}
+            {file && <div className="file-detail"><Icon name="check" size={15}/> {busy && phase === PUSH_STAGES.ANALYZING ? 'Đang phân tích ZIP...' : preview ? 'Đã phân tích · Review đã sẵn sàng' : 'Đã chọn ZIP'} · Commit: <strong>{commitMessage}</strong></div>}
             <div className="limits"><span>{archiveMode === 'extended' ? 'Extended · 200 MiB ZIP / 400 MiB giải nén' : 'Standard · 120 MiB ZIP / 240 MiB giải nén'}</span><span>2.500 file · 2,5 MB/file</span></div>
             {archiveMode === 'extended' && <p className="archive-capacity-note" role="status">Extended Mode đã được chấp nhận cho ZIP hiện tại. Có thể tiêu thụ nhiều bộ nhớ trên iPhone; giữ app ở foreground. Chọn ZIP khác sẽ yêu cầu xác nhận lại.</p>}
             <details className="workflow-options"><summary><Icon name="settings" size={16}/> Tùy chọn nâng cao <span>{mode === 'sync' ? 'Sync' : 'Merge'} · {releaseStrategy === 'pr' ? 'Pull Request' : 'Direct Push'}</span></summary><div className="workflow-options-body">
@@ -1160,13 +1178,11 @@ export default function Home() {
                 onSyncConsent={(value) => { setSyncConfirmed(value); setConfirmed(false); }}
                 onShowDetails={showReviewDiagnostics}/>
               <span id="push-readiness-help" className="visually-hidden">Trạng thái trước khi Push: {riskSummary.pendingCount ? `Còn ${riskSummary.pendingCount} xác nhận tại Đánh giá rủi ro` : pushReadiness.title}. {pushReadiness.detail}</span>
-              <section ref={decisionRef} tabIndex={-1} className="premium-review-confirm" aria-label="Xác nhận và Push"><div className="premium-decision-heading"><strong>{releaseStrategy === 'pr' ? 'Xác nhận tạo Pull Request' : 'Sẵn sàng Commit & Push'}</strong><small>{selectedChanges.length} thay đổi · {preview.input.owner}/{preview.input.repo} · {preview.input.branch}</small></div>
+              <section className="premium-review-confirm" aria-label="Xác nhận và Push"><div className="premium-decision-heading"><strong>{releaseStrategy === 'pr' ? 'Xác nhận tạo Pull Request' : 'Sẵn sàng Commit & Push'}</strong><small>{selectedChanges.length} thay đổi · {preview.input.owner}/{preview.input.repo} · {preview.input.branch}</small></div>
                 {!['SECURITY', 'SYNC', 'CONFIRM', 'READY'].includes(pushReadiness.code) && <ReviewReadiness state={pushReadiness} selectedCount={selectedChanges.length} totalCount={preview.changes.length} strategy={releaseStrategy}/>}
                 {riskSummary.pendingCount > 0 && <p className="review-risk-next-step" role="status">Hoàn tất {riskSummary.pendingCount} xác nhận tại “Đánh giá rủi ro” để mở khóa xác nhận Commit/PR.</p>}
-                <label className="confirm-row"><input type="checkbox" checked={confirmed} disabled={busy || !selectedChanges.length || (requiresConsent && !sensitiveConsent) || (preview.identity?.severity === 'critical' && !projectMismatchConfirmed) || riskSummary.pendingCount > 0} onChange={(e) => setConfirmed(e.target.checked)}/><span>Tôi đã xem tổng quan, hiểu các cảnh báo và đồng ý {releaseStrategy === 'pr' ? 'tạo Pull Request' : 'cập nhật branch'} <b>{preview.input.branch}</b>.</span></label>
-                <button className="button primary full push-button" disabled={!canSubmitPush} aria-describedby="push-readiness-help" onClick={push}><Icon name="upload" size={18}/> {busy ? 'Đang xử lý...' : releaseStrategy === 'pr' ? `Push & Create PR (${selectedChanges.length} file)` : `Commit & Push (${selectedChanges.length} file)`}</button>
               </section>
-              <p className="premium-review-skip-note">Muốn kiểm tra hoặc bỏ chọn file? Mở danh sách chi tiết bên dưới.</p>
+              <p className="premium-review-skip-note">Cần kiểm tra từng file? Mở danh sách chi tiết trong vùng Review.</p>
               <details className="premium-review-files" open={fileDetailsOpen} onToggle={(event) => setFileDetailsOpen(event.currentTarget.open)}>
                 <summary className="premium-review-files-trigger"><span><strong>Danh sách file thay đổi</strong><small>{selectedChanges.length}/{preview.changes.length} file được chọn · Chạm để xem chi tiết</small></span><span aria-hidden="true" className="premium-files-chevron">⌄</span></summary>
               {fileDetailsOpen && <>
@@ -1193,6 +1209,12 @@ export default function Home() {
               </details>
             </>}
           </article>
+          {preview && activeTab === 'home' && <section ref={decisionRef} tabIndex={-1} className="zip392-action-dock" data-mobile-view="home" aria-label="Xác nhận và Push · Thanh thao tác cố định">
+            <div className="zip392-dock-context"><strong>{releaseStrategy === 'pr' ? 'Create Pull Request' : 'Commit & Push'}</strong><span title={`${preview.input.owner}/${preview.input.repo}@${preview.input.branch}`}>{preview.input.owner}/{preview.input.repo} · {preview.input.branch} · {selectedChanges.length} file</span></div>
+            {riskSummary.pendingCount > 0 && <button type="button" className="zip392-dock-risk" onClick={() => scrollReviewTo(previewRef.current?.querySelector('.review-risk-center'))}>Còn {riskSummary.pendingCount} cảnh báo cần xác nhận · Xem Review <Icon name="arrow" size={14}/></button>}
+            <label className="confirm-row zip392-dock-consent"><input type="checkbox" checked={confirmed} disabled={busy || !selectedChanges.length || (requiresConsent && !sensitiveConsent) || (preview.identity?.severity === 'critical' && !projectMismatchConfirmed) || riskSummary.pendingCount > 0} onChange={(e) => setConfirmed(e.target.checked)}/><span>Tôi đã xem Review, hiểu cảnh báo và đồng ý {releaseStrategy === 'pr' ? 'tạo PR' : 'cập nhật'} <b>{preview.input.branch}</b>.</span></label>
+            <button type="button" className="button primary full zip392-dock-push" disabled={!canSubmitPush} aria-describedby="push-readiness-help" onClick={push}><Icon name="upload" size={17}/> {busy ? 'Đang xử lý...' : releaseStrategy === 'pr' ? `Push & Create PR (${selectedChanges.length})` : `Commit & Push (${selectedChanges.length})`}</button>
+          </section>}
           <article ref={activityRef} className="panel activity-panel" data-mobile-view="activity"><div id="activity-live-flow" className="activity-title"><div><span className="pro-overline">LIVE OPERATIONS</span><h2>Live Activity</h2></div><span className={`activity-dot ${busy ? 'pulse' : ''}`} aria-label={busy ? 'Đang thực hiện thao tác' : 'Không có thao tác đang chạy'}/></div>
             {phase === PUSH_STAGES.IDLE && !busy && !result && !pendingCommit && !pendingPR && <ActivityEmpty canUpload={chosenRepo} onUpload={() => goToTab('home')}/>}
             <LiveActivityFocus presentation={activityFocus}/>
@@ -1223,7 +1245,7 @@ export default function Home() {
             <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
               profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
               onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.1</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.2</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -1234,7 +1256,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.9.1</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.9.2</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <ModalSheet open={Boolean(preview && securityDialogOpen && requiresConsent)} onClose={() => setSecurityDialogOpen(false)} title="Cảnh báo thông tin nhạy cảm" variant="sheet">
     <div className="sensitive-consent-modal" role="alert">
