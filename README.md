@@ -1,8 +1,18 @@
-# Zipverra Pro v3.9.4 — Adaptive Sheets & Smooth Flow
+# Zipverra Pro v3.9.5 — Zero-Scroll QA & Performance Polish
 
-**Current release:** [RELEASE_V392.md](RELEASE_V392.md) · **Acceptance checklist:** [QA_CHECKLIST_V392.md](QA_CHECKLIST_V392.md). Previous compact baseline: [RELEASE_V391.md](RELEASE_V391.md).
+**Current release:** [RELEASE_V395.md](RELEASE_V395.md) · **Acceptance checklist:** [QA_CHECKLIST_V395.md](QA_CHECKLIST_V395.md). Previous release: [RELEASE_V394.md](RELEASE_V394.md).
 
 **Standard:** 120 MiB ZIP / 240 MiB uncompressed. **Extended:** 200 MiB / 400 MiB, one-time consent per ZIP. The 2.5 MB/file, 2,500 source-file and GitHub branch safety constraints are unchanged. Browser Web Worker retains the compressed archive and returns only SHA/path/size/scan metadata. Bytes are read on demand and checksum validated before upload or Diff. Proof refresh is mandatory before Commit if evidence is expiring. Avoid backgrounding iPhone while working with large archives.
+
+
+### What's new in v3.9.5
+
+- **Virtual Review list:** renders only the visible file rows in large change sets (up to 2,500), with five-row overscan and native scroll; no "Load more" interaction. File selection, Diff, filters and search are preserved. Small lists still render normally. File paths are truncated visually but preserved in the title and aria-label.
+- **Height-aware desktop workbench:** observes available viewport space and fits Upload/Review/Push without redundant document scrolling on standard PC displays; when space is truly insufficient, independent sections remain scrollable.
+- **Mobile Push dock safe positioning:** measures dock height so content below is not covered; keeps the dock above the five-item bottom navigation and hides it while an editable control is covered by the iOS keyboard.
+- **No jump on Review navigation:** a new ZIP resets only Review's internal scroll; switching tabs does not scroll the whole page back to the top.
+- **Footer removal during active Review:** hides non-action footer only when Review is open to prevent a useless page scrollbar.
+- All GitHub security/approval and server mutation routes are unchanged. See release notes for test scope and limits.
 
 ---
 
@@ -63,10 +73,10 @@
 
 ## Deployment to GitHub + Vercel
 
-1. Extract the archive and push the **contents of `Zipverra-v3.9.4/`** into the root of the existing application repository; do not push the outer folder as a nested app.
+1. Extract the archive and push the **contents of `Zipverra-v3.9.5/`** into the root of the existing application repository; do not push the outer folder as a nested app.
 2. Keep your existing Vercel variables: `APP_URL`, `GITHUB_APP_CLIENT_ID`, `GITHUB_APP_CLIENT_SECRET`, `GITHUB_APP_SLUG`, `SESSION_SECRET`. Update `APP_URL` only if the deployed domain has changed.
 3. Build on Vercel or another networked CI with `npm install --no-audit --no-fund`, `npm test`, `npm run build` using Node 22. Existing GitHub Actions workflow runs tests/build on push and PR.
-4. Verify `/api/version` displays `3.9.4`, and refresh the app to apply the public PWA service-worker cache version. Old public cache entries are removed after activation; private API/auth responses are never cached.
+4. Verify `/api/version` displays `3.9.5`, and refresh the app to apply the public PWA service-worker cache version. Old public cache entries are removed after activation; private API/auth responses are never cached.
 5. Test on an authorized throwaway repository: select ZIP with hundreds of files, check the quick confirmation flow without opening details, expand and scroll the file list, return to confirmation, then separately verify Sync delete acknowledgement, Critical consent dialog (No/Yes) and PR behavior. Test rollback/Recovery after interrupted operations before using production repositories.
 6. Test actual iPhone Safari and installed standalone PWA keyboard, modal focus and scroll, dynamic safe area, dark/light, reduced motion, and Wi-Fi interruption before labeling production validated.
 
@@ -684,7 +694,7 @@ Upload now includes up to four **authorized** repository shortcuts (Pinned → R
 - Verify production Next.js build and actual Safari iOS / Vercel Preview layouts before production deployment.
 
 
-## v3.9.4 — Adaptive Sheets & Smooth Flow
+## v3.9.5 — Adaptive Sheets & Smooth Flow
 
 - Mobile picker and Diff use viewport-safe Bottom Sheets; desktop uses a right Side Panel for both. Critical security confirmation remains a modal dialog.
 - Drag downward from the mobile handle to dismiss (list content scrolling never dismisses). Incomplete gestures ease back into place.

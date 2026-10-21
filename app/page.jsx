@@ -38,6 +38,8 @@ import { RepositoryPickerSheet, BranchPickerSheet } from './components/Repositor
 import { reviewReadiness, themeChoice, resolveTheme } from '../lib/ux-polish.js';
 import MobileViewportGuard from './components/MobileViewportGuard.jsx';
 import ModalSheet from './components/ModalSheet.jsx';
+import VirtualReviewList from './components/VirtualReviewList.jsx';
+import { installViewportLayout } from '../lib/viewport-layout-client.js';
 const HistoryPanel = dynamic(() => import('./components/HistoryPanel.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải HistoryPanel…"/> });
 const WorkspacePanel = dynamic(() => import('./components/WorkspacePanel.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải WorkspacePanel…"/> });
 const BranchPrPanel = dynamic(() => import('./components/BranchPrPanel.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải BranchPrPanel…"/> });
@@ -203,7 +205,6 @@ export default function Home() {
   const [repositoryUsage, setRepositoryUsage] = useState([]);
   const [excludedPaths, setExcludedPaths] = useState([]);
   const [reviewSearch, setReviewSearch] = useState('');
-  const [visibleLimit, setVisibleLimit] = useState(100);
   const [diffViewer, setDiffViewer] = useState(null);
   const diffRequestRef = useRef(0);
   const [transfer, setTransfer] = useState(null);
@@ -629,6 +630,14 @@ export default function Home() {
   }), [securityReport, preview?.insights, preview?.identity, mode, stats?.delete, requiresConsent,
     sensitiveConsent, projectMismatchConfirmed, syncConfirmed]);
   const diagnosticsRef = useRef(null);
+  // One shared geometry calculation: avoid guessed fixed dock heights on
+  // iPhone safe areas/large text and reserve the actual desktop workspace.
+  useEffect(() => {
+    if (activeTab !== 'home') return;
+    const main = document.getElementById('zipverra-main');
+    return installViewportLayout({ main, dock:decisionRef.current, win:window, ResizeObserverImpl:window.ResizeObserver });
+  }, [activeTab, Boolean(preview), riskSummary.pendingCount, selectedChanges.length, releaseStrategy]);
+
   // Scroll only the Review viewport, never the full Upload page when it is bounded.
   const scrollReviewTo = (target) => {
     const panel = previewRef.current;
@@ -659,7 +668,7 @@ export default function Home() {
     setConfirmed(false);
     setSyncConfirmed(false); setSensitiveConsent(false); setSecurityDialogOpen(false); setProjectMismatchConfirmed(false);
     setChangeFilter('all');
-    setExcludedPaths([]); setReviewSearch(''); setVisibleLimit(100); setDiffViewer(null); diffRequestRef.current += 1;
+    setExcludedPaths([]); setReviewSearch(''); setDiffViewer(null); diffRequestRef.current += 1;
     setTransfer(null);
     setResult(null);
     setError(''); setErrorHint('');
@@ -815,7 +824,7 @@ export default function Home() {
       setPreview({ archive, remote, changes, insights, identity, input: { owner: input.owner, repo: input.repo, branch: input.branch }, mode, filename: file.name, releaseStrategy, releaseBranch });
       setFileDetailsOpen(reviewDisclosureDefaultOpen(changes.length));
       saveRecent(`${input.owner}/${input.repo}`);
-      setChangeFilter('all'); setReviewSearch(''); setVisibleLimit(100); setExcludedPaths([]); setDiffViewer(null); diffRequestRef.current += 1;
+      setChangeFilter('all'); setReviewSearch(''); setExcludedPaths([]); setDiffViewer(null); diffRequestRef.current += 1;
       setConfirmed(false); setSyncConfirmed(false); setSensitiveConsent(false); setProjectMismatchConfirmed(false);
       const selectedReport=reportSelectedSecurity(archive.security,changes);
       setSecurityDialogOpen(needsSensitiveConsent(selectedReport.findings));
@@ -923,15 +932,13 @@ export default function Home() {
     goToTab('home');
     // The chooser is initiated only by a separate user tap (iOS Safari requirement).
   }
-  // The Review becomes a bounded workspace as soon as analysis completes.
-  // Never scroll the whole iPhone document to a second tall page.
+  const lastPositionedPreviewRef = useRef(null);
+  // Do not scroll the document when a ZIP becomes ready or when switching tabs.
+  // Only a genuinely new Review clears the independent panel position.
   useEffect(() => {
-    if (!preview || activeTab !== 'home') return;
-    if (window.matchMedia?.('(max-width: 760px)').matches) {
-      window.requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-    } else {
-      previewRef.current?.scrollTo?.({ top: 0, behavior: 'instant' });
-    }
+    if (!preview || activeTab !== 'home' || lastPositionedPreviewRef.current === preview) return;
+    lastPositionedPreviewRef.current = preview;
+    previewRef.current?.scrollTo?.({ top: 0, behavior: 'instant' });
   }, [preview, activeTab]);
   function goToReview() {
     if (!preview) return;
@@ -1125,7 +1132,7 @@ export default function Home() {
         <span className="desktop-rail-label">GITHUB ACCOUNT</span>
         <strong>{auth.user?.login ? `@${auth.user.login}` : 'Chưa đăng nhập'}</strong>
         <span className="desktop-rail-branch"><Icon name="branch" size={14}/>{chosenRepo ? `${repo} · ${branch}` : 'Chọn repository để bắt đầu'}</span>
-        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.4</span>
+        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.5</span>
       </div>
     </aside>
     <header className="topbar" role="banner">
@@ -1134,7 +1141,7 @@ export default function Home() {
       <div className="header-actions"><span className="desktop-header-help">
         {activeTab === 'repositories' && auth.authenticated && <button type="button" className="repo-refresh-icon desktop-context-refresh" onClick={restartWorkspace} disabled={busy || loadingRepos || Boolean(pendingCommit || pendingPR)} aria-label="Khởi động lại và tải lại repository" title="Làm mới ứng dụng"><Icon name="refresh" size={17}/></button>}
         <ContextualHelp tab={activeTab}/>
-      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.4</span></div>
+      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.5</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} repoTools={activeTab === 'repositories' && auth.authenticated ? <button type="button" className={`repo-refresh-icon${loadingRepos ? ' is-loading' : ''}`} onClick={restartWorkspace} disabled={busy || loadingRepos || Boolean(pendingCommit || pendingPR)} aria-label="Khởi động lại ứng dụng, bỏ các lựa chọn và tải lại danh sách repository" title="Khởi động lại từ đầu"><Icon name="refresh" size={17}/></button> : null}/>
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
@@ -1264,9 +1271,8 @@ export default function Home() {
               <div className="review-select-summary"><div><strong>{selectedChanges.length}/{preview.changes.length} thay đổi được chọn</strong><small>File bỏ chọn sẽ giữ nguyên trên GitHub, kể cả trong Sync.</small></div><span>{prettyBytes(selectedBytes)}</span></div>
               <div className="archive-meta">{preview.archive.files.length} file · {prettyBytes(preview.archive.unpackedSize)} đã giải nén{preview.archive.wrapper ? ` · Bỏ thư mục gốc: ${preview.archive.wrapper}/` : ''}{preview.archive.ignored ? ` · Bỏ qua ${preview.archive.ignored} file` : ''}</div>
               <div className="diff-filters" role="group" aria-label="Lọc file thay đổi">{[{id:'all',label:'Tất cả',n:preview.changes.length},{id:'add',label:'Thêm',n:totalStats.add},{id:'modify',label:'Sửa',n:totalStats.modify},{id:'delete',label:'Xóa',n:totalStats.delete}].map((option) => <button type="button" key={option.id} className={`diff-filter ${changeFilter === option.id ? 'selected' : ''}`} aria-pressed={changeFilter === option.id} onClick={() => setChangeFilter(option.id)}>{option.label} <span>{option.n}</span></button>)}</div>
-              <div className="review-toolbar"><div className="input-icon"><Icon name="search" size={16}/><input type="search" aria-label="Tìm file thay đổi" placeholder="Tìm file trong diff" value={reviewSearch} onChange={e => {setReviewSearch(e.target.value);setVisibleLimit(100);}}/></div><div className="review-bulk"><button type="button" disabled={busy} onClick={() => bulkSelection(true)}>Chọn tất cả</button><button type="button" disabled={busy} onClick={() => bulkSelection(false)}>Bỏ chọn tất cả</button></div></div>
-              <div className="change-list review-list" role="region" tabIndex={0} aria-label="Danh sách thay đổi · Cuộn trong vùng này để xem thêm file">{shownChanges.length ? shownChanges.slice(0,visibleLimit).map((item) => <div className={`change-row review-row ${excludedPaths.includes(item.path) ? 'excluded' : ''}`} key={item.path}><label className="review-check"><input type="checkbox" checked={!excludedPaths.includes(item.path)} disabled={busy} onChange={() => updateSelection(item.path)} aria-label={`Chọn ${item.path} để push`}/></label><span className={`change-mark ${item.kind}`}>{item.kind === 'add' ? 'A' : item.kind === 'modify' ? 'M' : 'D'}</span><span title={item.path} className="change-path">{item.path}</span><button type="button" className="review-diff-button" disabled={busy} onClick={() => inspectChange(item)} aria-label={`Xem diff ${item.path}`}>Diff</button></div>) : <div className="empty-change">{preview.changes.length ? 'Không có file thuộc bộ lọc này.' : 'Không có thay đổi để commit.'}</div>}</div>
-              {shownChanges.length > visibleLimit && <button type="button" className="button secondary full review-more" onClick={() => setVisibleLimit(v => v + 100)}>Hiển thị thêm {Math.min(100,shownChanges.length-visibleLimit)} file · {shownChanges.length-visibleLimit} còn lại</button>}
+              <div className="review-toolbar"><div className="input-icon"><Icon name="search" size={16}/><input type="search" aria-label="Tìm file thay đổi" placeholder="Tìm file trong diff" value={reviewSearch} onChange={e => setReviewSearch(e.target.value)}/></div><div className="review-bulk"><button type="button" disabled={busy} onClick={() => bulkSelection(true)}>Chọn tất cả</button><button type="button" disabled={busy} onClick={() => bulkSelection(false)}>Bỏ chọn tất cả</button></div></div>
+              <VirtualReviewList changes={shownChanges} allCount={preview.changes.length} excludedPaths={excludedPaths} busy={busy} onToggle={updateSelection} onDiff={inspectChange} filterKey={`${changeFilter}:${reviewSearch}:${preview.remote.head}`} />
               <div className="review-return-bottom"><button type="button" className="button secondary full" onClick={goToDecision}><Icon name="check" size={16}/> Thu gọn danh sách · Quay lại xác nhận & Push</button></div>
 
               </>}
@@ -1319,7 +1325,7 @@ export default function Home() {
             <PushProfiles selectedRepo={chosenRepo?`${owner}/${repo}`:''} branch={branch} mode={mode} strategy={releaseStrategy}
               profiles={proProfiles} authenticated={auth.authenticated} busy={busy || Boolean(pendingCommit) || Boolean(pendingPR)} authorizedRepos={repos}
               onSave={saveProfile} onApply={applyProfile} onSelectApply={selectAndApplyProfile} onRemove={deleteProfile}/>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.4</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.5</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -1330,7 +1336,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.9.4</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.9.5</span><span>GitHub App · Cookie mã hóa · Không yêu cầu VPS · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <ModalSheet open={Boolean(preview && diffViewer && activeTab === 'home')} title={`Diff · ${diffViewer?.path || ''}`}
     onClose={() => { diffRequestRef.current += 1; setDiffViewer(null); }} variant="diff">

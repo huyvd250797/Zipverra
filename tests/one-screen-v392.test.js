@@ -7,11 +7,11 @@ const page=read('app/page.jsx');
 const css=read('app/styles/one-screen-v392.css');
 const layout=read('app/layout.jsx');
 
-test('v3.9.4 runtime, PWA cache, shell and final CSS layer match',()=>{
-  assert.equal(APP_VERSION,'3.9.4');
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.4');
-  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.4/);
-  assert.match(page,/Zipverra · v3\.9\.4/);
+test('v3.9.5 runtime, PWA cache, shell and final CSS layer match',()=>{
+  assert.equal(APP_VERSION,'3.9.5');
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.5');
+  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.5/);
+  assert.match(page,/Zipverra · v3\.9\.5/);
   assert.ok(layout.indexOf('smart-compact-v391.css') < layout.indexOf('one-screen-v392.css'));
 });
 
@@ -86,10 +86,10 @@ test('desktop keeps independent Review scroll and a separate, visible action row
 });
 
 test('no forced scrollIntoView to Review after ZIP analysis',()=>{
-  const workflow=page.slice(page.indexOf('// The Review becomes a bounded workspace'),page.indexOf('function goToDecision'));
+  const workflow=page.slice(page.indexOf('// Do not scroll the document'),page.indexOf('function goToDecision'));
   assert.doesNotMatch(workflow,/scrollIntoView/);
-  assert.match(workflow,/previewRef\.current\?\.scrollTo/);
-  assert.match(workflow,/window\.scrollTo/);
+  assert.match(workflow,/previewRef\.current\?\.scrollTo\?\./);
+  assert.doesNotMatch(workflow,/window\.scrollTo/);
 });
 
 test('Reduced Motion and virtual keyboard are respected; no blanket overflow hidden',()=>{

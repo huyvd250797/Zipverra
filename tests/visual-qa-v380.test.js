@@ -8,11 +8,11 @@ const page = read('app/page.jsx');
 const css = read('app/styles/visual-qa-v380.css');
 const layout = read('app/layout.jsx');
 
-test('v3.9.4 consistent runtime, service worker cache, footer and stylesheet order',()=>{
-  assert.equal(JSON.parse(read('package.json')).version, '3.9.4');
-  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.9\.4'/);
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.4/);
-  assert.match(page, /Zipverra · v3\.9\.4/);
+test('v3.9.5 consistent runtime, service worker cache, footer and stylesheet order',()=>{
+  assert.equal(JSON.parse(read('package.json')).version, '3.9.5');
+  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.9\.5'/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.5/);
+  assert.match(page, /Zipverra · v3\.9\.5/);
   assert.ok(layout.indexOf('modal-motion-v360.css') < layout.indexOf('visual-qa-v380.css'));
 });
 
@@ -20,7 +20,7 @@ test('large file review stays bounded with keyboard scrolling and no page-height
   assert.match(css, /\.review-list\s*\{[^}]*max-height:clamp\(/s);
   assert.match(css, /overflow-y:auto/);
   assert.match(css, /overscroll-behavior-y:contain/);
-  assert.match(page, /className="change-list review-list" role="region" tabIndex=\{0\}/);
+  assert.match(read('app/components/VirtualReviewList.jsx'), /className="change-list review-list zip395-review-list" role="region" tabIndex=\{0\}/);
   assert.equal(reviewDisclosureDefaultOpen(2500), false);
   assert.equal(reviewDisclosureDefaultOpen(10), true);
 });

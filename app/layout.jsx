@@ -26,6 +26,7 @@ import './styles/smart-compact-v391.css';
 import './styles/one-screen-v392.css';
 import './styles/quick-actions-v393.css';
 import './styles/adaptive-sheets-v394.css';
+import './styles/zero-scroll-v395.css';
 
 export const metadata = {
   title: 'Zipverra Pro — GitHub Workspace',

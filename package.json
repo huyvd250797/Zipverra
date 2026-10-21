@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.9.4",
+  "version": "3.9.5",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.9.4 — Adaptive Sheets & Smooth Flow: mobile keyboard-safe sheets, desktop side panels, non-reflow Diff viewer",
+  "description": "Zipverra Pro v3.9.5 — Zero-Scroll QA & Performance Polish: virtual Review list, measured workspaces, keyboard-safe Push dock",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

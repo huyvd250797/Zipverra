@@ -1,0 +1,63 @@
+/* v3.9.5 — Zero-Scroll QA & Performance Polish. Mobile-first, no hidden confirmation. */
+:root { --zip395-touch:44px; }
+/* The persistent action dock already carries status/version context. The
+   footer has no action and must not create a second scrollbar in Review. */
+.pro-shell:has(main[data-active-view="home"][data-review-ready="true"]) > footer {display:none;}
+.zip395-review-list .review-row { height:46px;min-height:46px;max-height:46px;box-sizing:border-box;padding:0 9px;gap:8px; }
+.zip395-review-list .review-row .change-path {display:block;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal;word-break:normal;}
+.zip395-review-list .review-row .review-check,
+.zip395-review-list .review-row .review-diff-button {flex:none;}
+.zip395-review-list .review-row .review-diff-button {min-width:44px;min-height:40px;}
+.zip395-review-list .review-row .review-check {min-width:38px;min-height:42px;display:flex;align-items:center;justify-content:center;}
+.zip395-review-list .review-row .review-check input {min-height:20px;min-width:20px;}
+.zip395-list-hint {font-size:11px;color:var(--pro-muted);padding:5px 1px 7px;}
+.zip395-review-list {overscroll-behavior:contain;contain:layout paint;scrollbar-gutter:stable;scrollbar-width:thin;}
+@media (min-width:1100px) {
+  /* Measured top position accounts for banners, zoom, short laptop heights. */
+  .pro-shell main[data-active-view="home"] .side-column {
+    height:var(--zip395-workspace-height,calc(100dvh - 155px));
+    max-height:var(--zip395-workspace-height,calc(100dvh - 155px));
+    min-height:260px;
+  }
+  .pro-shell main[data-active-view="home"] .form-column {
+    max-height:var(--zip395-workspace-height,calc(100dvh - 155px));
+    min-height:0;
+  }
+  .pro-shell main[data-active-view="home"] .form-column > .upload-panel {
+    min-height:0;max-height:100%;overflow-y:auto;overscroll-behavior:contain;
+    scrollbar-width:thin;
+  }
+  .pro-shell main[data-active-view="home"] .preview-panel {scrollbar-gutter:stable;}
+}
+@media (min-width:761px) and (max-width:1099px) {
+  .pro-shell main[data-active-view="home"] .zip392-action-dock {bottom:max(10px,env(safe-area-inset-bottom,0px));}
+  .pro-shell main[data-active-view="home"] .preview-panel {max-height:min(48dvh,440px);min-height:180px;overflow-y:auto;overscroll-behavior:contain;}
+}
+@media (max-width:760px) {
+  /* Dock must not obscure the end of the review or an error/recovery banner. */
+  .pro-shell main[data-active-view="home"][data-review-ready="true"] {
+    padding-bottom:calc(var(--zip395-dock-height,160px) + 95px + env(safe-area-inset-bottom,0px));
+  }
+  .pro-shell main[data-active-view="home"][data-review-ready="true"] .preview-panel {
+    height:clamp(185px,37dvh,440px);max-height:clamp(185px,37dvh,440px);
+    scroll-padding-bottom:14px;
+  }
+  .pro-shell main[data-active-view="home"][data-review-ready="true"] .zip392-action-dock {
+    bottom:calc(80px + env(safe-area-inset-bottom,0px));
+    max-height:min(45dvh,calc(100dvh - 120px));overflow-y:auto;overscroll-behavior:contain;
+    scrollbar-width:thin;
+  }
+  .pro-shell main[data-keyboard-occluded="true"] .zip392-action-dock {display:none!important;}
+  .pro-shell main[data-active-view="home"] .review-toolbar input[type="search"],
+  .pro-shell .zip-modal input[type="search"] {font-size:16px;}
+  .zip395-review-list .review-row .review-diff-button {min-height:44px;}
+}
+@media (max-width:760px) and (max-height:690px) {
+  .pro-shell main[data-active-view="home"][data-review-ready="true"] .preview-panel {
+    height:clamp(160px,32dvh,250px);max-height:clamp(160px,32dvh,250px);
+  }
+  .pro-shell main[data-active-view="home"] .zip392-action-dock {padding:7px 9px;gap:4px;}
+}
+@media (prefers-reduced-motion:reduce) {
+  .zip395-review-list *, .pro-shell main[data-active-view="home"] .zip392-action-dock {scroll-behavior:auto!important;animation:none!important;}
+}

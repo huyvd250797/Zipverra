@@ -1,3 +1,9 @@
+# v3.9.5 — Zero-Scroll QA & Performance Polish
+
+- Virtualized Review change list, adaptive mobile dock and measured desktop workspace.
+- Eliminated redundant Review footer scrolling and document jump on ZIP analysis.
+- GitHub API, Push/security gates and 120/200 MiB ZIP limits unchanged.
+
 ## v3.9.4 — Adaptive Sheets & Smooth Flow
 - Bottom Sheet on mobile, repository/branch picker and Diff as desktop Side Panels.
 - Touch grip swipe-to-dismiss with snap-back, keyboard-aware visual viewport and scroll isolation.
