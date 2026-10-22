@@ -13,12 +13,12 @@ const SHA = 'a'.repeat(40);
 const HEAD = 'b'.repeat(40);
 
 test('v2.6 metadata, PWA stylesheet and service worker are present', () => {
-  assert.equal(APP_VERSION, '3.9.10');
+  assert.equal(APP_VERSION, '3.9.11');
   assert.equal(JSON.parse(src('package.json')).version, APP_VERSION);
   assert.match(src('app/layout.jsx'), /pwa-reliability\.css/);
   assert.ok(existsSync(join(root, 'public/offline.html')));
   assert.ok(existsSync(join(root, 'public/sw.js')));
-  assert.match(src('app/page.jsx'), /v3\.9\.10/);
+  assert.match(src('app/page.jsx'), /v3\.9\.11/);
 });
 test('public version API responds no-store without leaking authentication', async () => {
   const response = await GET();
@@ -28,11 +28,11 @@ test('public version API responds no-store without leaking authentication', asyn
   assert.equal(response.headers.get('Set-Cookie'), null);
 });
 test('version validation does not accept arbitrary strings or URL injection', () => {
-  assert.equal(validPublicVersion('3.9.10'), true);
+  assert.equal(validPublicVersion('3.9.11'), true);
   assert.equal(validPublicVersion('../evil'), false);
   assert.equal(validPublicVersion('3.5.0?foo=bar'), false);
   assert.equal(isNewVersion({ version:'2.6.1' }), true);
-  assert.equal(isNewVersion({ version:'3.9.10' }), false);
+  assert.equal(isNewVersion({ version:'3.9.11' }), false);
   assert.equal(isNewVersion({ version:'https://malicious.test' }), false);
 });
 test('update checks are throttled but handle a backwards clock', () => {

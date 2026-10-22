@@ -1,15 +1,13 @@
-# Zipverra Pro v3.9.10 — Directional Tab Transitions
+# Zipverra Pro v3.9.11 — Verified Repo Ranking & Smooth Tab Motion
 
-**Current release:** [RELEASE_V3910.md](RELEASE_V3910.md) · **QA:** [QA_CHECKLIST_V3910.md](QA_CHECKLIST_V3910.md). Previous: [RELEASE_V399.md](RELEASE_V399.md).
+**Current release:** [RELEASE_V3911.md](RELEASE_V3911.md) · **QA:** [QA_CHECKLIST_V3911.md](QA_CHECKLIST_V3911.md). Previous: [RELEASE_V3910.md](RELEASE_V3910.md).
 
-- Tab order **Upload → Activity → History → Settings** now determines slide direction automatically. Moving right slides the current screen left and brings the new screen in from the right; moving left reverses direction.
-- When **Commit & Push** starts, the interface transitions horizontally to **Activity**, using the same tab-navigation animation. GitHub commit and recovery safeguards are unchanged.
-- Native View Transitions animate both screens concurrently when supported; fallback navigates immediately with a short directional entrance, never the former black fade. Reduced Motion disables horizontal movement.
-- Bottom taskbar, desktop navigation and fixed app chrome remain stable. Transition duration is about 240 ms, with no 175 ms delay before changing tabs.
+- **Repo thường dùng:** Choosing a repo, applying a Profile and analysing a ZIP no longer changes its position. After a GitHub commit is verified, its repo moves to the first slot in Quick Access, including verified PR branch Push. Repeat verification of the same commit does not count again.
+- **Smooth tab slide:** Screens slide left/right by taskbar order. Only the work surface is snapshotted; the topbar and tabbar stay still. Eliminated competing intro/root animations and duplicate scroll corrections. Native View Transitions use ~195 ms; fallback is shorter. Reduce Motion is respected.
+- **Safety:** No changes to GitHub APIs, authorization, critical security consent, Sync deletion consent, or Commit/PR recovery.
+- **Deploy:** Copy the **contents** of `Zipverra-v3.9.11/` into the repo root, run `npm install`, `npm test` and `npm run build`; confirm on Vercel Preview and iPhone Safari/PWA before Production.
 
-**Deploy:** Place the **contents** of `Zipverra-v3.9.10/` at repository root. Run `npm install`, `npm test`, `npm run build`, and check Vercel Preview and Safari/PWA before production.
-
----
+--
 # Zipverra Pro v3.9.9 — Upload Hub & Source ZIP
 
 **Current release:** [RELEASE_V399.md](RELEASE_V399.md) · **QA:** [QA_CHECKLIST_V399.md](QA_CHECKLIST_V399.md). Previous: [RELEASE_V398.md](RELEASE_V398.md).

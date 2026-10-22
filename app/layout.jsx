@@ -32,6 +32,7 @@ import './styles/professional-copy-v397.css';
 import './styles/minimal-interface-v398.css';
 import './styles/upload-hub-v399.css';
 import './styles/directional-tabs-v3910.css';
+import './styles/smooth-tab-performance-v3911.css';
 
 export const metadata = {
   title: 'Zipverra Pro — GitHub Workspace',

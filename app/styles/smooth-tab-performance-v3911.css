@@ -1,0 +1,57 @@
+/* v3.9.11 — performance pass for directional tab navigation.
+ * Snapshot only the work surface. The v3.9.10 implementation captured the
+ * entire main column PLUS a second intro snapshot, increasing iOS compositing
+ * work and causing independent animations to stutter over each other.
+ * No visual opacity fades, no animation on navigation chrome or dialogs. */
+:root {
+  --zip410-tab-duration:195ms;
+  --zip410-tab-ease:cubic-bezier(.25,.82,.25,1);
+}
+@supports (view-transition-name: zipverra-tab) {
+  .pro-shell #zipverra-main {view-transition-name:none!important;}
+  .pro-shell .pro-view-intro {view-transition-name:none!important;}
+  .pro-shell #zipverra-main > .content-grid {view-transition-name:zipverra-tab;}
+}
+/* Disable independent enter animations while the named view snapshots are
+ * moving. Otherwise an incoming panel fades/slides within its own snapshot. */
+html.zip410-switching .pro-shell .pro-view-intro,
+html.zip410-switching .pro-shell main[data-active-view] .content-grid [data-mobile-view],
+html.zip410-fallback .pro-shell .pro-view-intro,
+html.zip410-fallback .pro-shell main[data-active-view] .content-grid [data-mobile-view] {
+  animation:none!important;
+}
+/* Disable the browser's implicit 250ms ROOT sizing animation; only the
+ * active work area should move. This avoids a second conflicting timeline. */
+html.zip410-switching::view-transition-group(root) {
+  animation:none!important;
+}
+html.zip410-switching::view-transition-group(zipverra-tab) {
+  animation-duration:var(--zip410-tab-duration);
+  animation-timing-function:var(--zip410-tab-ease);
+}
+/* The same timeline runs for both snapshots, giving the perceived continuous
+ * tab-slide rather than a two-stage fade. */
+html[data-zip-tab-direction="forward"]::view-transition-old(zipverra-tab) {
+  animation:zip410-old-forward var(--zip410-tab-duration) var(--zip410-tab-ease) both!important;
+}
+html[data-zip-tab-direction="forward"]::view-transition-new(zipverra-tab) {
+  animation:zip410-new-forward var(--zip410-tab-duration) var(--zip410-tab-ease) both!important;
+}
+html[data-zip-tab-direction="backward"]::view-transition-old(zipverra-tab) {
+  animation:zip410-old-backward var(--zip410-tab-duration) var(--zip410-tab-ease) both!important;
+}
+html[data-zip-tab-direction="backward"]::view-transition-new(zipverra-tab) {
+  animation:zip410-new-backward var(--zip410-tab-duration) var(--zip410-tab-ease) both!important;
+}
+/* Mobile fallback is a short compositor-only slide on unsupported Safari.
+ * It never holds navigation to wait for the animation to finish. */
+html.zip410-fallback[data-zip-tab-direction="forward"] .pro-shell #zipverra-main {
+  animation:zip410-fallback-forward 165ms var(--zip410-tab-ease) both!important;
+}
+html.zip410-fallback[data-zip-tab-direction="backward"] .pro-shell #zipverra-main {
+  animation:zip410-fallback-backward 165ms var(--zip410-tab-ease) both!important;
+}
+@media (prefers-reduced-motion:reduce) {
+  .pro-shell #zipverra-main > .content-grid {view-transition-name:none!important;}
+  html.zip410-fallback .pro-shell #zipverra-main {animation:none!important;}
+}

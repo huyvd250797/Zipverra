@@ -7,11 +7,11 @@ const page=read('app/page.jsx');
 const css=read('app/styles/one-screen-v392.css');
 const layout=read('app/layout.jsx');
 
-test('v3.9.10 runtime, PWA cache, shell and final CSS layer match',()=>{
-  assert.equal(APP_VERSION,'3.9.10');
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.10');
-  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.10/);
-  assert.match(page,/Zipverra · v3\.9\.10/);
+test('v3.9.11 runtime, PWA cache, shell and final CSS layer match',()=>{
+  assert.equal(APP_VERSION,'3.9.11');
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.11');
+  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.11/);
+  assert.match(page,/Zipverra · v3\.9\.11/);
   assert.ok(layout.indexOf('smart-compact-v391.css') < layout.indexOf('one-screen-v392.css'));
 });
 

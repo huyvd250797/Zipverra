@@ -87,9 +87,10 @@ test('modal scroll lock, security warnings and explicit push consent remain inta
 
 test('existing account activity seeds frequent repo suggestions on first upgrade without secrets',()=>{
   const old=[
-    {kind:'push',repo:'owner/alpha',at:100},
-    {kind:'quick-edit',repo:'owner/alpha',at:110},
-    {kind:'pr',repo:'owner/beta',at:130},
+    {kind:'push',state:'success',repo:'owner/alpha',sha:'a'.repeat(40),at:100},
+    {kind:'push',state:'success',repo:'owner/alpha',sha:'b'.repeat(40),at:110},
+    {kind:'push',state:'success',repo:'owner/beta',sha:'c'.repeat(40),at:130},
+    {kind:'quick-edit',state:'success',repo:'owner/private',sha:'f'.repeat(40),at:135},
     {kind:'system',repo:'owner/private',at:140},
     {kind:'push',repo:'../bad',at:150},
   ];

@@ -7,27 +7,27 @@ const read=name=>readFileSync(new URL(`../${name}`,import.meta.url),'utf8');
 const repos=['team/Finzaro','team/Zipverra','team/SendInt','team/TestPilot','team/Extra'].map(full_name=>({full_name}));
 const now=Date.now();
 
-test('v3.9.10 version and CSS cascade are aligned',()=>{
-  assert.equal(APP_VERSION,'3.9.10');
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.10');
-  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.10/);
-  assert.match(read('app/page.jsx'),/Zipverra · v3\.9\.10/);
+test('v3.9.11 version and CSS cascade are aligned',()=>{
+  assert.equal(APP_VERSION,'3.9.11');
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.11');
+  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.11/);
+  assert.match(read('app/page.jsx'),/Zipverra · v3\.9\.11/);
   const layout=read('app/layout.jsx');
   assert.ok(layout.indexOf('one-screen-v392.css') < layout.indexOf('quick-actions-v393.css'));
 });
 
-test('quick access prioritizes pinned, recent, frequent; never leaks unauthorized repository',()=>{
+test('quick access prioritizes recently pushed, then pinned, then frequent; never leaks unauthorized repository',()=>{
   const result=quickActionRepos({repos,favorites:['bad/private','team/SendInt','team/Finzaro'],recents:['team/Zipverra','bad/secret','team/Finzaro'],
     usage:[{repo:'team/TestPilot',count:3,lastUsed:now},{repo:'bad/secret',count:100,lastUsed:now}],selected:'team/Finzaro'});
-  assert.deepEqual(result.map(r=>r.repo),['team/SendInt','team/Finzaro','team/Zipverra','team/TestPilot']);
-  assert.deepEqual(result.map(r=>r.origin),['pinned','pinned','recent','frequent']);
+  assert.deepEqual(result.map(r=>r.repo),['team/Zipverra','team/Finzaro','team/SendInt','team/TestPilot']);
+  assert.deepEqual(result.map(r=>r.origin),['recent','recent','pinned','frequent']);
   assert.equal(result.find(r=>r.repo==='team/Finzaro').active,true);
 });
 
 test('quick picks are case-insensitive, deduplicated and capped at four',()=>{
   const result=quickActionRepos({repos,favorites:['TEAM/FINZARO','team/finzaro','team/SendInt'],
     recents:['TEAM/FINZARO','team/Zipverra'],limit:50});
-  assert.deepEqual(result.map(x=>x.repo),['team/Finzaro','team/SendInt','team/Zipverra']);
+  assert.deepEqual(result.map(x=>x.repo),['team/Finzaro','team/Zipverra','team/SendInt']);
   assert.ok(result.length<=4);
 });
 

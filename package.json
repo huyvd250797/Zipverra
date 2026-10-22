@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.9.10",
+  "version": "3.9.11",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.9.10 — Directional Tab Transitions: horizontal navigation, synchronized Activity slide after Push and reduced-motion support",
+  "description": "Zipverra Pro v3.9.11 — Verified Repo Ranking & Smooth Tab Motion: reorder only after verified GitHub Push, optimized slide performance",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

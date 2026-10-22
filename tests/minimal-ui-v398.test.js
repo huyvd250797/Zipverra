@@ -8,11 +8,11 @@ const page=read('app/page.jsx');
 const actions=read('app/components/QuickActions.jsx');
 const risk=read('app/components/ReviewRiskCenter.jsx');
 
-test('v3.9.10 runtime, package, visible app version and PWA cache agree',()=>{
- assert.equal(APP_VERSION,'3.9.10');
+test('v3.9.11 runtime, package, visible app version and PWA cache agree',()=>{
+ assert.equal(APP_VERSION,'3.9.11');
  assert.equal(JSON.parse(read('package.json')).version,APP_VERSION);
- assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.10/);
- assert.match(page,/Zipverra · v3\.9\.10/);
+ assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.11/);
+ assert.match(page,/Zipverra · v3\.9\.11/);
 });
 test('opening the application cannot automatically restore a repository',()=>{
  for(const needle of ['quickRestoreEnabled','autoRestoredAccountRef','lastAuthorizedRepo','QUICK_RESTORE_KEY','setQuickRestorePreference']) assert.ok(!page.includes(needle), needle);
