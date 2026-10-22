@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.9.9",
+  "version": "3.9.13",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.9.9 — Upload Hub & Source ZIP: four-tab navigation, in-place download to Files, retained GitHub safeguards",
+  "description": "Zipverra Pro v3.9.13 — Desktop Focused Upload & Verified Repo Ranking: four-tab navigation, in-place download to Files, retained GitHub safeguards",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -8,10 +8,10 @@ const read=(name)=>readFileSync(join(root,name),'utf8');
 const page=read('app/page.jsx'), ui=read('app/components/ProfessionalUI.jsx');
 const theme=read('app/styles/pro-design-system.css');
 
-test('v3.9.9 metadata and performance UI stylesheet are connected to RootLayout',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.9');
+test('v3.9.13 metadata and performance UI stylesheet are connected to RootLayout',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.13');
   assert.match(read('app/layout.jsx'), /import '\.\/styles\/pro-design-system\.css'/);
-  assert.match(page,/v3\.9\.9/);
+  assert.match(page,/v3\.9\.13/);
 });
 test('UI design tokens share colors, space, radius and motion defaults',()=>{
   for(const token of ['--pro-bg','--pro-surface','--pro-border','--pro-text','--pro-muted','--pro-accent','--pro-focus','--pro-radius-lg','--pro-space-4','--pro-ease'])

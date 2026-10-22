@@ -1,3 +1,10 @@
+# v3.9.13 — Desktop Focused Upload & Verified Repo Ranking
+
+- Based on v3.9.9; no directional tab animations from v3.9.10–v3.9.12.
+- Desktop: centered Upload-only state, followed by full-width Review & Push with one gated action row and Change ZIP.
+- Mobile: layout unchanged.
+- Repo order updates only when a GitHub commit SHA is verified; simple selection / profile / analysis never changes order.
+
 # v3.9.9 — Upload Hub & Source ZIP
 
 - Removed Repos navigation on mobile and PC; four-tab workflow.

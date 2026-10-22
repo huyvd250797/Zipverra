@@ -10,8 +10,8 @@ const ui=source('app/components/ReviewRiskCenter.jsx');
 const critical={report:{critical:1,warning:2,info:1},requiresConsent:true,
   identity:{severity:'critical',common:1,differentNames:true},mode:'sync',deleteCount:15};
 
-test('v3.9.9 registers one unified Review risk surface ahead of Commit and diagnostics',()=>{
-  assert.equal(JSON.parse(source('package.json')).version,'3.9.9');
+test('v3.9.13 registers one unified Review risk surface ahead of Commit and diagnostics',()=>{
+  assert.equal(JSON.parse(source('package.json')).version,'3.9.13');
   assert.match(source('app/layout.jsx'),/review-risk-v385\.css/);
   const risk=page.indexOf('<ReviewRiskCenter'),decision=page.indexOf('className="premium-review-confirm"'),files=page.indexOf('className="premium-review-files"');
   assert.ok(risk>0&&risk<decision&&decision<files);

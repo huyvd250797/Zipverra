@@ -322,14 +322,19 @@ export default function Home() {
       return next;
     });
   }
-  function saveRecent(value) {
-    if (!auth.authenticated || !auth.user?.login) return;
+  // Ranking is based on an actual, verified GitHub commit, not on merely
+  // opening a repository, applying a profile, or analyzing an archive.
+  function recordVerifiedPushRepo(value, sha) {
+    if (!auth.authenticated || !auth.user?.login || !/^[a-f0-9]{40}$/i.test(sha || '')) return;
+    if (!repos.some(item => item.full_name?.toLowerCase() === value?.toLowerCase())) return;
+    // Recovery verification may return the same SHA twice; do not count it again.
+    if (proActivityRef.current.some(item => item.kind === 'push' && item.state === 'success' &&
+      item.sha === sha.toLowerCase() && item.repo?.toLowerCase() === value.toLowerCase())) return;
     setRecents(current => {
       const next = updateRecentRepositories(current, value);
       try { window.localStorage.setItem(accountStorageKey(RECENTS_KEY, auth.user), JSON.stringify(next)); } catch { /* optional metadata */ }
       return next;
     });
-    // Increment only on actual user-initiated selections, not initial load or refresh.
     setRepositoryUsage(current => {
       const next = recordRepositorySelection(current, value, repos);
       try { window.localStorage.setItem(accountStorageKey(REPO_USAGE_KEY, auth.user), JSON.stringify(next)); } catch { /* optional metadata */ }
@@ -434,7 +439,7 @@ export default function Home() {
     setOwner(nextOwner);setRepo(nextRepo);setBranch(profile.branch);
     setMode(profile.mode);setReleaseStrategy(profile.strategy);
     setWorkspaceOpen(false);setFile(null);if(fileInput.current)fileInput.current.value='';
-    reset();saveRecent(profile.repo);goToTab('home');
+    reset();goToTab('home');
     setStatus(`Đã chọn ${profile.repo} · ${profile.branch}; hãy Review ZIP trước khi Push.`);
     return true;
   }
@@ -711,7 +716,6 @@ export default function Home() {
     setFile(null); setArchiveMode('standard'); setMode('merge'); setReleaseStrategy('direct');
     if (fileInput.current) fileInput.current.value = '';
     reset();
-    saveRecent(value);
     notify('repo-selected');
     goToTab('home');
   }
@@ -807,7 +811,6 @@ export default function Home() {
         ? makeReleaseBranch(file.name, crypto.randomUUID().replaceAll('-', '').slice(0, 8)) : null;
       setPreview({ archive, remote, changes, insights, identity, input: { owner: input.owner, repo: input.repo, branch: input.branch }, mode, filename: file.name, releaseStrategy, releaseBranch });
       setFileDetailsOpen(reviewDisclosureDefaultOpen(changes.length));
-      saveRecent(`${input.owner}/${input.repo}`);
       setChangeFilter('all'); setReviewSearch(''); setExcludedPaths([]); setDiffViewer(null); diffRequestRef.current += 1;
       setConfirmed(false); setSyncConfirmed(false); setSensitiveConsent(false); setProjectMismatchConfirmed(false);
       const selectedReport=reportSelectedSecurity(archive.security,changes);
@@ -831,6 +834,7 @@ export default function Home() {
     setPhase(PUSH_STAGES.SUCCEEDED);
     setActiveTab('activity');
     notify('push-verified', true);
+    recordVerifiedPushRepo(`${owner}/${repo}`, outcome.sha);
     logLocalAction({kind:'push',state:'success',repo:`${owner}/${repo}`,sha:outcome.sha,message:'Commit verified on GitHub'});
     setPendingCommit(null);
     clearPending();
@@ -852,6 +856,7 @@ export default function Home() {
     clearPending(); setPendingCommit(null); clearUploadCheckpoint();
     setPreview(null); setConfirmed(false); setSyncConfirmed(false); setSensitiveConsent(false); setSecurityDialogOpen(false);
     setResult({ ...outcome, branchOnly: true, sourceBranch: prData.sourceBranch });
+    recordVerifiedPushRepo(`${prData.owner}/${prData.repo}`, outcome.sha);
     logLocalAction({kind:'push',state:'success',repo:`${prData.owner}/${prData.repo}`,sha:outcome.sha,message:'Release branch verified'});
     setProgress(100); setPhase(PUSH_STAGES.SUCCEEDED); setActiveTab('activity');
     setPendingPR(prData); savePendingPR(prData);
@@ -1125,7 +1130,7 @@ export default function Home() {
         <span className="desktop-rail-label">GITHUB ACCOUNT</span>
         <strong>{auth.user?.login ? `@${auth.user.login}` : 'Chưa đăng nhập'}</strong>
         <span className="desktop-rail-branch"><Icon name="branch" size={14}/>{chosenRepo ? `${repo} · ${branch}` : 'Chọn repository để bắt đầu'}</span>
-        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.9</span>
+        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.13</span>
       </div>
     </aside>
     <header className="topbar" role="banner">
@@ -1134,12 +1139,12 @@ export default function Home() {
       <div className="header-actions"><span className="desktop-header-help">
         
         <ContextualHelp tab={activeTab}/>
-      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.9</span></div>
+      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.13</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} />
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
     {activeTab !== 'activity' && (error || busy) && <button type="button" className={`mobile-global-status ${error ? 'has-error' : ''}`} onClick={() => goToTab('activity')}><span>{error ? `Cần kiểm tra: ${error}` : `${status || 'Đang xử lý...'} · ${progress}%`}</span><Icon name="arrow" size={17}/></button>}
-    <main id="zipverra-main" tabIndex={-1} aria-labelledby="zipverra-current-view" data-active-view={activeTab} data-review-ready={Boolean(preview && activeTab === 'home') ? 'true' : 'false'} className={viewExiting ? 'zip-view-exiting' : ''}>
+    <main id="zipverra-main" tabIndex={-1} aria-labelledby="zipverra-current-view" data-active-view={activeTab} data-review-ready={Boolean(preview && activeTab === 'home') ? 'true' : 'false'} data-zip-stage={preview ? 'review' : 'upload'} className={viewExiting ? 'zip-view-exiting' : ''}>
       {/* Desktop session summary keeps the destination visible without repeated long cards. */}
       <section className="desktop-session-bar" data-has-repo={chosenRepo ? 'true' : 'false'} aria-label="Thanh ngữ cảnh phiên làm việc">
         <div className="desktop-session-location">
@@ -1162,6 +1167,10 @@ export default function Home() {
       {activeTab === 'home' && <WorkflowStrip currentStep={flowStep} onRepo={() => setRepoSheetOpen(true)} onUpload={() => goToTab('home')} onReview={goToReview} onActivity={() => goToTab('activity')}/> }
       {activeTab === 'home' && <CurrentRepository owner={owner} repo={repo} branch={branch} busy={busy || Boolean(pendingCommit || pendingPR)} onChoose={() => setRepoSheetOpen(true)} onBranch={() => setBranchSheetOpen(true)}/> }
       {(pendingCommit || pendingPR) && activeTab !== 'activity' && <button type="button" className="mobile-recovery-shortcut" onClick={() => goToTab('activity')}>Có thao tác GitHub cần xác minh · Mở Activity <Icon name="arrow" size={15}/></button>}
+      {activeTab === 'home' && preview && <div className="zip3913-desktop-review-toolbar" aria-label="Phiên Review">
+        <div className="zip3913-review-file"><span className="zip3913-review-kicker">REVIEW SOURCE</span><strong title={file?.name || ''}>{file?.name}</strong><small>{prettyBytes(file?.size || 0)} · {selectedChanges.length}/{preview.changes.length} file thay đổi · {mode === 'sync' ? 'Sync' : 'Merge'} / {releaseStrategy === 'pr' ? 'PR' : 'Direct Push'}</small></div>
+        <button type="button" className="button secondary zip3913-change-zip" disabled={busy || Boolean(pendingCommit || pendingPR)} onClick={() => fileInput.current?.click()}><Icon name="file" size={17}/> Đổi ZIP</button>
+      </div>}
       <section className="content-grid" data-active-view={activeTab}>
         <div className="form-column">
           <article className={`panel upload-panel${preview ? ' zip392-reviewed' : ''}`} data-mobile-view="home">
@@ -1351,7 +1360,7 @@ export default function Home() {
                 {workspaceOpen && <WorkspacePanel hostView="settings" key={`${owner}/${repo}@${branch}`} authenticated={auth.authenticated} owner={owner} repo={repo} branch={branch} online={online} busy={busy} onBack={() => {workspaceDirtyRef.current=false;setWorkspaceOpen(false);}} onDirtyChange={onWorkspaceDirtyChange} api={api} onCommit={(outcome)=>{reset();logLocalAction({kind:'quick-edit',state:'success',repo:`${owner}/${repo}`,sha:outcome?.sha,message:'Quick Edit saved'});}}/>}
               </div>
             </details>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.9</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.13</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -1362,7 +1371,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.9.9</span><span>GitHub App · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.9.13</span><span>GitHub App · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <ModalSheet open={Boolean(preview && diffViewer && activeTab === 'home')} title={`Diff · ${diffViewer?.path || ''}`}
     onClose={() => { diffRequestRef.current += 1; setDiffViewer(null); }} variant="diff">

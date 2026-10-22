@@ -1,15 +1,24 @@
+# Zipverra Pro v3.9.13 — Desktop Focused Upload & Verified Repo Ranking
+
+**Bản hiện tại:** [RELEASE_V3913.md](RELEASE_V3913.md) · **Checklist:** [QA_CHECKLIST_V3913.md](QA_CHECKLIST_V3913.md) · **Baseline:** [RELEASE_V399.md](RELEASE_V399.md).
+
+Trên PC, Upload được trình bày riêng; sau khi phân tích ZIP sẽ chuyển sang Review & Push toàn chiều rộng, có nút **Đổi ZIP**. Giao diện mobile giữ nguyên từ v3.9.9. **Repo thường dùng** chỉ thay đổi thứ tự sau khi GitHub xác minh Commit Push thành công.
+
+**Triển khai:** Push **nội dung** thư mục `Zipverra-v3.9.13/` vào root repository; triển khai Vercel Preview và chạy `npm install`, `npm test`, `npm run build`. Không có các animation chuyển tab đã bị rollback ở v3.9.10–v3.9.12.
+
+---
+
 # Zipverra Pro v3.9.9 — Upload Hub & Source ZIP
 
-**Current release:** [RELEASE_V399.md](RELEASE_V399.md) · **QA:** [QA_CHECKLIST_V399.md](QA_CHECKLIST_V399.md). Previous: [RELEASE_V398.md](RELEASE_V398.md).
+**Previous release:** [RELEASE_V399.md](RELEASE_V399.md) · **QA:** [QA_CHECKLIST_V399.md](QA_CHECKLIST_V399.md). Previous: [RELEASE_V398.md](RELEASE_V398.md).
 
 - Four tabs: **Upload, Activity, History, Settings**. Repository/branch selection lives inside Upload.
 - After selecting an authorized repository, tap **Tải ZIP** to prepare a copy of the GitHub `main` branch. On iPhone, tap **Lưu vào Tệp** after preparation. PR tools are in History; less-used editor/dashboard tools are in Settings.
 - Standard ZIP 120 MiB and Extended 200 MiB for **upload** remain unchanged; GitHub source download limits are separate. All GitHub security and Push approval gates remain intact.
 
-**Deploy:** Place the **contents** of `Zipverra-v3.9.9/` at the repository root. Run `npm install`, `npm test` and `npm run build`, then verify the deployed Vercel Preview on iPhone and PC.
+**Deploy (previous):** Place the **contents** of `Zipverra-v3.9.9/` at the repository root. Run `npm install`, `npm test` and `npm run build`, then verify the deployed Vercel Preview on iPhone and PC.
 
 ---
-
 # Zipverra Pro v3.9.8 — Minimal Interface & Manual Repo Selection
 
 **Current release:** [RELEASE_V398.md](RELEASE_V398.md) · **QA:** [QA_CHECKLIST_V398.md](QA_CHECKLIST_V398.md). Previous: [RELEASE_V397.md](RELEASE_V397.md).
@@ -55,6 +64,13 @@
 **Current release:** [RELEASE_V395.md](RELEASE_V395.md) · **Acceptance checklist:** [QA_CHECKLIST_V395.md](QA_CHECKLIST_V395.md). Previous release: [RELEASE_V394.md](RELEASE_V394.md).
 
 **Standard:** 120 MiB ZIP / 240 MiB uncompressed. **Extended:** 200 MiB / 400 MiB, one-time consent per ZIP. The 2.5 MB/file, 2,500 source-file and GitHub branch safety constraints are unchanged. Browser Web Worker retains the compressed archive and returns only SHA/path/size/scan metadata. Bytes are read on demand and checksum validated before upload or Diff. Proof refresh is mandatory before Commit if evidence is expiring. Avoid backgrounding iPhone while working with large archives.
+
+
+### What's new in v3.9.13
+
+- **Desktop staged workspace:** before ZIP analysis, show one centered Upload card. After analysis, hide Upload and display a full-width Review & Push workspace with a **Đổi ZIP** action. Mobile layout remains unchanged.
+- **Verified repo ranking:** selecting a repo, applying a profile or analyzing ZIP no longer changes shortcut order. Reorder only after a GitHub commit is verified; repeated verification of the same SHA is deduplicated.
+- **Safety preserved:** all GitHub API endpoints and upload/security/consent gates are unchanged.
 
 
 ### What's new in v3.9.5

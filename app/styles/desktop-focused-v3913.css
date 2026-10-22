@@ -1,0 +1,93 @@
+/* Zipverra v3.9.13 — desktop-only, progressive Upload -> Review workspace.
+   No changes to the mobile layout or any security/mutation logic. */
+.zip3913-desktop-review-toolbar{display:none}
+@media (min-width:761px){
+  .pro-shell main[data-active-view="home"] .content-grid {min-width:0}
+  /* Step 1: one focused Upload panel, not a second empty Review panel. */
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .content-grid{
+    display:grid!important;grid-template-columns:minmax(0,790px)!important;
+    justify-content:center;align-items:start;gap:0;margin:0 auto;max-width:1060px;
+  }
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .form-column{
+    display:block!important;min-width:0;max-height:none!important;height:auto;
+  }
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .side-column{display:none!important}
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel{
+    width:100%;position:relative!important;top:auto!important;max-height:none!important;
+    overflow:visible!important;border-radius:20px;padding:clamp(22px,2.2vw,32px);
+    box-shadow:0 10px 38px rgba(0,0,0,.085);
+  }
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel .step-heading{
+    margin-bottom:20px;padding-bottom:13px;border-bottom:1px solid var(--pro-border);
+  }
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel .step-heading h2{font-size:20px;letter-spacing:-.035em}
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel .source-zip-download{margin:12px 0 16px}
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel .drop-zone{
+    min-height:118px!important;padding:18px!important;border-radius:14px;
+  }
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel .workflow-options{margin-top:18px}
+  /* Step 2: focus on Review. Upload remains mounted for in-session ZIP replacement,
+     but only Review and its existing gated action row are presented on desktop. */
+  .pro-shell main[data-active-view="home"][data-zip-stage="review"] .content-grid{
+    display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+    margin:0;gap:0;min-height:0;
+  }
+  .pro-shell main[data-active-view="home"][data-zip-stage="review"] .form-column{display:none!important}
+  .pro-shell main[data-active-view="home"][data-zip-stage="review"] .side-column{
+    display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+    grid-template-rows:minmax(0,1fr) auto!important;gap:12px;
+    min-width:0;min-height:310px;
+    height:var(--zip395-workspace-height,calc(100dvh - 210px))!important;
+    max-height:var(--zip395-workspace-height,calc(100dvh - 210px))!important;
+  }
+  .pro-shell main[data-active-view="home"][data-zip-stage="review"] .side-column>.preview-panel{
+    display:block!important;min-width:0;min-height:0;height:100%!important;
+    max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain;
+    scrollbar-width:thin;scrollbar-gutter:stable;
+    border-radius:18px;padding:clamp(18px,1.8vw,28px);
+  }
+  .pro-shell main[data-active-view="home"][data-zip-stage="review"] .zip392-action-dock{
+    display:grid!important;position:static!important;inset:auto!important;
+    max-height:none!important;overflow:visible!important;
+    padding:13px 18px!important;gap:10px;border-radius:15px;
+    box-shadow:0 4px 20px rgba(0,0,0,.085);
+  }
+  .pro-shell main[data-active-view="home"][data-zip-stage="review"] .zip392-dock-context{gap:14px}
+  .pro-shell main[data-active-view="home"][data-zip-stage="review"] .zip392-dock-context strong{font-size:14px}
+  .pro-shell main[data-active-view="home"][data-zip-stage="review"] .zip392-dock-context span{font-size:12px}
+  .pro-shell main[data-active-view="home"][data-zip-stage="review"] .zip392-dock-push{min-height:46px;font-size:13px}
+  .pro-shell main[data-active-view="home"][data-zip-stage="review"] .preview-panel .step-heading{margin-bottom:18px}
+  .pro-shell main[data-active-view="home"][data-zip-stage="review"] .preview-panel .step-heading h2{font-size:19px}
+  .pro-shell main[data-active-view="home"][data-zip-stage="review"] .review-risk-center{padding:18px;gap:14px;margin:15px 0}
+  .pro-shell main[data-active-view="home"][data-zip-stage="review"] .review-risk-count{font-size:12px;padding:9px 13px}
+  .pro-shell main[data-active-view="home"][data-zip-stage="review"] .premium-review-files{margin-top:12px}
+  .zip3913-desktop-review-toolbar{
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+    margin:0 0 13px;padding:13px 18px;border:1px solid var(--pro-border);
+    background:var(--pro-surface);border-radius:15px;min-width:0;
+  }
+  .zip3913-review-file{min-width:0;display:grid;gap:5px}
+  .zip3913-review-kicker{color:var(--pro-accent);font-size:10px;font-weight:800;letter-spacing:.13em}
+  .zip3913-review-file strong{color:var(--pro-text);font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:min(64vw,800px)}
+  .zip3913-review-file small{color:var(--pro-muted);font-size:12px;line-height:1.5}
+  .zip3913-change-zip.button{flex:0 0 auto;margin:0;min-height:40px;padding:9px 15px;border-radius:11px}
+  .pro-shell main[data-active-view="home"] .desktop-session-bar{margin-bottom:15px}
+}
+@media (min-width:761px) and (max-width:1099px){
+  .pro-shell main[data-active-view="home"][data-zip-stage="review"] .side-column{
+    height:calc(100dvh - 225px)!important;max-height:calc(100dvh - 225px)!important;min-height:260px;
+  }
+}
+@media (min-width:1100px){
+  .pro-shell main[data-active-view="home"][data-zip-stage="review"] .side-column{
+    height:calc(var(--zip395-workspace-height,calc(100dvh - 156px)) - 67px)!important;
+    max-height:calc(var(--zip395-workspace-height,calc(100dvh - 156px)) - 67px)!important;
+  }
+}
+@media (min-width:761px) and (max-height:650px){
+  .pro-shell main[data-active-view="home"][data-zip-stage="review"] .side-column{min-height:210px}
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel{max-height:calc(100dvh - 150px)!important;overflow-y:auto!important}
+}
+@media (prefers-reduced-motion:reduce){
+  .zip3913-desktop-review-toolbar,.pro-shell main[data-active-view="home"] .content-grid{animation:none!important;transition:none!important}
+}
