@@ -2,7 +2,6 @@
 import ContextualHelp from './components/ContextualHelp.jsx';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
 import dynamic from 'next/dynamic';
 import { encodeBase64 } from '../lib/base64.js';
 import { openArchiveOffThread } from '../lib/archive-worker-client.js';
@@ -15,8 +14,7 @@ import { scanSelectedChanges, reportSelectedSecurity, needsSensitiveConsent } fr
 import { LIMITS, archiveCapacity } from '../lib/constants.js';
 import { deriveWorkflowStep, shouldPublishProgress, checkZipCandidate } from '../lib/workflow-ux.js';
 import { PUSH_STAGES, JOURNAL_KEY, withSafeRetry, validJournal } from '../lib/reliability.js';
-import { positionTabViewport, scheduleTabViewport } from '../lib/tab-scroll.js';
-import { tabSlideDirection, canSlideTabs } from '../lib/tab-transitions.js';
+import { scheduleTabViewport } from '../lib/tab-scroll.js';
 import { MOBILE_TABS, RECENTS_KEY, THEME_KEY, filterChanges, updateRecentRepositories, getPushTimeline } from '../lib/mobile-ui.js';
 import { REPO_USAGE_KEY, normalizeRepositoryUsage, recordRepositorySelection, usageFromActivity } from '../lib/repository-suggestions.js';
 import { FAVORITES_KEY, analyzeSource, selectChanges, toggleExcluded, filterReview, sortedRepositories, updateFavorites, isTextPreviewable, decodePreview, makeLineDiff, transferEstimate } from '../lib/smart-push.js';
@@ -185,8 +183,7 @@ export default function Home() {
 
   const [theme, setTheme] = useState('dark');
   const [themeReady, setThemeReady] = useState(false);
-  const viewTransitionRef = useRef(null);
-  const viewTransitionIdRef = useRef(0);
+  const [viewExiting, setViewExiting] = useState(false);
   const navigationFocusRef = useRef(null);
   const viewTimerRef = useRef(null);
   const [prefersLight, setPrefersLight] = useState(false);
@@ -279,7 +276,6 @@ export default function Home() {
   const pendingSameTabScroll = useRef(null);
   useEffect(() => () => pendingSameTabScroll.current?.(), []);
   useEffect(() => {
-    if (document.documentElement.classList.contains('zip410-switching')) return;
     return scheduleTabViewport(window, document, activeTab, activityRef.current);
   }, [activeTab]);
   useEffect(() => {
@@ -293,61 +289,21 @@ export default function Home() {
     navigationFocusRef.current = null;
     document.getElementById('zipverra-main')?.focus({ preventScroll: true });
   }, [activeTab]);
-  useEffect(() => () => {
-    window.clearTimeout(viewTimerRef.current);
-    viewTransitionRef.current?.skipTransition?.();
-    document.documentElement.removeAttribute('data-zip-tab-direction');
-    document.documentElement.classList.remove('zip410-switching', 'zip410-fallback');
-  }, []);
+  useEffect(() => () => window.clearTimeout(viewTimerRef.current), []);
   function goToTab(tab) {
     if (!MOBILE_TABS.includes(tab) || !canLeaveWorkspace(tab)) return;
-    if (tab === activeTab) {
+    if (tab !== activeTab) navigationFocusRef.current = tab;
+    if (tab === activeTab && typeof window !== 'undefined') {
       pendingSameTabScroll.current?.();
       pendingSameTabScroll.current = scheduleTabViewport(window, document, tab, activityRef.current);
-      return;
     }
-    navigationFocusRef.current = tab;
     setRepoSheetOpen(false); setBranchSheetOpen(false);
-    diffRequestRef.current += 1; setDiffViewer(null);
-    const direction = tabSlideDirection(activeTab, tab);
-    const root = document.documentElement;
-    const transitionId = ++viewTransitionIdRef.current;
+    if (tab !== activeTab) { diffRequestRef.current += 1; setDiffViewer(null); }
     window.clearTimeout(viewTimerRef.current);
-    viewTransitionRef.current?.skipTransition?.();
-    root.classList.remove('zip410-fallback');
-    root.dataset.zipTabDirection = direction;
-    root.classList.add('zip410-switching');
-    const commitTab = () => {
-      // Commit during the native transition's update callback. Both the old
-      // and new view are then captured, enabling real simultaneous sliding.
-      flushSync(() => setActiveTab(tab));
-      // Reset Safari's previously scrolled long page before capturing the
-      // incoming view, not half-way through the animation.
-      positionTabViewport(window, document, tab, activityRef.current);
-    };
-    const clearTransition = () => {
-      if (transitionId !== viewTransitionIdRef.current) return;
-      root.classList.remove('zip410-switching', 'zip410-fallback');
-      root.removeAttribute('data-zip-tab-direction');
-      viewTransitionRef.current = null;
-    };
-    if (canSlideTabs(document, window)) {
-      try {
-        const transition = document.startViewTransition(commitTab);
-        viewTransitionRef.current = transition;
-        void transition.finished.then(clearTransition, clearTransition);
-        return;
-      } catch { /* Older WebKit: navigate immediately without a black fade. */ }
-    }
-    commitTab();
-    if (window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches) {
-      clearTransition();
-    } else {
-      // Non-supporting browsers get a short horizontal entrance; never block
-      // navigation waiting for an exit, and never dim the entire app.
-      root.classList.add('zip410-fallback');
-      viewTimerRef.current = window.setTimeout(clearTransition, 250);
-    }
+    if (tab !== activeTab && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      setViewExiting(true);
+      viewTimerRef.current = window.setTimeout(() => { setActiveTab(tab); setViewExiting(false); }, 175);
+    } else { setActiveTab(tab); setViewExiting(false); }
   }
   function saveUploadCheckpoint(value) {
     try { window.localStorage.setItem(UPLOAD_CHECKPOINT_KEY, JSON.stringify(value)); } catch { /* no persistent storage available */ }
@@ -366,19 +322,14 @@ export default function Home() {
       return next;
     });
   }
-  // A repository selection, Profile change or ZIP review does NOT affect the
-  // quick-access order. A verified GitHub Push is the only promotion event.
-  function recordVerifiedPushRepo(value, verifiedSha) {
-    if (!auth.authenticated || !auth.user?.login || !/^[0-9a-f]{40}$/i.test(verifiedSha || '')) return;
-    if (!repos.some(item => item.full_name?.toLowerCase() === value?.toLowerCase())) return;
-    // Recovery verification of an already-recorded commit must be idempotent.
-    if (proActivityRef.current.some(item => item.kind === 'push' && item.state === 'success' &&
-      item.sha === verifiedSha && item.repo?.toLowerCase() === value.toLowerCase())) return;
+  function saveRecent(value) {
+    if (!auth.authenticated || !auth.user?.login) return;
     setRecents(current => {
       const next = updateRecentRepositories(current, value);
       try { window.localStorage.setItem(accountStorageKey(RECENTS_KEY, auth.user), JSON.stringify(next)); } catch { /* optional metadata */ }
       return next;
     });
+    // Increment only on actual user-initiated selections, not initial load or refresh.
     setRepositoryUsage(current => {
       const next = recordRepositorySelection(current, value, repos);
       try { window.localStorage.setItem(accountStorageKey(REPO_USAGE_KEY, auth.user), JSON.stringify(next)); } catch { /* optional metadata */ }
@@ -483,7 +434,7 @@ export default function Home() {
     setOwner(nextOwner);setRepo(nextRepo);setBranch(profile.branch);
     setMode(profile.mode);setReleaseStrategy(profile.strategy);
     setWorkspaceOpen(false);setFile(null);if(fileInput.current)fileInput.current.value='';
-    reset();goToTab('home');
+    reset();saveRecent(profile.repo);goToTab('home');
     setStatus(`Đã chọn ${profile.repo} · ${profile.branch}; hãy Review ZIP trước khi Push.`);
     return true;
   }
@@ -760,6 +711,7 @@ export default function Home() {
     setFile(null); setArchiveMode('standard'); setMode('merge'); setReleaseStrategy('direct');
     if (fileInput.current) fileInput.current.value = '';
     reset();
+    saveRecent(value);
     notify('repo-selected');
     goToTab('home');
   }
@@ -855,6 +807,7 @@ export default function Home() {
         ? makeReleaseBranch(file.name, crypto.randomUUID().replaceAll('-', '').slice(0, 8)) : null;
       setPreview({ archive, remote, changes, insights, identity, input: { owner: input.owner, repo: input.repo, branch: input.branch }, mode, filename: file.name, releaseStrategy, releaseBranch });
       setFileDetailsOpen(reviewDisclosureDefaultOpen(changes.length));
+      saveRecent(`${input.owner}/${input.repo}`);
       setChangeFilter('all'); setReviewSearch(''); setExcludedPaths([]); setDiffViewer(null); diffRequestRef.current += 1;
       setConfirmed(false); setSyncConfirmed(false); setSensitiveConsent(false); setProjectMismatchConfirmed(false);
       const selectedReport=reportSelectedSecurity(archive.security,changes);
@@ -876,9 +829,8 @@ export default function Home() {
     setStatus(outcome.recovered ? 'Push đã thành công, được xác minh lại trên GitHub.' : 'Đã push và xác minh commit trên GitHub.');
     setProgress(100);
     setPhase(PUSH_STAGES.SUCCEEDED);
-    goToTab('activity');
+    setActiveTab('activity');
     notify('push-verified', true);
-    recordVerifiedPushRepo(`${owner}/${repo}`, outcome.sha);
     logLocalAction({kind:'push',state:'success',repo:`${owner}/${repo}`,sha:outcome.sha,message:'Commit verified on GitHub'});
     setPendingCommit(null);
     clearPending();
@@ -900,9 +852,8 @@ export default function Home() {
     clearPending(); setPendingCommit(null); clearUploadCheckpoint();
     setPreview(null); setConfirmed(false); setSyncConfirmed(false); setSensitiveConsent(false); setSecurityDialogOpen(false);
     setResult({ ...outcome, branchOnly: true, sourceBranch: prData.sourceBranch });
-    recordVerifiedPushRepo(`${prData.owner}/${prData.repo}`, outcome.sha);
     logLocalAction({kind:'push',state:'success',repo:`${prData.owner}/${prData.repo}`,sha:outcome.sha,message:'Release branch verified'});
-    setProgress(100); setPhase(PUSH_STAGES.SUCCEEDED); goToTab('activity');
+    setProgress(100); setPhase(PUSH_STAGES.SUCCEEDED); setActiveTab('activity');
     setPendingPR(prData); savePendingPR(prData);
     setStatus('Branch đã push và xác minh trên GitHub. Đang mở Pull Request...');
     try {
@@ -1042,20 +993,11 @@ export default function Home() {
 
   async function push() {
     if (!preview || !selectedChanges.length || (requiresConsent && !sensitiveConsent) || !confirmed || (mode === 'sync' && stats?.delete > 0 && !syncConfirmed) || busy || pendingCommit || pendingPR || !canSubmitPush) return;
-    // Let the native iPhone confirmation sheet close before taking Activity
-    // snapshots; otherwise its dark modal backdrop can obscure the slide.
-    const closingSheet = decisionSheetOpen ? document.querySelector('dialog.zip-modal--sheet[open]') : null;
     setDecisionSheetOpen(false); setRiskSheetOpen(false);
     setBusy(true); setResult(null); setError(''); setErrorHint(''); setProgress(0); setTransfer(null);
     setPhase(PUSH_STAGES.UPLOADING);
     let commitPayload = null;
     try {
-      if (closingSheet) await new Promise(resolve => {
-        let timeout;
-        const settled = () => { window.clearTimeout(timeout); closingSheet.removeEventListener('close', settled); resolve(); };
-        closingSheet.addEventListener('close', settled, { once:true });
-        timeout = window.setTimeout(settled, 350); // fallback if browser skips native close event
-      });
       goToTab('activity');
       if (!online) throw new Error('Thiết bị đang offline. Hãy kết nối Internet rồi thử lại.');
       const input = getInputs();
@@ -1164,7 +1106,7 @@ export default function Home() {
     <FeedbackToast notice={notifications.active} queuedCount={notifications.queued.length} onDismiss={dismissNotice}/>
     <ConfirmationDialog request={confirmRequest} onAnswer={answerConfirmation}/>
     <a className="polish-skip-link" href="#zipverra-main">Bỏ qua điều hướng, đến nội dung chính</a>
-    <div className="shell pro-shell polish-shell">
+    <div className="shell pro-shell polish-shell" data-view-exiting={viewExiting ? "true" : undefined}>
     <div className="glow one"/><div className="glow two"/>
     {/* Desktop: a persistent workspace navigation; mobile retains the original bottom tabs. */}
     <aside className="desktop-workspace-nav" aria-label="Điều hướng desktop">
@@ -1183,7 +1125,7 @@ export default function Home() {
         <span className="desktop-rail-label">GITHUB ACCOUNT</span>
         <strong>{auth.user?.login ? `@${auth.user.login}` : 'Chưa đăng nhập'}</strong>
         <span className="desktop-rail-branch"><Icon name="branch" size={14}/>{chosenRepo ? `${repo} · ${branch}` : 'Chọn repository để bắt đầu'}</span>
-        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.11</span>
+        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.9</span>
       </div>
     </aside>
     <header className="topbar" role="banner">
@@ -1192,12 +1134,12 @@ export default function Home() {
       <div className="header-actions"><span className="desktop-header-help">
         
         <ContextualHelp tab={activeTab}/>
-      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.11</span></div>
+      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.9</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} />
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
     {activeTab !== 'activity' && (error || busy) && <button type="button" className={`mobile-global-status ${error ? 'has-error' : ''}`} onClick={() => goToTab('activity')}><span>{error ? `Cần kiểm tra: ${error}` : `${status || 'Đang xử lý...'} · ${progress}%`}</span><Icon name="arrow" size={17}/></button>}
-    <main id="zipverra-main" tabIndex={-1} aria-labelledby="zipverra-current-view" data-active-view={activeTab} data-review-ready={Boolean(preview && activeTab === 'home') ? 'true' : 'false'} >
+    <main id="zipverra-main" tabIndex={-1} aria-labelledby="zipverra-current-view" data-active-view={activeTab} data-review-ready={Boolean(preview && activeTab === 'home') ? 'true' : 'false'} className={viewExiting ? 'zip-view-exiting' : ''}>
       {/* Desktop session summary keeps the destination visible without repeated long cards. */}
       <section className="desktop-session-bar" data-has-repo={chosenRepo ? 'true' : 'false'} aria-label="Thanh ngữ cảnh phiên làm việc">
         <div className="desktop-session-location">
@@ -1409,7 +1351,7 @@ export default function Home() {
                 {workspaceOpen && <WorkspacePanel hostView="settings" key={`${owner}/${repo}@${branch}`} authenticated={auth.authenticated} owner={owner} repo={repo} branch={branch} online={online} busy={busy} onBack={() => {workspaceDirtyRef.current=false;setWorkspaceOpen(false);}} onDirtyChange={onWorkspaceDirtyChange} api={api} onCommit={(outcome)=>{reset();logLocalAction({kind:'quick-edit',state:'success',repo:`${owner}/${repo}`,sha:outcome?.sha,message:'Quick Edit saved'});}}/>}
               </div>
             </details>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.11</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.9</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -1420,7 +1362,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.9.11</span><span>GitHub App · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.9.9</span><span>GitHub App · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <ModalSheet open={Boolean(preview && diffViewer && activeTab === 'home')} title={`Diff · ${diffViewer?.path || ''}`}
     onClose={() => { diffRequestRef.current += 1; setDiffViewer(null); }} variant="diff">

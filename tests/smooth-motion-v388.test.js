@@ -7,10 +7,10 @@ const modal = read('app/components/ModalSheet.jsx');
 const page = read('app/page.jsx');
 const root = read('app/layout.jsx');
 
-test('v3.9.11 app, sw, cache and motion CSS are release-aligned',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.11');
-  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.9\.11'/);
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.11/);
+test('v3.9.9 app, sw, cache and motion CSS are release-aligned',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.9');
+  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.9\.9'/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.9/);
   assert.ok(root.indexOf('accessibility-visual-qa-v387.css') < root.indexOf('smooth-motion-v388.css'));
 });
 test('native modal preserves content during prop-driven close and delays physical close',()=>{
@@ -33,15 +33,12 @@ test('enter/leave styles include sheet slide, modal fade+scale, and backdrop cro
   assert.match(css,/\.zip-modal\[open\]\.zip-modal--exiting::backdrop/);
   assert.match(css,/pointer-events:none/);
 });
-test('tab switch replaces the old black fade with directional native snapshots',()=>{
-  assert.match(page, /tabSlideDirection\(activeTab, tab\)/);
-  assert.match(page, /document\.startViewTransition\(commitTab\)/);
-  assert.match(page, /flushSync\(\(\) => setActiveTab\(tab\)\)/);
-  assert.doesNotMatch(page, /setViewExiting\(true\)/);
-  const directional=read('app/styles/directional-tabs-v3910.css');
-  assert.match(directional, /view-transition-name:zipverra-tab/);
-  assert.match(directional, /zip410-old-forward/);
-  assert.match(directional, /zip410-new-backward/);
+test('tab switch reverses before next view and animates title without reloading app',()=>{
+  assert.match(page, /setViewExiting\(true\)/);
+  assert.match(page, /setActiveTab\(tab\); setViewExiting\(false\); \}, 175\)/);
+  assert.match(page, /data-view-exiting=\{viewExiting \? "true" : undefined\}/);
+  assert.match(css, /@keyframes zip388-view-out/);
+  assert.match(css, /@keyframes zip388-view-in/);
 });
 test('smooth accordion fallback, reduced motion and no GitHub progress animation',()=>{
   assert.match(css, /@supports \(interpolate-size:allow-keywords\) and selector\(details::details-content\)/);

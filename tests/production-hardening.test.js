@@ -97,8 +97,7 @@ test('Live Push Flow appears before Recovery Center and Recent Actions; no push 
   assert.ok(page.indexOf('id="activity-live-flow"') < page.indexOf('<RecoveryCenter push={pendingCommit}'));
   assert.ok(page.indexOf('<RecoveryCenter push={pendingCommit}') < page.indexOf('<ActivityJournal items={proActivity}'));
   assert.match(page,/setPhase\(PUSH_STAGES\.UPLOADING\);[\s\S]*?goToTab\('activity'\)/);
-  assert.match(page,/classList\.contains\('zip410-switching'\)/);
-  assert.match(page,/return scheduleTabViewport\(window, document, activeTab, activityRef\.current\)/);
+  assert.match(page,/useEffect\(\(\) => \{\s*return scheduleTabViewport\(window, document, activeTab, activityRef\.current\);/);
   assert.match(page,/requestOnce\('commit', commitPayload\)/);
   assert.doesNotMatch(source('lib/tab-scroll.js'),/fetch\(|localStorage|sessionStorage|requestOnce\(/);
 });

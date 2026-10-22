@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.9.11",
+  "version": "3.9.9",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.9.11 — Verified Repo Ranking & Smooth Tab Motion: reorder only after verified GitHub Push, optimized slide performance",
+  "description": "Zipverra Pro v3.9.9 — Upload Hub & Source ZIP: four-tab navigation, in-place download to Files, retained GitHub safeguards",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

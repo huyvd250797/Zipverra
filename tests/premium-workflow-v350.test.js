@@ -6,8 +6,8 @@ const read = path => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'
 const page = read('app/page.jsx'), ui = read('app/components/ProfessionalUI.jsx');
 const styles = read('app/styles/premium-workflow-v350.css');
 
-test('v3.9.11 loads Premium Workflow last, preserving preceding visual layers',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.11');
+test('v3.9.9 loads Premium Workflow last, preserving preceding visual layers',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.9');
   const layout=read('app/layout.jsx');
   assert.match(layout,/premium-workflow-v350\.css/);
   assert.ok(layout.indexOf('mobile-layout-v340.css')<layout.indexOf('premium-workflow-v350.css'));

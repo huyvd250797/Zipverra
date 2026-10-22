@@ -1,13 +1,3 @@
-# Zipverra Pro v3.9.11 — Verified Repo Ranking & Smooth Tab Motion
-
-**Current release:** [RELEASE_V3911.md](RELEASE_V3911.md) · **QA:** [QA_CHECKLIST_V3911.md](QA_CHECKLIST_V3911.md). Previous: [RELEASE_V3910.md](RELEASE_V3910.md).
-
-- **Repo thường dùng:** Choosing a repo, applying a Profile and analysing a ZIP no longer changes its position. After a GitHub commit is verified, its repo moves to the first slot in Quick Access, including verified PR branch Push. Repeat verification of the same commit does not count again.
-- **Smooth tab slide:** Screens slide left/right by taskbar order. Only the work surface is snapshotted; the topbar and tabbar stay still. Eliminated competing intro/root animations and duplicate scroll corrections. Native View Transitions use ~195 ms; fallback is shorter. Reduce Motion is respected.
-- **Safety:** No changes to GitHub APIs, authorization, critical security consent, Sync deletion consent, or Commit/PR recovery.
-- **Deploy:** Copy the **contents** of `Zipverra-v3.9.11/` into the repo root, run `npm install`, `npm test` and `npm run build`; confirm on Vercel Preview and iPhone Safari/PWA before Production.
-
---
 # Zipverra Pro v3.9.9 — Upload Hub & Source ZIP
 
 **Current release:** [RELEASE_V399.md](RELEASE_V399.md) · **QA:** [QA_CHECKLIST_V399.md](QA_CHECKLIST_V399.md). Previous: [RELEASE_V398.md](RELEASE_V398.md).

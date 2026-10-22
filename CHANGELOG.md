@@ -1,18 +1,3 @@
-# v3.9.11 — Verified Repo Ranking & Smooth Tab Motion
-
-- Quick Access order changes only after a GitHub-verified successful Push; repo selection, Profile application, ZIP analysis and failed/unverified attempts leave order intact.
-- A verified PR branch Push also counts; duplicate verification of the same SHA is ignored when recorded.
-- `recents` (verified Push history) now takes priority over pinned and frequent entries in Quick Access, without losing favorite markers.
-- Tab transitions snapshot only the actual content grid. Removed separate intro animation, root pseudo transition and duplicate tab scroll resets; reduced duration to 195 ms.
-- Preserved four-tab navigation direction, fallback, Reduced Motion, security/consent and all GitHub server endpoints.
-
-# v3.9.10 — Directional Tab Transitions
-
-- Replaced exit-to-black/fade tab animation with horizontal screen slide driven by four-tab navigation order.
-- Reused directional navigation when Push opens Activity, with real simultaneous snapshots on supported browsers.
-- Retained fixed navigation chrome, accessibility focus, scroll-to-top behavior and Reduced Motion fallback.
-- No GitHub API, authorization, ZIP parsing, upload, PR, security or recovery logic changed.
-
 # v3.9.9 — Upload Hub & Source ZIP
 
 - Removed Repos navigation on mobile and PC; four-tab workflow.
