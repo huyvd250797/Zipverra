@@ -8,10 +8,10 @@ const read=(name)=>readFileSync(join(root,name),'utf8');
 const page=read('app/page.jsx'), ui=read('app/components/ProfessionalUI.jsx');
 const theme=read('app/styles/pro-design-system.css');
 
-test('v3.9.8 metadata and performance UI stylesheet are connected to RootLayout',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.8');
+test('v3.9.9 metadata and performance UI stylesheet are connected to RootLayout',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.9');
   assert.match(read('app/layout.jsx'), /import '\.\/styles\/pro-design-system\.css'/);
-  assert.match(page,/v3\.9\.8/);
+  assert.match(page,/v3\.9\.9/);
 });
 test('UI design tokens share colors, space, radius and motion defaults',()=>{
   for(const token of ['--pro-bg','--pro-surface','--pro-border','--pro-text','--pro-muted','--pro-accent','--pro-focus','--pro-radius-lg','--pro-space-4','--pro-ease'])
@@ -19,8 +19,8 @@ test('UI design tokens share colors, space, radius and motion defaults',()=>{
   assert.match(theme,/html\[data-theme="light"\]/);
   assert.match(theme,/prefers-reduced-motion:reduce/);
 });
-test('UX chrome preserves five tabs and screen-state visibility',()=>{
-  for(const tab of ['repositories','home','activity','history','settings'])assert.match(page,new RegExp(`id:'${tab}'`));
+test('UX chrome preserves four tabs and screen-state visibility',()=>{
+  for(const tab of ['home','activity','history','settings'])assert.match(page,new RegExp(`id:'${tab}'`));
   assert.match(page,/data-active-view=\{activeTab\}/);
   assert.match(page,/onClick=\{\(\) => goToTab\(tab\.id\)\}/);
   assert.match(page,/aria-current=\{activeTab === tab\.id/);
@@ -60,5 +60,5 @@ test('mobile layout keeps bottom safe area and deliberately avoids a sixth nav t
   assert.match(theme,/safe-area-inset-bottom/);
   assert.match(theme,/max-width:360px/);
   assert.match(theme,/min-height:calc\(72px \+ env\(safe-area-inset-bottom/);
-  assert.equal((page.match(/\{id:'(?:repositories|home|activity|history|settings)',label:/g)||[]).length,5);
+  assert.equal((page.match(/\{id:'(?:repositories|home|activity|history|settings)',label:/g)||[]).length,4);
 });

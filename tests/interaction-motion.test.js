@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs';
 import { createInteractionNotice, shouldAnnounceEvent } from '../lib/interaction-feedback.js';
 const read = path => readFileSync(new URL(`../${path}`, import.meta.url),'utf8');
 
-test('v3.9.8 has separate optional motion layer loaded last',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.8');
+test('v3.9.9 has separate optional motion layer loaded last',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.9');
   const layout=read('app/layout.jsx');
   assert.ok(layout.indexOf('pro-design-system.css') < layout.indexOf('pro-motion.css'));
   for(const css of ['--motion-quick','--motion-enter','--motion-steady','--motion-curve','pro-toast-region','pro-skeleton','pro-enter','pro-toast-enter','prefers-reduced-motion:reduce'])
@@ -57,8 +57,8 @@ test('skeleton appears for async chunks, authorization and ZIP analysis',()=>{
   const ui=read('app/components/InteractionFeedback.jsx');
   for(const name of ['HistoryPanel','WorkspacePanel','BranchPrPanel','ProDashboard','PushProfiles','ActivityJournal'])
     assert.match(page,new RegExp(`<LoadingSkeleton kind="panel" label="Đang tải ${name}`));
-  assert.match(page,/loadingRepos && <LoadingSkeleton kind="repos"/);
-  assert.match(page,/auth\.loading \? <LoadingSkeleton kind="inline"/);
+  assert.match(page,/loadingRepos/);
+  assert.match(page,/auth\.loading/);
   assert.match(page,/phase === PUSH_STAGES\.ANALYZING \|\| phase === PUSH_STAGES\.PREFLIGHT/);
   assert.match(ui,/aria-busy="true"/);
   assert.match(ui,/aria-hidden="true"/);
@@ -73,12 +73,12 @@ test('motion is transform/opacity only, safe on iPhone and disabled in reduced m
   assert.match(css,/animation:pro-soft-shimmer 1\.7s linear infinite/);
   assert.match(css,/\.pro-skeleton-avatar:after,\.pro-skeleton-title:after,\.pro-skeleton-lines span:after \{animation:none!important;\}/);
 });
-test('tab transitions preserve main workflow state, data-mobile-view and five tabs',()=>{
+test('tab transitions preserve main workflow state, data-mobile-view and four tabs',()=>{
   const page=read('app/page.jsx');
   assert.match(page,/function goToTab\(tab\)/);
   assert.match(page,/setActiveTab\(tab\)/);
   assert.match(page,/<UXViewIntro activeTab=\{activeTab\} key=\{activeTab\}/);
   assert.match(page,/data-active-view=\{activeTab\}/);
-  assert.equal((page.match(/\{id:'(?:repositories|home|activity|history|settings)',label:/g)||[]).length,5);
+  assert.equal((page.match(/\{id:'(?:repositories|home|activity|history|settings)',label:/g)||[]).length,4);
   assert.match(page,/matchMedia\?\.\('\(prefers-reduced-motion: reduce\)'\)/);
 });

@@ -6,13 +6,13 @@ import { installViewportLayout } from '../lib/viewport-layout-client.js';
 import { APP_VERSION } from '../lib/pwa-reliability.js';
 const read = path => readFileSync(new URL(`../${path}`, import.meta.url),'utf8');
 
-test('v3.9.8 version synchronized across runtime, PWA and UI',()=>{
-  assert.equal(APP_VERSION,'3.9.8');
+test('v3.9.9 version synchronized across runtime, PWA and UI',()=>{
+  assert.equal(APP_VERSION,'3.9.9');
   assert.equal(JSON.parse(read('package.json')).version, APP_VERSION);
-  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.8/);
-  assert.match(read('app/page.jsx'),/Zipverra · v3\.9\.8/);
+  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.9/);
+  assert.match(read('app/page.jsx'),/Zipverra · v3\.9\.9/);
 });
-test('v3.9.8 visual stylesheet is imported after adaptive sheets',()=>{
+test('v3.9.9 visual stylesheet is imported after adaptive sheets',()=>{
   const s=read('app/layout.jsx');
   assert.ok(s.indexOf('adaptive-sheets-v394.css') < s.indexOf('zero-scroll-v395.css'));
   assert.ok(s.includes("import './styles/zero-scroll-v395.css'"));

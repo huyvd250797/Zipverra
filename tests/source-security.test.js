@@ -141,7 +141,7 @@ test('new UI displays redacted security report and gates BOTH direct push and Pu
 });
 
 
-test('v3.9.8 sensitive file ZIP consent allows .npmrc but never unsafe ZIP traversal', async()=>{
+test('v3.9.9 sensitive file ZIP consent allows .npmrc but never unsafe ZIP traversal', async()=>{
   const { assertSafeContentPath } = await import('../lib/paths.js');
   const { calculateChanges } = await import('../lib/operations.js');
   const { assertVerificationPayload } = await import('../lib/verification.js');
@@ -168,14 +168,14 @@ test('v3.9.8 sensitive file ZIP consent allows .npmrc but never unsafe ZIP trave
 });
 
 
-test('v3.9.8 Sync can delete stale secret file without granting upload consent', async()=>{
+test('v3.9.9 Sync can delete stale secret file without granting upload consent', async()=>{
   const { assertVerificationPayload }=await import('../lib/verification.js');
   const deletion={owner:OWNER,repo:REPO,branch:'main',expectedHead:'b'.repeat(40),message:'remove stale credentials',entries:[{path:'.npmrc',sha:null,mode:'100644'}]};
   assert.doesNotThrow(()=>assertVerificationPayload(deletion));
   assert.equal(assertSecureCommitEntries(deletion,ID,ENV),true);
 });
 
-test('v3.9.8 sensitive user decision is explicit, ephemeral and required on both upload and commit',()=>{
+test('v3.9.9 sensitive user decision is explicit, ephemeral and required on both upload and commit',()=>{
  const page=readFileSync(new URL('../app/page.jsx',import.meta.url),'utf8');
  assert.match(page,/setSensitiveConsent\(false\); setSecurityDialogOpen\(false\)/);
  assert.match(page,/const sensitiveWarning=needsSensitiveConsent\(selectedReport\.findings\);\s*setSecurityDialogOpen\(sensitiveWarning\)/);

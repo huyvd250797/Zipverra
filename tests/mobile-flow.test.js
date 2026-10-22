@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const read = (name) => readFileSync(new URL(`../${name}`, import.meta.url), 'utf8');
 
-test('mobile navigation includes five sections and retains GitHub/OAuth fields', () => {
+test('mobile navigation includes four sections and retains GitHub/OAuth fields', () => {
  const page = read('app/page.jsx');
- for (const view of ['home','repositories','activity','settings']) {
+ for (const view of ['home','activity','settings']) {
    assert.match(page, new RegExp(`data-mobile-view="${view}"`));
  }
  assert.match(read('app/components/HistoryPanel.jsx'), /data-mobile-view="history"/);

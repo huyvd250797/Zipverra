@@ -7,11 +7,11 @@ const read=name=>readFileSync(new URL(`../${name}`,import.meta.url),'utf8');
 const repos=['team/Finzaro','team/Zipverra','team/SendInt','team/TestPilot','team/Extra'].map(full_name=>({full_name}));
 const now=Date.now();
 
-test('v3.9.8 version and CSS cascade are aligned',()=>{
-  assert.equal(APP_VERSION,'3.9.8');
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.8');
-  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.8/);
-  assert.match(read('app/page.jsx'),/Zipverra · v3\.9\.8/);
+test('v3.9.9 version and CSS cascade are aligned',()=>{
+  assert.equal(APP_VERSION,'3.9.9');
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.9');
+  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.9/);
+  assert.match(read('app/page.jsx'),/Zipverra · v3\.9\.9/);
   const layout=read('app/layout.jsx');
   assert.ok(layout.indexOf('one-screen-v392.css') < layout.indexOf('quick-actions-v393.css'));
 });

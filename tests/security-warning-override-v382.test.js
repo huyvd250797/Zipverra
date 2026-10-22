@@ -10,7 +10,7 @@ const utf8 = value => new TextEncoder().encode(value);
 const FILE = 'tests/source-security.test.js';
 const ready = { hasPreview:true, selectedCount:2, authenticated:true, online:true, confirmed:true };
 
-test('v3.9.8 fake key fixture avoids triggering older Zipverra scanners on our own source',()=>{
+test('v3.9.9 fake key fixture avoids triggering older Zipverra scanners on our own source',()=>{
   const findings=scanSourceFile(FILE,utf8(read(FILE)));
   assert.equal(findings.filter(f=>f.severity==='critical').length,0);
   // Test source still creates the key header dynamically at runtime for scanner regression.

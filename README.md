@@ -1,3 +1,15 @@
+# Zipverra Pro v3.9.9 — Upload Hub & Source ZIP
+
+**Current release:** [RELEASE_V399.md](RELEASE_V399.md) · **QA:** [QA_CHECKLIST_V399.md](QA_CHECKLIST_V399.md). Previous: [RELEASE_V398.md](RELEASE_V398.md).
+
+- Four tabs: **Upload, Activity, History, Settings**. Repository/branch selection lives inside Upload.
+- After selecting an authorized repository, tap **Tải ZIP** to prepare a copy of the GitHub `main` branch. On iPhone, tap **Lưu vào Tệp** after preparation. PR tools are in History; less-used editor/dashboard tools are in Settings.
+- Standard ZIP 120 MiB and Extended 200 MiB for **upload** remain unchanged; GitHub source download limits are separate. All GitHub security and Push approval gates remain intact.
+
+**Deploy:** Place the **contents** of `Zipverra-v3.9.9/` at the repository root. Run `npm install`, `npm test` and `npm run build`, then verify the deployed Vercel Preview on iPhone and PC.
+
+---
+
 # Zipverra Pro v3.9.8 — Minimal Interface & Manual Repo Selection
 
 **Current release:** [RELEASE_V398.md](RELEASE_V398.md) · **QA:** [QA_CHECKLIST_V398.md](QA_CHECKLIST_V398.md). Previous: [RELEASE_V397.md](RELEASE_V397.md).

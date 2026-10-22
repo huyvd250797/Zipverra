@@ -5,7 +5,7 @@ import { helpForTab, helpTabNames } from '../lib/contextual-help.js';
 const read = (path) => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
 
 test('exactly one contextual help catalogue entry per mobile tab', () => {
-  assert.deepEqual(helpTabNames(), ['repositories', 'home', 'activity', 'history', 'settings']);
+  assert.deepEqual(helpTabNames(), ['home', 'activity', 'history', 'settings']);
   for (const tab of helpTabNames()) {
     const help = helpForTab(tab);
     assert.equal(typeof help.title, 'string');

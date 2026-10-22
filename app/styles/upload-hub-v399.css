@@ -1,0 +1,57 @@
+/* v3.9.9 — One Upload Hub: four navigation destinations, source ZIP at selected repo. */
+.zip399-history-tools,.zip399-advanced-tools{
+  border:1px solid var(--pro-border);border-radius:16px;
+  background:var(--pro-surface);min-width:0;overflow:hidden;
+}
+.zip399-history-tools{margin-top:14px;padding:12px 15px}
+.zip399-advanced-tools{margin:16px 0;padding:12px 15px}
+.zip399-history-tools>summary,.zip399-advanced-tools>summary{
+  cursor:pointer;min-height:44px;display:flex;align-items:center;
+  color:var(--pro-text);font-size:13px;font-weight:740;
+  padding:8px 3px;list-style:none;
+}
+.zip399-history-tools>summary::-webkit-details-marker,.zip399-advanced-tools>summary::-webkit-details-marker{display:none}
+.zip399-history-tools>summary::after,.zip399-advanced-tools>summary::after{
+  content:'⌄';margin-left:auto;font-size:18px;color:var(--pro-muted);
+  transition:transform .18s ease;
+}
+.zip399-history-tools[open]>summary::after,.zip399-advanced-tools[open]>summary::after{transform:rotate(180deg)}
+.zip399-tools-body{display:grid;gap:14px;padding:10px 0 4px}
+.zip399-tools-body>details{min-width:0}
+.zip399-tools-body :is(.repo-advanced,.pro-dash-details){margin:0;padding:10px;border:1px solid var(--pro-border);border-radius:12px}
+.zip399-tools-body .workspace-panel{min-width:0;max-width:100%;margin:0;box-shadow:none}
+.pro-shell .upload-panel .source-zip-download{
+  display:flex;align-items:center;flex-wrap:wrap;gap:9px 11px;
+  border:1px solid var(--pro-border);background:var(--pro-surface-2);
+  border-radius:13px;padding:10px 12px;margin:10px 0 12px;
+}
+.pro-shell .upload-panel .source-zip-download-label strong{font-size:13px}
+.pro-shell .upload-panel .source-zip-download-label small{font-size:11px}
+.pro-shell .upload-panel .source-zip-download-symbol{width:32px;height:32px;border-radius:10px;font-size:18px}
+.pro-shell .upload-panel .source-zip-download-action{
+  min-height:44px;font-size:12.5px;padding:8px 14px;border-radius:10px;
+}
+.pro-shell .upload-panel .source-zip-download-progress,
+.pro-shell .upload-panel .source-zip-download-ready,
+.pro-shell .upload-panel .source-zip-download-error{flex-basis:100%;min-width:0}
+.pro-shell .upload-panel .source-zip-download-progress progress{max-width:100%}
+.pro-shell .upload-panel .source-zip-filename{overflow-wrap:anywhere}
+/* Mobile tabbar remains fully tappable, with four equal destinations. */
+@media(max-width:760px){
+  .mobile-bottom-nav{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:4px;align-items:center;
+  }
+  .mobile-bottom-nav .mobile-nav-item{min-width:0;min-height:60px}
+  .pro-shell .upload-panel .source-zip-download{padding:10px 12px;margin:9px 0 12px}
+  .pro-shell .upload-panel .source-zip-download-detail{flex:1 1 auto;min-width:0}
+  .pro-shell .upload-panel .source-zip-download-action{min-width:98px}
+  .pro-shell>footer{display:none!important}
+}
+@media(max-width:340px){
+  .pro-shell .upload-panel .source-zip-download-action{min-width:88px;padding:8px 9px}
+  .pro-shell .upload-panel .source-zip-download-label strong{font-size:12px}
+}
+@media(prefers-reduced-motion:reduce){
+  .zip399-history-tools>summary::after,.zip399-advanced-tools>summary::after{transition:none!important}
+}

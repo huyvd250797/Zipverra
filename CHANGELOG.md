@@ -1,3 +1,10 @@
+# v3.9.9 — Upload Hub & Source ZIP
+
+- Removed Repos navigation on mobile and PC; four-tab workflow.
+- Moved Source ZIP Download into Upload; visible only after authorized repo selection, with **Tải ZIP** → **Lưu vào Tệp** on iPhone.
+- Preserved PR manager under History and Quick Edit/dashboard under Settings > Công cụ GitHub.
+- All mutation checks and security approvals remain unchanged.
+
 # v3.9.8 — Minimal Interface & Manual Repo Selection
 
 - Removed auto-select recent repository preference and automatic re-selection logic.

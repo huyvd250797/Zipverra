@@ -129,20 +129,20 @@ export default function SourceZipDownload({ owner, repo, selected, online, busy,
 
   const isPreparing = download.state === 'preparing';
   const isReady = download.state === 'ready';
-  const mainLabel = isReady ? (download.shareSupported ? 'Lưu vào Tệp' : 'Tải ZIP') : isPreparing ? 'Đang chuẩn bị...' : 'Chuẩn bị ZIP';
+  const mainLabel = isReady ? (download.shareSupported ? 'Lưu vào Tệp' : 'Tải ZIP') : isPreparing ? 'Đang tải...' : 'Tải ZIP';
   return <section className={`source-zip-download source-zip-download--share${compact ? ' source-zip-download--compact' : ''}`}
     aria-label="Tải toàn bộ source ZIP của branch main">
     <div className="source-zip-download-detail">
       <span className="source-zip-download-symbol" aria-hidden="true">↓</span>
       <span className="source-zip-download-label">
-        <strong>Download Source ZIP</strong>
+        <strong>Source ZIP</strong>
         <small>Branch <b>main</b></small>
       </span>
     </div>
     {isReady ? <button type="button" className="source-zip-download-action" onClick={download.shareSupported ? saveToFiles : downloadInBrowser}
       aria-label={`Lưu ZIP ${download.filename}`}>{mainLabel} <span aria-hidden="true">↗</span></button>
       : <button type="button" className="source-zip-download-action" onClick={prepareZip}
-        disabled={!available || isPreparing} aria-label={`Chuẩn bị ZIP branch main của ${owner}/${repo}`}>
+        disabled={!available || isPreparing} aria-label={`Tải ZIP branch main của ${owner}/${repo}`}>
         {mainLabel} <span aria-hidden="true">↓</span>
       </button>}
     {isPreparing && <div className="source-zip-download-progress" role="status" aria-live="polite">

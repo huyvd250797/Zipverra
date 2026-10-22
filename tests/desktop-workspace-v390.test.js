@@ -7,18 +7,18 @@ const page = read('app/page.jsx');
 const css = read('app/styles/desktop-workspace-v390.css');
 const layout = read('app/layout.jsx');
 
-test('v3.9.8 desktop workbench is a responsive layer loaded after prior mobile styles',()=>{
-  assert.equal(APP_VERSION,'3.9.8');
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.8');
-  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.8/);
+test('v3.9.9 desktop workbench is a responsive layer loaded after prior mobile styles',()=>{
+  assert.equal(APP_VERSION,'3.9.9');
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.9');
+  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.9/);
   assert.ok(layout.indexOf('large-archive-v389.css') < layout.indexOf('desktop-workspace-v390.css'));
   assert.match(css,/\.desktop-workspace-nav,\.desktop-session-bar,\.desktop-topbar-path\{display:none\}/);
   assert.match(css,/@media \(min-width:1100px\)/);
   assert.match(css,/@media \(min-width:761px\)/);
 });
 
-test('persistent desktop navigation preserves five existing tabs and routes via existing guard',()=>{
-  assert.match(page,/const DESKTOP_TAB_ORDER = Object\.freeze\(\['repositories','home','activity','history','settings'\]\)/);
+test('persistent desktop navigation preserves four existing tabs and routes via existing guard',()=>{
+  assert.match(page,/const DESKTOP_TAB_ORDER = Object\.freeze\(\['home','activity','history','settings'\]\)/);
   assert.match(page,/DESKTOP_TAB_ORDER\.map\(id/);
   assert.match(page,/onClick=\{\(\) => goToTab\(id\)\}/);
   assert.match(page,/onClick=\{\(\) => goToTab\(tab\.id\)\}/);
@@ -27,9 +27,9 @@ test('persistent desktop navigation preserves five existing tabs and routes via 
   assert.match(page,/aria-current=\{activeTab === id \? 'page' : undefined\}/);
 });
 
-test('desktop renders only active panels; mobile bottom tabs are unaffected',()=>{
+test('desktop renders active panels and mobile uses four tabs',()=>{
   assert.match(css,/main\[data-active-view/); // panel visibility is scoped to main
-  for(const section of ['repositories','home','activity','history','settings']){
+  for(const section of ['home','activity','history','settings']){
     assert.ok(css.includes(`data-active-view="${section}"`));
   }
   assert.match(css,/main\[data-active-view="home"\] \.repository-panel\{display:none!important\}/);

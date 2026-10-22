@@ -8,11 +8,11 @@ const ready = { hasPreview:true, selectedCount:3, critical:0, authenticated:true
   pending:false, confirmed:true, syncDeleteCount:0, syncConfirmed:false };
 
 test('v3.0 stable release keeps full PWA version and stylesheet', () => {
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.8');
-  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.9\.8'/);
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.8/);
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.9');
+  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.9\.9'/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.9/);
   assert.match(read('app/layout.jsx'), /advanced-ux-polish\.css/);
-  assert.match(read('app/page.jsx'), /v3\.9\.8/);
+  assert.match(read('app/page.jsx'), /v3\.9\.9/);
 });
 
 test('readiness cannot approve a missing preview, missing changes or unconfirmed review', () => {
@@ -59,12 +59,11 @@ test('SHA and destination helpers ignore invalid input', () => {
   assert.equal(selectedRepoLabel(null,'repo'),'');
 });
 
-test('Repos has compact launchpad and uses real selected authorization', () => {
+test('Upload owns repo selection and advanced tools stay accessible', () => {
   const main=read('app/page.jsx'); const ui=read('app/components/PolishedWorkspace.jsx');
-  assert.match(main,/selected=\{chosenRepo\}/);
-  assert.match(main,/onWorkspace=\{\(\) => \{ setWorkspaceOpen\(true\)/);
-  assert.match(main,/repoTools=\{activeTab === 'repositories' && auth\.authenticated/);
-  assert.match(main,/repo-refresh-icon/);
+  assert.match(main,/onClick=\{\(\) => setRepoSheetOpen\(true\)\}/);
+  assert.match(main,/className=\"zip399-advanced-tools\"/);
+  assert.match(main,/workspaceOpen && <WorkspacePanel hostView=\"settings\"/);
   assert.doesNotMatch(main,/repo-auth-minimal/);
   assert.match(ui,/disabled=\{!selected \|\| disabled\}/);
   assert.match(ui,/WorkspaceLaunchpad/);
@@ -73,7 +72,7 @@ test('Repos has compact launchpad and uses real selected authorization', () => {
 
 test('Actionable empty states are read-only and do not create GitHub mutations',()=>{
   const main=read('app/page.jsx'); const ui=read('app/components/PolishedWorkspace.jsx');
-  assert.match(main,/<RepositoryEmpty authenticated=\{auth\.authenticated\}/);
+  assert.match(main,/<QuickActions/);
   assert.match(main,/<ActivityEmpty canUpload=\{chosenRepo\}/);
   assert.match(ui,/\/api\/auth\/install/);
   assert.match(ui,/Chưa có thao tác Push mới/);

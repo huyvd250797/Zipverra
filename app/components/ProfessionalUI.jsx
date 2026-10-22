@@ -4,7 +4,6 @@ import ContextualHelp from './ContextualHelp.jsx';
 import { workflowPosition } from '../../lib/premium-workflow.js';
 
 const views = Object.freeze({
-  repositories: { eyebrow: 'YOUR WORKSPACE', title: 'Repositories', description: 'Chọn nơi cập nhật source.', step: '01' },
   home: { eyebrow: 'SOURCE DELIVERY', title: 'Upload & Review', description: 'Đưa ZIP lên GitHub an toàn.', step: '02' },
   activity: { eyebrow: 'OPERATIONS', title: 'Activity', description: 'Theo dõi và xác minh kết quả.', step: '03' },
   history: { eyebrow: 'VERSION CONTROL', title: 'History', description: 'Commit, compare và rollback.', step: '04' },
@@ -12,7 +11,7 @@ const views = Object.freeze({
 });
 
 export function UXViewIntro({ activeTab, online, pending, repoTools = null }) {
-  const screen = views[activeTab] || views.repositories;
+  const screen = views[activeTab] || views.home;
   return <div className="mobile-context pro-view-intro" aria-label={`Màn hình ${screen.title}`}>
     <div className="pro-view-copy"><h2 id="zipverra-current-view">{screen.title}</h2></div>
     <div className="pro-view-indicators"><span className={`mobile-connection ${online ? 'connected' : 'disconnected'}`} role="status" aria-label={online ? 'Online' : 'Offline'} title={online ? 'Online' : 'Offline'}>{online ? 'Online' : 'Offline'}</span>{repoTools ? <div className="pro-view-tools" role="group" aria-label="Repository controls">{repoTools}</div> : null}{pending && <span className="pro-pending-marker" aria-label="Có thao tác cần xác minh" title="Cần xác minh">!</span>}<ContextualHelp tab={activeTab}/></div>

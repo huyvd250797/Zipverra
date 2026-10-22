@@ -42,13 +42,15 @@ test('splash displays on first HTML paint and has a network failsafe', () => {
   assert.match(splash, /Push to GitHub from Mobile/);
 });
 
-test('compact launchpad retains the primary ZIP push action without a large marketing hero', () => {
+test('Upload replaces the Repos launchpad while preserving ZIP push', () => {
   const page = source('app/page.jsx');
   const launchpad = source('app/components/PolishedWorkspace.jsx');
   assert.match(launchpad, /className="zip-mobile-hub"/);
   assert.match(launchpad, /<strong>Push ZIP<\/strong>/);
   assert.match(launchpad, /onChooseRepo/);
-  assert.match(page, /<WorkspaceLaunchpad/);
+  assert.doesNotMatch(page, /<WorkspaceLaunchpad/);
+  assert.match(page, /<QuickActions/);
+  assert.match(page, /<SourceZipDownload/);
   assert.doesNotMatch(launchpad, /Đẩy source lên GitHub/);
 });
 

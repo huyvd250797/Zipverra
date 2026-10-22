@@ -134,15 +134,15 @@ test('syntax highlighting emits text segments, no HTML injection or eval',async(
  assert.equal(parts.find(p=>p.text==='const').kind,'keyword');
  assert.equal(parts.find(p=>p.kind==='string').text,'"<script>alert(1)</script>"');
 });
-test('workspace UI keeps original 5 tabs and preserves ZIP Push workflow',async()=>{
+test('Quick Edit remains in Settings and four tabs preserve ZIP Push workflow',async()=>{
  const {readFileSync}=await import('node:fs');
  const page=readFileSync(new URL('../app/page.jsx',import.meta.url),'utf8');
  const panel=readFileSync(new URL('../app/components/WorkspacePanel.jsx',import.meta.url),'utf8');
  const menu=readFileSync(new URL('../lib/mobile-ui.js',import.meta.url),'utf8');
- assert.match(page,/<WorkspaceLaunchpad/);
- assert.match(page,/onWorkspace=\{\(\) => \{ setWorkspaceOpen\(true\)/);
- assert.match(page,/workspaceOpen && <WorkspacePanel/);
- assert.match(menu,/\['home', 'repositories', 'activity', 'history', 'settings'\]/);
+ assert.doesNotMatch(page,/<WorkspaceLaunchpad/);
+ assert.match(page,/className="zip399-advanced-tools"/);
+ assert.match(page,/workspaceOpen && <WorkspacePanel hostView="settings"/);
+ assert.match(menu,/\['home', 'activity', 'history', 'settings'\]/);
  assert.match(page,/Commit & Push/);
  assert.match(panel,/Review Changes/);
  assert.match(panel,/Commit & Save File/);

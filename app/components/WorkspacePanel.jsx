@@ -16,7 +16,7 @@ function pickLanguage(path) {
   return 'Text';
 }
 function shortenHash(value) { return typeof value === 'string' ? value.slice(0, 10) : '—'; }
-export default function WorkspacePanel({ authenticated, owner, repo, branch, online, busy, onBack, api, onCommit, onDirtyChange }) {
+export default function WorkspacePanel({ hostView = 'repositories', authenticated, owner, repo, branch, online, busy, onBack, api, onCommit, onDirtyChange }) {
   const { ask: askConfirmation, request: confirmRequest, answer: answerConfirmation } = useConfirmationDialog();
   const [directory,setDirectory]=useState('');
   const [listing,setListing]=useState(null);
@@ -144,7 +144,7 @@ export default function WorkspacePanel({ authenticated, owner, repo, branch, onl
   }
   function toggleFolder(path){setFavoriteFolders(current=>current.includes(path)?current.filter(x=>x!==path):[...current.slice(-5),path]);}
 
-  return <><ConfirmationDialog request={confirmRequest} onAnswer={answerConfirmation}/><article className="panel workspace-panel" data-mobile-view="repositories" aria-label="Repository Workspace">
+  return <><ConfirmationDialog request={confirmRequest} onAnswer={answerConfirmation}/><article className="panel workspace-panel" data-mobile-view={hostView} aria-label="Repository Workspace">
     <div className="workspace-heading"><div><span className="mini-label">ZIPVERRA / WORKSPACE</span><h2>Repository Explorer</h2><p>{owner}/{repo} · <code>{branch}</code></p></div><button type="button" className="button secondary workspace-back" disabled={working||busy} onClick={async()=>{if(await mayDiscard())onBack();}}>← Repos</button></div>
     <div className="workspace-intro">Duyệt source, xem code, chỉnh sửa và kiểm tra lịch sử file ngay trên điện thoại. ZIP Push vẫn là luồng chính.</div>
     {success && <div className="workspace-success" role="status"><strong>{success.kind==='verified'?'Nội dung đã được xác minh':'Commit thành công'}</strong><span>{success.path} · {shortenHash(success.sha)}</span>{success.url&&<a href={success.url} target="_blank" rel="noopener noreferrer">Mở commit GitHub ↗</a>}</div>}

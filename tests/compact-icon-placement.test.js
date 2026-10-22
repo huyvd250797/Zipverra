@@ -13,12 +13,11 @@ test('connected check belongs before version only in the top bar', () => {
   assert.doesNotMatch(header, /<span className="live-dot"/);
 });
 
-test('Repository heading contains one icon-only Refresh and one shared contextual Help', () => {
+test('Upload heading retains contextual Help without obsolete Repos refresh', () => {
   const page = read('app/page.jsx');
   const ui = read('app/components/ProfessionalUI.jsx');
-  assert.match(page, /repoTools=\{activeTab === 'repositories' && auth\.authenticated \? <button/);
-  assert.match(page, /className=\{`repo-refresh-icon/);
-  assert.match(page, /aria-label="Khởi động lại ứng dụng, bỏ các lựa chọn và tải lại danh sách repository"/);
+  assert.match(page, /<UXViewIntro activeTab=\{activeTab\}/);
+  assert.doesNotMatch(page, /desktop-context-refresh/);
   assert.equal((ui.match(/<ContextualHelp tab=/g) || []).length, 1);
   assert.match(ui, /<ContextualHelp tab=\{activeTab\}\/>/);
 });

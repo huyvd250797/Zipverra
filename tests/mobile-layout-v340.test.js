@@ -9,28 +9,29 @@ const page=read('app/page.jsx');
 const hub=read('app/components/PolishedWorkspace.jsx');
 const css=read('app/styles/mobile-layout-v340.css');
 
-test('v3.9.8 ships its mobile layout layer last and PWA version matches',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.8');
+test('v3.9.9 ships its mobile layout layer last and PWA version matches',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.9');
   const layout=read('app/layout.jsx');
   assert.match(layout,/import '\.\/styles\/mobile-layout-v340\.css'/);
   assert.ok(layout.indexOf('unified-components-v330.css')<layout.indexOf('mobile-layout-v340.css'));
-  assert.match(read('lib/pwa-reliability.js'),/APP_VERSION = '3\.9\.8'/);
+  assert.match(read('lib/pwa-reliability.js'),/APP_VERSION = '3\.9\.9'/);
   for(const name of ['icon-192.png','icon-512.png','apple-touch-icon.png'])assert.ok(existsSync(join(root,'public',name)),name);
 });
-test('Repos uses one authorized repo and branch hub, not duplicated pickers',()=>{
-  assert.equal((page.match(/<WorkspaceLaunchpad/g)||[]).length,1);
+test('Upload provides the only repository and branch pickers',()=>{
+  assert.equal((page.match(/<WorkspaceLaunchpad/g)||[]).length,0);
   assert.doesNotMatch(page,/className="zip-workflow-picker"/);
-  assert.match(page,/onChooseRepo=\{\(\) => setRepoSheetOpen\(true\)\}/);
-  assert.match(page,/onChooseBranch=\{\(\) => setBranchSheetOpen\(true\)\}/);
+  assert.match(page,/className="zip392-target-repo"/);
+  assert.match(page,/className="zip392-target-branch"/);
   assert.match(hub,/aria-label=\{selected \? `Thay đổi repository/);
   assert.match(hub,/className="zip-hub-branch"/);
   assert.match(hub,/disabled=\{!selected \|\| disabled\}/);
   assert.match(page,/RepositoryPickerSheet/);
   assert.match(read('app/components/RepositoryWorkflowSheets.jsx'),/repositoryQuickPicks/);
 });
-test('Repos owns a single persistent Source ZIP Download, separate from Upload',()=>{
+test('Download Source ZIP appears in Upload only with selected repo and before ZIP picker',()=>{
   assert.equal((page.match(/<SourceZipDownload\b/g)||[]).length,1);
-  assert.match(page,/className="panel repository-panel"[\s\S]*?<SourceZipDownload/);
+  assert.match(page,/\{chosenRepo && !preview && <SourceZipDownload/);
+  assert.ok(page.indexOf('<SourceZipDownload') < page.indexOf('<QuickActions'));
   assert.match(page,/panel upload-panel\$\{preview \? ' zip392-reviewed'/);
   assert.doesNotMatch(page,/className="zip-missing-repo"/);
   assert.match(page,/className=\{`drop-zone/);
@@ -41,11 +42,11 @@ test('Upload preserves reviewed diff, critical security, Sync and explicit commi
   assert.match(page,/data-mobile-view="activity"/);
   assert.match(page,/onClick=\{startNextVersion\}/);
 });
-test('Activity stays ahead of recovery log; all five tabs and modal scroll locks survive',()=>{
+test('Activity stays ahead of recovery log; all four tabs and modal scroll locks survive',()=>{
   assert.ok(page.indexOf('id="activity-live-flow"')<page.indexOf('<RecoveryCenter'));
   assert.ok(page.indexOf('<RecoveryCenter')<page.indexOf('<ActivityJournal'));
   const base=read('lib/mobile-ui.js');
-  for(const name of ['home','repositories','activity','history','settings'])assert.ok(base.includes(`'${name}'`));
+  for(const name of ['home','activity','history','settings'])assert.ok(base.includes(`'${name}'`));
   const overlay=read('app/components/ModalSheet.jsx');
   assert.match(overlay,/lockModalScroll/);
   assert.match(css,/safe-area-inset-bottom/);

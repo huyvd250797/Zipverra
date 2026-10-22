@@ -4,7 +4,7 @@ import { MOBILE_TABS, CHANGE_FILTERS, filterChanges, updateRecentRepositories, g
 
 const changes = [{ path:'a',kind:'add' }, { path:'b',kind:'modify' }, { path:'c',kind:'delete' }];
 test('all four mobile tabs are independent from mutations', () => {
-  assert.deepEqual(MOBILE_TABS, ['home','repositories','activity','history','settings']);
+  assert.deepEqual(MOBILE_TABS, ['home','activity','history','settings']);
 });
 test('diff filtering never changes the source array', () => {
   assert.deepEqual(CHANGE_FILTERS, ['all','add','modify','delete']);

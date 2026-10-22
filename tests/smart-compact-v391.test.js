@@ -7,11 +7,11 @@ const page = read('app/page.jsx');
 const css = read('app/styles/smart-compact-v391.css');
 const layout = read('app/layout.jsx');
 
-test('v3.9.8 package, runtime and PWA cache are aligned', () => {
-  assert.equal(APP_VERSION, '3.9.8');
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.8');
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.8/);
-  assert.match(page,/Zipverra · v3\.9\.8/);
+test('v3.9.9 package, runtime and PWA cache are aligned', () => {
+  assert.equal(APP_VERSION, '3.9.9');
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.9');
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.9/);
+  assert.match(page,/Zipverra · v3\.9\.9/);
 });
 test('Smart Compact CSS loads after desktop, archive, modal and mobile layers', () => {
   for(const previous of ['mobile-layout-v340.css','modal-motion-v360.css','large-archive-v389.css','desktop-workspace-v390.css']){
@@ -30,8 +30,8 @@ test('desktop stages trigger existing navigation and file picker, respecting gua
   assert.match(page, /desktop-session-step[^\n]*disabled=\{!preview \|\| busy\} onClick=\{goToReview\}/);
   assert.match(page, /onClick=\{\(\) => setRepoSheetOpen\(true\)\}/);
 });
-test('desktop preserves repository refresh and one visible contextual help per breakpoint', () => {
-  assert.match(page,/className="repo-refresh-icon desktop-context-refresh" onClick=\{restartWorkspace\}/);
+test('desktop preserves a single contextual Help per breakpoint', () => {
+  assert.doesNotMatch(page,/repo-refresh-icon desktop-context-refresh/);
   assert.equal((page.match(/<ContextualHelp tab=/g) || []).length,1);
   assert.match(css,/\.desktop-header-help \{display:none\}/);
   assert.match(css,/@media \(min-width:761px\)[\s\S]*\.desktop-header-help \{display:flex/);
