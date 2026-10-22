@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.9.9",
+  "version": "3.9.10",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.9.9 — Upload Hub & Source ZIP: four-tab navigation, in-place download to Files, retained GitHub safeguards",
+  "description": "Zipverra Pro v3.9.10 — Directional Tab Transitions: horizontal navigation, synchronized Activity slide after Push and reduced-motion support",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

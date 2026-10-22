@@ -1,3 +1,10 @@
+# v3.9.10 — Directional Tab Transitions
+
+- Replaced exit-to-black/fade tab animation with horizontal screen slide driven by four-tab navigation order.
+- Reused directional navigation when Push opens Activity, with real simultaneous snapshots on supported browsers.
+- Retained fixed navigation chrome, accessibility focus, scroll-to-top behavior and Reduced Motion fallback.
+- No GitHub API, authorization, ZIP parsing, upload, PR, security or recovery logic changed.
+
 # v3.9.9 — Upload Hub & Source ZIP
 
 - Removed Repos navigation on mobile and PC; four-tab workflow.

@@ -1,3 +1,15 @@
+# Zipverra Pro v3.9.10 — Directional Tab Transitions
+
+**Current release:** [RELEASE_V3910.md](RELEASE_V3910.md) · **QA:** [QA_CHECKLIST_V3910.md](QA_CHECKLIST_V3910.md). Previous: [RELEASE_V399.md](RELEASE_V399.md).
+
+- Tab order **Upload → Activity → History → Settings** now determines slide direction automatically. Moving right slides the current screen left and brings the new screen in from the right; moving left reverses direction.
+- When **Commit & Push** starts, the interface transitions horizontally to **Activity**, using the same tab-navigation animation. GitHub commit and recovery safeguards are unchanged.
+- Native View Transitions animate both screens concurrently when supported; fallback navigates immediately with a short directional entrance, never the former black fade. Reduced Motion disables horizontal movement.
+- Bottom taskbar, desktop navigation and fixed app chrome remain stable. Transition duration is about 240 ms, with no 175 ms delay before changing tabs.
+
+**Deploy:** Place the **contents** of `Zipverra-v3.9.10/` at repository root. Run `npm install`, `npm test`, `npm run build`, and check Vercel Preview and Safari/PWA before production.
+
+---
 # Zipverra Pro v3.9.9 — Upload Hub & Source ZIP
 
 **Current release:** [RELEASE_V399.md](RELEASE_V399.md) · **QA:** [QA_CHECKLIST_V399.md](QA_CHECKLIST_V399.md). Previous: [RELEASE_V398.md](RELEASE_V398.md).

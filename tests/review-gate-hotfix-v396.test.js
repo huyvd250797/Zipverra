@@ -8,10 +8,10 @@ const read = file => readFileSync(new URL(`../${file}`, import.meta.url),'utf8')
 const page = read('app/page.jsx');
 const css = read('app/styles/review-gate-hotfix-v396.css');
 
-test('v3.9.9 version and latest styles are synchronized', () => {
-  assert.equal(APP_VERSION,'3.9.9');
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.9');
-  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.9/);
+test('v3.9.10 version and latest styles are synchronized', () => {
+  assert.equal(APP_VERSION,'3.9.10');
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.10');
+  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.10/);
   const layout=read('app/layout.jsx');
   assert.ok(layout.indexOf('zero-scroll-v395.css') < layout.indexOf('review-gate-hotfix-v396.css'));
 });

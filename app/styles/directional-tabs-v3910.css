@@ -1,0 +1,68 @@
+/* Zipverra Pro v3.9.10 — directional tab transitions.
+   Navigation is never delayed. Browser-supported View Transitions show both
+   screens together; the permanent navigation/header never slides or darkens. */
+:root { --zip410-tab-duration:240ms; --zip410-tab-ease:cubic-bezier(.22,.75,.25,1); }
+
+/* Keep the permanent shell (logo, account state, bottom navigation, rail)
+   outside the named snapshot. Only the tab's work area slides. */
+@supports (view-transition-name: zipverra-tab) {
+  .pro-shell #zipverra-main { view-transition-name:zipverra-tab; }
+  .pro-shell .pro-view-intro { view-transition-name:zipverra-intro; }
+}
+
+/* The previous UI contained a delayed fade-out + fade-in. Suppress every
+   inherited per-panel/heading route animation while the horizontal switch
+   takes place. Dialog and progress animations are intentionally untouched. */
+html.zip410-switching .pro-shell .pro-view-intro,
+html.zip410-switching .pro-shell main .content-grid [data-mobile-view] {
+  animation:none!important;
+}
+
+@keyframes zip410-old-forward { to { transform:translate3d(-100%,0,0); } }
+@keyframes zip410-new-forward { from { transform:translate3d(100%,0,0); } }
+@keyframes zip410-old-backward { to { transform:translate3d(100%,0,0); } }
+@keyframes zip410-new-backward { from { transform:translate3d(-100%,0,0); } }
+
+/* Native browser snapshots contain the outgoing and incoming view at the
+   same time. Never fade either snapshot or animate the root chrome. */
+html.zip410-switching::view-transition-old(root),
+html.zip410-switching::view-transition-new(root) {
+  animation:none!important;
+  mix-blend-mode:normal;
+}
+html.zip410-switching::view-transition-group(zipverra-tab),
+html.zip410-switching::view-transition-group(zipverra-intro) {
+  animation-duration:var(--zip410-tab-duration);
+  animation-timing-function:var(--zip410-tab-ease);
+}
+html[data-zip-tab-direction="forward"]::view-transition-old(zipverra-tab),
+html[data-zip-tab-direction="forward"]::view-transition-old(zipverra-intro) {
+  animation:zip410-old-forward var(--zip410-tab-duration) var(--zip410-tab-ease) both!important;
+}
+html[data-zip-tab-direction="forward"]::view-transition-new(zipverra-tab),
+html[data-zip-tab-direction="forward"]::view-transition-new(zipverra-intro) {
+  animation:zip410-new-forward var(--zip410-tab-duration) var(--zip410-tab-ease) both!important;
+}
+html[data-zip-tab-direction="backward"]::view-transition-old(zipverra-tab),
+html[data-zip-tab-direction="backward"]::view-transition-old(zipverra-intro) {
+  animation:zip410-old-backward var(--zip410-tab-duration) var(--zip410-tab-ease) both!important;
+}
+html[data-zip-tab-direction="backward"]::view-transition-new(zipverra-tab),
+html[data-zip-tab-direction="backward"]::view-transition-new(zipverra-intro) {
+  animation:zip410-new-backward var(--zip410-tab-duration) var(--zip410-tab-ease) both!important;
+}
+
+/* Progressive fallback if the browser lacks native View Transitions.
+   No old screen fade, black frame, or 175ms state-change delay. */
+@keyframes zip410-fallback-forward { from {transform:translate3d(32px,0,0)} to {transform:translate3d(0,0,0)} }
+@keyframes zip410-fallback-backward { from {transform:translate3d(-32px,0,0)} to {transform:translate3d(0,0,0)} }
+html.zip410-fallback[data-zip-tab-direction="forward"] .pro-shell #zipverra-main {animation:zip410-fallback-forward 210ms var(--zip410-tab-ease) both!important;}
+html.zip410-fallback[data-zip-tab-direction="backward"] .pro-shell #zipverra-main {animation:zip410-fallback-backward 210ms var(--zip410-tab-ease) both!important;}
+
+@media (prefers-reduced-motion:reduce) {
+  .pro-shell #zipverra-main, .pro-shell .pro-view-intro {view-transition-name:none!important;}
+  html.zip410-switching::view-transition-old(root),html.zip410-switching::view-transition-new(root),
+  html.zip410-switching::view-transition-old(zipverra-tab),html.zip410-switching::view-transition-new(zipverra-tab),
+  html.zip410-switching::view-transition-old(zipverra-intro),html.zip410-switching::view-transition-new(zipverra-intro) {animation:none!important;}
+  html.zip410-fallback .pro-shell #zipverra-main {animation:none!important;}
+}

@@ -11,7 +11,7 @@ const MiB=1024*1024;
 const SH='a'.repeat(40);
 const encodeProof=(exp)=>Buffer.from(JSON.stringify({v:1,exp})).toString('base64url')+'.signature';
 
-test('v3.9.9 capacity profiles are explicit, bounded, and non-persistent',()=>{
+test('v3.9.10 capacity profiles are explicit, bounded, and non-persistent',()=>{
   assert.deepEqual(archiveCapacity('standard'),{zipBytes:120*MiB,unpackedBytes:240*MiB});
   assert.deepEqual(archiveCapacity('extended'),{zipBytes:200*MiB,unpackedBytes:400*MiB});
   assert.equal(LIMITS.zipBytes,120*MiB);
