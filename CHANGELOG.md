@@ -1,3 +1,12 @@
+# v3.9.14 — Desktop Studio Redesign
+
+- Redesigned desktop-only workflow, without touching mobile layout.
+- Organized Upload as a two-zone studio: ZIP/source tools and Quick Repository Access.
+- Replaced the empty dual-panel desktop state with a purposeful single-stage Upload.
+- After analyzing the ZIP, display Review with a separate, non-overlaying confirmation panel.
+- Removed the desktop opacity exit wait on tab changes, preserved mobile behavior.
+- Kept verified Push ranking and all GitHub API contracts unchanged.
+
 # v3.9.13 — Desktop Focused Upload & Verified Repo Ranking
 
 - Based on v3.9.9; no directional tab animations from v3.9.10–v3.9.12.

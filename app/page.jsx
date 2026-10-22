@@ -300,7 +300,7 @@ export default function Home() {
     setRepoSheetOpen(false); setBranchSheetOpen(false);
     if (tab !== activeTab) { diffRequestRef.current += 1; setDiffViewer(null); }
     window.clearTimeout(viewTimerRef.current);
-    if (tab !== activeTab && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+    if (tab !== activeTab && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches && !window.matchMedia?.('(min-width: 761px)').matches) {
       setViewExiting(true);
       viewTimerRef.current = window.setTimeout(() => { setActiveTab(tab); setViewExiting(false); }, 175);
     } else { setActiveTab(tab); setViewExiting(false); }
@@ -1130,7 +1130,7 @@ export default function Home() {
         <span className="desktop-rail-label">GITHUB ACCOUNT</span>
         <strong>{auth.user?.login ? `@${auth.user.login}` : 'Chưa đăng nhập'}</strong>
         <span className="desktop-rail-branch"><Icon name="branch" size={14}/>{chosenRepo ? `${repo} · ${branch}` : 'Chọn repository để bắt đầu'}</span>
-        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.13</span>
+        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.14</span>
       </div>
     </aside>
     <header className="topbar" role="banner">
@@ -1139,12 +1139,23 @@ export default function Home() {
       <div className="header-actions"><span className="desktop-header-help">
         
         <ContextualHelp tab={activeTab}/>
-      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.13</span></div>
+      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.14</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} />
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
     {activeTab !== 'activity' && (error || busy) && <button type="button" className={`mobile-global-status ${error ? 'has-error' : ''}`} onClick={() => goToTab('activity')}><span>{error ? `Cần kiểm tra: ${error}` : `${status || 'Đang xử lý...'} · ${progress}%`}</span><Icon name="arrow" size={17}/></button>}
     <main id="zipverra-main" tabIndex={-1} aria-labelledby="zipverra-current-view" data-active-view={activeTab} data-review-ready={Boolean(preview && activeTab === 'home') ? 'true' : 'false'} data-zip-stage={preview ? 'review' : 'upload'} className={viewExiting ? 'zip-view-exiting' : ''}>
+      {activeTab === 'home' && <div className="zip3914-desktop-stage" aria-label="Tiến trình cập nhật source">
+        <div className="zip3914-desktop-stage-copy">
+          <span className="zip3914-stage-eyebrow">GITHUB / SOURCE MANAGEMENT</span>
+          <h1>{preview ? 'Kiểm tra bản cập nhật' : 'Cập nhật source'}</h1>
+          <p>{preview ? 'Xác nhận các thay đổi trước khi ghi lên GitHub.' : 'Chọn repository và tải ZIP lên để phân tích.'}</p>
+        </div>
+        <span className={`zip3914-stage-status${preview ? ' is-review' : ''}`}>
+          <span className="zip3914-stage-status-dot" aria-hidden="true"/>
+          {preview ? '02 / REVIEW' : '01 / UPLOAD'}
+        </span>
+      </div>}
       {/* Desktop session summary keeps the destination visible without repeated long cards. */}
       <section className="desktop-session-bar" data-has-repo={chosenRepo ? 'true' : 'false'} aria-label="Thanh ngữ cảnh phiên làm việc">
         <div className="desktop-session-location">
@@ -1175,6 +1186,7 @@ export default function Home() {
         <div className="form-column">
           <article className={`panel upload-panel${preview ? ' zip392-reviewed' : ''}`} data-mobile-view="home">
             <StepTitle n="02" title="Upload ZIP" desc=""/>
+            <div className="zip3914-upload-section-title" aria-hidden="true"><span>01</span><div><strong>Gói source ZIP</strong><small>Chọn ZIP mới hoặc tải source hiện tại</small></div></div>
             {!auth.loading && !auth.authenticated && <a className="button primary full zip392-login" href="/api/auth/login"><Icon name="github" size={17}/> Kết nối GitHub để chọn repository</a>}
             <div className="zip392-target-switch" role="group" aria-label="Đích cập nhật source">
               <button type="button" className="zip392-target-repo" disabled={!auth.authenticated || busy || Boolean(pendingCommit || pendingPR)} onClick={() => setRepoSheetOpen(true)} title="Chọn hoặc đổi repository">
@@ -1195,6 +1207,7 @@ export default function Home() {
               <div className="zip392-source-copy"><Icon name="file" size={16}/><span title={file?.name || ''}><strong>{file?.name}</strong><small>{prettyBytes(file?.size || 0)} · {selectedChanges.length} thay đổi</small></span></div>
               <button type="button" className="zip392-replace-zip" disabled={busy || Boolean(pendingCommit || pendingPR)} onClick={() => fileInput.current?.click()} aria-label="Chọn ZIP khác">Thay ZIP</button>
             </div>}
+            {auth.authenticated && !chosenRepo && <button type="button" className="zip3914-desktop-choose-repo" disabled={busy || Boolean(pendingCommit || pendingPR)} onClick={() => setRepoSheetOpen(true)}><Icon name="branch" size={20}/><span>Chọn repository để bắt đầu</span><Icon name="arrow" size={17}/></button>}
             <input ref={fileInput} id="file" className="visually-hidden" type="file" accept=".zip,application/zip,application/x-zip-compressed" disabled={busy || !chosenRepo} onChange={(e) => chooseFile(e.target.files?.[0])}/>
             <label htmlFor={chosenRepo ? 'file' : undefined} className={`drop-zone ${file ? 'picked' : ''} ${!chosenRepo ? 'locked' : ''}`}><span className="file-symbol"><Icon name={file ? 'file' : 'upload'} size={25}/></span><strong>{file ? file.name : chosenRepo ? 'Chọn ZIP' : 'Chọn repository'}</strong>{file && <small>{prettyBytes(file.size)}</small>}</label>
             {file && <div className="file-detail"><Icon name="check" size={15}/> {busy && phase === PUSH_STAGES.ANALYZING ? 'Đang phân tích...' : preview ? 'Review sẵn sàng' : 'Đã chọn ZIP'} · <strong>{commitMessage}</strong></div>}
@@ -1360,7 +1373,7 @@ export default function Home() {
                 {workspaceOpen && <WorkspacePanel hostView="settings" key={`${owner}/${repo}@${branch}`} authenticated={auth.authenticated} owner={owner} repo={repo} branch={branch} online={online} busy={busy} onBack={() => {workspaceDirtyRef.current=false;setWorkspaceOpen(false);}} onDirtyChange={onWorkspaceDirtyChange} api={api} onCommit={(outcome)=>{reset();logLocalAction({kind:'quick-edit',state:'success',repo:`${owner}/${repo}`,sha:outcome?.sha,message:'Quick Edit saved'});}}/>}
               </div>
             </details>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.13</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.14</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -1371,7 +1384,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.9.13</span><span>GitHub App · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.9.14</span><span>GitHub App · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <ModalSheet open={Boolean(preview && diffViewer && activeTab === 'home')} title={`Diff · ${diffViewer?.path || ''}`}
     onClose={() => { diffRequestRef.current += 1; setDiffViewer(null); }} variant="diff">

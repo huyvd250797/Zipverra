@@ -1,10 +1,10 @@
-# Zipverra Pro v3.9.13 — Desktop Focused Upload & Verified Repo Ranking
+# Zipverra Pro v3.9.14 — Desktop Studio Redesign
 
-**Bản hiện tại:** [RELEASE_V3913.md](RELEASE_V3913.md) · **Checklist:** [QA_CHECKLIST_V3913.md](QA_CHECKLIST_V3913.md) · **Baseline:** [RELEASE_V399.md](RELEASE_V399.md).
+**Bản hiện tại:** [RELEASE_V3914.md](RELEASE_V3914.md) · **Checklist:** [QA_CHECKLIST_V3914.md](QA_CHECKLIST_V3914.md) · **Baseline:** [RELEASE_V399.md](RELEASE_V399.md).
 
 Trên PC, Upload được trình bày riêng; sau khi phân tích ZIP sẽ chuyển sang Review & Push toàn chiều rộng, có nút **Đổi ZIP**. Giao diện mobile giữ nguyên từ v3.9.9. **Repo thường dùng** chỉ thay đổi thứ tự sau khi GitHub xác minh Commit Push thành công.
 
-**Triển khai:** Push **nội dung** thư mục `Zipverra-v3.9.13/` vào root repository; triển khai Vercel Preview và chạy `npm install`, `npm test`, `npm run build`. Không có các animation chuyển tab đã bị rollback ở v3.9.10–v3.9.12.
+**Triển khai:** Push **nội dung** thư mục `Zipverra-v3.9.14/` vào root repository; triển khai Vercel Preview và chạy `npm install`, `npm test`, `npm run build`. Không có các animation chuyển tab đã bị rollback ở v3.9.10–v3.9.12.
 
 ---
 
@@ -63,10 +63,12 @@ Trên PC, Upload được trình bày riêng; sau khi phân tích ZIP sẽ chuy�
 
 **Current release:** [RELEASE_V395.md](RELEASE_V395.md) · **Acceptance checklist:** [QA_CHECKLIST_V395.md](QA_CHECKLIST_V395.md). Previous release: [RELEASE_V394.md](RELEASE_V394.md).
 
+**Desktop redesign v3.9.14:** On desktop, Upload now uses a focused Git source workspace: project selector above, ZIP chooser on the left and frequently used repositories on the right. After analysis, a full-width Review replaces Upload; detailed changes scroll independently and a distinct consent/Push panel remains visible. Mobile layout is unchanged. GitHub APIs, security checks, Sync consents, branch checks, and verified-success repo ranking remain intact.
+
 **Standard:** 120 MiB ZIP / 240 MiB uncompressed. **Extended:** 200 MiB / 400 MiB, one-time consent per ZIP. The 2.5 MB/file, 2,500 source-file and GitHub branch safety constraints are unchanged. Browser Web Worker retains the compressed archive and returns only SHA/path/size/scan metadata. Bytes are read on demand and checksum validated before upload or Diff. Proof refresh is mandatory before Commit if evidence is expiring. Avoid backgrounding iPhone while working with large archives.
 
 
-### What's new in v3.9.13
+### What's new in v3.9.14
 
 - **Desktop staged workspace:** before ZIP analysis, show one centered Upload card. After analysis, hide Upload and display a full-width Review & Push workspace with a **Đổi ZIP** action. Mobile layout remains unchanged.
 - **Verified repo ranking:** selecting a repo, applying a profile or analyzing ZIP no longer changes shortcut order. Reorder only after a GitHub commit is verified; repeated verification of the same SHA is deduplicated.

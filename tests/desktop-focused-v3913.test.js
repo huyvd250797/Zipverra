@@ -9,11 +9,11 @@ const read = path => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'
 const page = read('app/page.jsx');
 const css = read('app/styles/desktop-focused-v3913.css');
 
-test('v3.9.13 metadata, public cache and desktop-only layer are aligned', () => {
-  assert.equal(APP_VERSION, '3.9.13');
+test('v3.9.14 metadata, public cache and desktop-only layer are aligned', () => {
+  assert.equal(APP_VERSION, '3.9.14');
   assert.equal(JSON.parse(read('package.json')).version, APP_VERSION);
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.13/);
-  assert.match(page, /Zipverra · v3\.9\.13/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.14/);
+  assert.match(page, /Zipverra · v3\.9\.14/);
   assert.ok(read('app/layout.jsx').indexOf('upload-hub-v399.css') < read('app/layout.jsx').indexOf('desktop-focused-v3913.css'));
 });
 test('desktop stage is based on a completed Preview, not just a selected archive', () => {
