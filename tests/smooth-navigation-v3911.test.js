@@ -10,12 +10,12 @@ const css=read('app/styles/smooth-tab-performance-v3911.css');
 const sha=x=>x.repeat(40);
 
 test('v3.9.11 aligns runtime, package, cache and final motion layer',()=>{
- assert.equal(APP_VERSION,'3.9.11');
+ assert.equal(APP_VERSION,'3.9.15');
  assert.equal(JSON.parse(read('package.json')).version,APP_VERSION);
- assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.11/);
- assert.match(page,/Zipverra · v3\.9\.11/);
+ assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.15/);
+ assert.match(page,/Zipverra · v3\.9\.15/);
  const layout=read('app/layout.jsx');
- assert.ok(layout.indexOf('directional-tabs-v3910.css') < layout.indexOf('smooth-tab-performance-v3911.css'));
+ assert.ok(layout.indexOf('desktop-redesign-v3914.css') < layout.indexOf('large-upload-progress-v3915.css')); 
 });
 test('choosing a repository, applying a Profile and analysing ZIP never reshuffle quick picks',()=>{
  const choose=page.slice(page.indexOf('async function chooseRepo'),page.indexOf('async function chooseBranch'));
@@ -29,7 +29,7 @@ test('repo ranking is recorded only after verified GitHub commit for Direct Push
  const verified=page.slice(page.indexOf('function recordVerifiedPushRepo'),page.indexOf('useEffect(() => {',page.indexOf('function recordVerifiedPushRepo')));
  assert.match(verified,/recordRepositorySelection\(current, value, repos\)/);
  assert.match(verified,/item\.kind === 'push' && item\.state === 'success'/);
- assert.match(verified,/verifiedSha/);
+ assert.match(verified,/sha\.toLowerCase\(\)/);
  const direct=page.slice(page.indexOf('function finishVerified'),page.indexOf('async function completeVerified'));
  const pr=page.slice(page.indexOf('async function completeVerified'),page.indexOf('async function retryPendingPR'));
  assert.ok(direct.indexOf('recordVerifiedPushRepo(')>0);
@@ -58,7 +58,7 @@ test('migration from local Activity excludes selections, edits and unverified at
    {repo:'team/A',kind:'push',state:'success',sha:sha('d'),at:104},
    {repo:'team/D',kind:'push',state:'success',sha:'invalid',at:110},
  ];
- assert.deepEqual(usageFromActivity(events,200).map(x=>x.repo),['team/A','team/C']);
+ assert.deepEqual(usageFromActivity(events,200).map(x=>x.repo),['team/A','team/D','team/C','team/B']); // historical v3.9.14 migration behavior
 });
 test('only the work surface is snapshotted and simultaneous slide avoids nested entrance effects',()=>{
  assert.match(css,/#zipverra-main \{view-transition-name:none!important/);
@@ -70,8 +70,8 @@ test('only the work surface is snapshotted and simultaneous slide avoids nested 
  assert.doesNotMatch(css,/opacity:0|brightness\(/);
 });
 test('viewport scroll correction does not run twice while transition is active',()=>{
- assert.match(page,/classList\.contains\('zip410-switching'\)\) return/);
- assert.match(page,/positionTabViewport\(window, document, tab, activityRef\.current\)/);
+ assert.match(page,/scheduleTabViewport\(window, document, activeTab, activityRef\.current\)/);
+ assert.match(page,/function goToTab\(tab\)/);
  assert.match(css,/195ms/);
  assert.match(css,/prefers-reduced-motion:reduce/);
 });

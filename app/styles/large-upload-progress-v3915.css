@@ -1,0 +1,21 @@
+/* Desktop-only activity surface: zero-scroll upload feedback without changing mobile UI. */
+.zip3915-progress{display:none}
+@media (min-width:761px){
+  .pro-shell main[data-active-view="home"] .zip3915-progress,
+  .pro-shell main[data-active-view="activity"] .zip3915-progress{
+    display:grid;gap:11px;min-width:0;border-radius:17px;padding:16px 19px;margin:0 0 14px;
+    color:var(--pro-text);background:var(--pro-surface-2);border:1px solid var(--pro-border-strong);
+  }
+  .zip3915-progress-head{display:flex;align-items:flex-start;gap:12px;min-width:0}
+  .zip3915-progress-icon{width:35px;height:35px;flex:0 0 35px;border-radius:11px;background:var(--pro-accent-surface);color:var(--pro-accent);display:grid;place-items:center;font-weight:780;font-size:18px}
+  .zip3915-progress-description{display:grid;gap:3px;min-width:0;flex:1}
+  .zip3915-progress-description strong{font-size:14px;line-height:1.35}
+  .zip3915-progress-description small{font-size:12px;line-height:1.55;color:var(--pro-muted);overflow-wrap:anywhere;max-height:2.9em;overflow:hidden}
+  .zip3915-progress-percent{font-variant-numeric:tabular-nums;font-size:20px;font-weight:790;color:var(--pro-accent);min-width:52px;text-align:right}
+  .zip3915-progress-track{height:8px;border-radius:999px;background:var(--pro-border);overflow:hidden}
+  .zip3915-progress-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,#239d95,#45d6aa);transition:width .18s linear;min-width:0}
+  .zip3915-progress-meta{display:flex;justify-content:space-between;gap:14px;font-size:11px;color:var(--pro-muted)}
+  .zip3915-progress.is-error{border-color:color-mix(in srgb,var(--pro-danger) 44%,var(--pro-border-strong))}
+  .zip3915-progress.is-error .zip3915-progress-icon{color:var(--pro-danger);background:color-mix(in srgb,var(--pro-danger) 10%,var(--pro-surface-2))}
+}
+@media (prefers-reduced-motion:reduce){.zip3915-progress-fill{transition:none!important}}

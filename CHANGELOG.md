@@ -1,3 +1,11 @@
+# v3.9.15 — Large File Upload & Desktop Progress UX
+
+- Max per-file ZIP source increased from 2.5MB to 20MiB with bounded security scan; direct API capped at 3MB.
+- Added private Vercel Blob client upload, server-side SHA/content scanning and HMAC ticket validation for larger GitHub blobs.
+- Added cleanup of temporary private uploads and cron for abandoned uploads when configured.
+- Added desktop workspace phase progress (%/files/stage/errors) without changing Mobile layout or existing GitHub Commit workflow.
+- Updated PWA cache to v3.9.15; no restored experimental tab transitions.
+
 # v3.9.14 — Desktop Studio Redesign
 
 - Redesigned desktop-only workflow, without touching mobile layout.

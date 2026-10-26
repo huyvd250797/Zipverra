@@ -8,11 +8,11 @@ const page=read('app/page.jsx');
 const actions=read('app/components/QuickActions.jsx');
 const risk=read('app/components/ReviewRiskCenter.jsx');
 
-test('v3.9.14 runtime, package, visible app version and PWA cache agree',()=>{
- assert.equal(APP_VERSION,'3.9.14');
+test('v3.9.15 runtime, package, visible app version and PWA cache agree',()=>{
+ assert.equal(APP_VERSION,'3.9.15');
  assert.equal(JSON.parse(read('package.json')).version,APP_VERSION);
- assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.14/);
- assert.match(page,/Zipverra · v3\.9\.14/);
+ assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.15/);
+ assert.match(page,/Zipverra · v3\.9\.15/);
 });
 test('opening the application cannot automatically restore a repository',()=>{
  for(const needle of ['quickRestoreEnabled','autoRestoredAccountRef','lastAuthorizedRepo','QUICK_RESTORE_KEY','setQuickRestorePreference']) assert.ok(!page.includes(needle), needle);
@@ -37,7 +37,7 @@ test('advanced capacity limits remain accessible without occupying the normal Up
  const s=page.slice(page.indexOf('<details className="workflow-options">'),page.indexOf('</details>',page.indexOf('<details className="workflow-options">')));
  assert.match(s,/className="limits"/);
  assert.match(s,/120 MiB ZIP \/ 240 MiB giải nén/);
- assert.match(s,/2\.500 file · 2,5 MB\/file/);
+ assert.match(s,/2\.500 file · 20 MiB\/file/);
 });
 test('normal operation copy is shorter but security and Sync warnings still carry meaning',()=>{
  assert.match(page,/Sync có thể xóa file trên GitHub/);

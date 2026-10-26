@@ -99,7 +99,7 @@ test('GitHub error reports exact failed stage', async () => {
 });
 
 test('blob rejects oversized base64 and accepts an empty file', async () => {
-  await assert.rejects(() => createBlob('TOKEN', 'a', 'b', 'A'.repeat(3_400_001)), /quá lớn/);
+  await assert.rejects(() => createBlob('TOKEN', 'a', 'b', 'A'.repeat(Math.ceil(20 * 1024 * 1024 / 3) * 4 + 5)), /quá lớn/);
   const old = globalThis.fetch;
   let body;
   globalThis.fetch = async (_url, opts) => { body = JSON.parse(opts.body); return mockResponse(201, { sha: SHA }); };

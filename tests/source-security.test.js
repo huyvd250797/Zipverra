@@ -48,7 +48,7 @@ test('scan includes sensitive names and config, survives binary safely, bounded 
  assert.ok(!issueCodes(contents('.env.example','PORT=123')).includes('SENSITIVE_PATH'));
  assert.ok(issueCodes(contents('package.json','{}')).includes('CONFIG_CHANGE'));
  assert.ok(issueCodes(scanSourceFile('public/logo.png',new Uint8Array([0,3,4]))).includes('BINARY_NOT_SCANNED'));
- assert.throws(()=>scanSourceFile(FILE,new Uint8Array(2_500_001)),/giới hạn/);
+ assert.throws(()=>scanSourceFile(FILE,new Uint8Array(20*1024*1024+1)),/giới hạn/);
 });
 
 test('scan only selected changed source; excluding a Critical file unblocks commit review',()=>{
@@ -141,7 +141,7 @@ test('new UI displays redacted security report and gates BOTH direct push and Pu
 });
 
 
-test('v3.9.14 sensitive file ZIP consent allows .npmrc but never unsafe ZIP traversal', async()=>{
+test('v3.9.15 sensitive file ZIP consent allows .npmrc but never unsafe ZIP traversal', async()=>{
   const { assertSafeContentPath } = await import('../lib/paths.js');
   const { calculateChanges } = await import('../lib/operations.js');
   const { assertVerificationPayload } = await import('../lib/verification.js');
@@ -168,20 +168,20 @@ test('v3.9.14 sensitive file ZIP consent allows .npmrc but never unsafe ZIP trav
 });
 
 
-test('v3.9.14 Sync can delete stale secret file without granting upload consent', async()=>{
+test('v3.9.15 Sync can delete stale secret file without granting upload consent', async()=>{
   const { assertVerificationPayload }=await import('../lib/verification.js');
   const deletion={owner:OWNER,repo:REPO,branch:'main',expectedHead:'b'.repeat(40),message:'remove stale credentials',entries:[{path:'.npmrc',sha:null,mode:'100644'}]};
   assert.doesNotThrow(()=>assertVerificationPayload(deletion));
   assert.equal(assertSecureCommitEntries(deletion,ID,ENV),true);
 });
 
-test('v3.9.14 sensitive user decision is explicit, ephemeral and required on both upload and commit',()=>{
+test('v3.9.15 sensitive user decision is explicit, ephemeral and required on both upload and commit',()=>{
  const page=readFileSync(new URL('../app/page.jsx',import.meta.url),'utf8');
  assert.match(page,/setSensitiveConsent\(false\); setSecurityDialogOpen\(false\)/);
  assert.match(page,/const sensitiveWarning=needsSensitiveConsent\(selectedReport\.findings\);\s*setSecurityDialogOpen\(sensitiveWarning\)/);
  assert.match(page,/Có, tôi hiểu rủi ro · Tiếp tục/);
  assert.match(page,/Không, kiểm tra lại/);
- assert.match(page,/allowSensitiveUpload: requiresConsent && sensitiveConsent/);
+ assert.match(page,/allowSensitiveUpload:\s*requiresConsent && sensitiveConsent/);
  assert.match(page,/allowSensitiveCommit: requiresConsent && sensitiveConsent/);
  assert.match(page,/requiresConsent && !sensitiveConsent/);
  assert.match(page,/Ẩn Diff cho file nghi ngờ chứa thông tin bí mật/);

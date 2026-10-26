@@ -9,12 +9,12 @@ const page=read('app/page.jsx');
 const css=read('app/styles/directional-tabs-v3910.css');
 
 test('v3.9.11 PWA cache, React UI and CSS layer are synchronized',()=>{
-  assert.equal(APP_VERSION,'3.9.11');
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.11');
-  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.11/);
-  assert.match(page,/Zipverra · v3\.9\.11/);
+  assert.equal(APP_VERSION,'3.9.15');
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.15');
+  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.15/);
+  assert.match(page,/Zipverra · v3\.9\.15/);
   const layout=read('app/layout.jsx');
-  assert.ok(layout.indexOf('upload-hub-v399.css')<layout.indexOf('directional-tabs-v3910.css'));
+  assert.ok(layout.indexOf('upload-hub-v399.css')<layout.indexOf('large-upload-progress-v3915.css'));
 });
 test('tab order matches four navigation destinations',()=>{
   assert.deepEqual([...TAB_ORDER],MOBILE_TABS);
@@ -43,14 +43,11 @@ test('both old and new views animate concurrently in opposite directions without
   assert.doesNotMatch(css,/opacity\s*:\s*0/);
   assert.match(css,/240ms/);
 });
-test('navigator switches immediately without the legacy 175ms fade delay',()=>{
-  assert.match(page,/flushSync\(\(\) => setActiveTab\(tab\)\)/);
-  assert.match(page,/document\.startViewTransition\(commitTab\)/);
-  assert.match(page,/positionTabViewport\(window, document, tab, activityRef\.current\)/);
-  assert.doesNotMatch(page,/setViewExiting/);
-  assert.doesNotMatch(page,/175\)/);
-  assert.match(page,/skipTransition\?\.\(\)/);
-  assert.match(page,/transitionId !== viewTransitionIdRef\.current/);
+test('rollback baseline uses the stable four-tab navigation without importing experimental motion',()=>{
+  assert.match(page,/function goToTab\(tab\)/);
+  assert.match(page,/setActiveTab\(tab\)/);
+  assert.match(page,/scheduleTabViewport\(window, document, activeTab, activityRef\.current\)/);
+  assert.doesNotMatch(read('app/layout.jsx'),/import '\.\/styles\/directional-tabs-v3910\.css'/);
 });
 test('Push still enters Activity and retains all server mutation safeguards',()=>{
   const start=page.indexOf('async function push()');
@@ -69,9 +66,9 @@ test('fallback is horizontal, has no dark-screen pause and supports reduced moti
   assert.doesNotMatch(css,/background\s*:\s*#000/);
 });
 
-test('Push waits for the iOS decision sheet exit before Activity slide',()=>{
+test('Push closes the consent sheet before entering Activity after explicit confirmation',()=>{
   const push=page.slice(page.indexOf('async function push()'),page.indexOf('return <>',page.indexOf('async function push()')));
-  assert.ok(push.includes("document.querySelector('dialog.zip-modal--sheet[open]')"));
-  assert.ok(push.includes("closingSheet.addEventListener('close', settled"));
-  assert.ok(push.indexOf('await new Promise(resolve =>') < push.indexOf("goToTab('activity')"));
+  assert.match(push,/setDecisionSheetOpen\(false\)/);
+  assert.match(push,/goToTab\('activity'\)/);
+  assert.match(push,/!canSubmitPush/);
 });

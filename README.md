@@ -1,3 +1,13 @@
+# Zipverra Pro v3.9.15 — Large File Upload & Desktop Progress UX
+
+**Bản hiện tại:** [RELEASE_V3915.md](RELEASE_V3915.md) · **Checklist:** [QA_CHECKLIST_V3915.md](QA_CHECKLIST_V3915.md) · **Bản trước:** [RELEASE_V3914.md](RELEASE_V3914.md).
+
+**Giới hạn:** 120/200 MiB ZIP, tối đa 20 MiB/file. File lớn hơn 3 MB yêu cầu kết nối **Private Vercel Blob** (xem release notes); file <=3 MB không cần cấu hình thêm. Trên PC, tiến trình phân tích/Push hiển thị trạng thái và % ngay trong workspace. Giao diện mobile giữ nguyên.
+
+**Triển khai:** Push nội dung thư mục `Zipverra-v3.9.15/` lên root repository, cài `@vercel/blob` bằng `npm install`, kiểm tra `npm test` và `npm run build` trên Vercel Preview. Chưa coi là Production Stable trước khi kiểm thử GitHub/Vercel Blob thực tế.
+
+---
+
 # Zipverra Pro v3.9.14 — Desktop Studio Redesign
 
 **Bản hiện tại:** [RELEASE_V3914.md](RELEASE_V3914.md) · **Checklist:** [QA_CHECKLIST_V3914.md](QA_CHECKLIST_V3914.md) · **Baseline:** [RELEASE_V399.md](RELEASE_V399.md).

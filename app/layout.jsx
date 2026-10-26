@@ -33,6 +33,7 @@ import './styles/minimal-interface-v398.css';
 import './styles/upload-hub-v399.css';
 import './styles/desktop-focused-v3913.css';
 import './styles/desktop-redesign-v3914.css';
+import './styles/large-upload-progress-v3915.css';
 
 export const metadata = {
   title: 'Zipverra Pro — GitHub Workspace',

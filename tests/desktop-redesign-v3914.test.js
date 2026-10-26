@@ -7,11 +7,11 @@ const page=read('app/page.jsx');
 const css=read('app/styles/desktop-redesign-v3914.css');
 const layout=read('app/layout.jsx');
 
-test('v3.9.14 runtime, PWA, package and desktop stylesheet are aligned',()=>{
-  assert.equal(APP_VERSION,'3.9.14');
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.14');
-  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.14/);
-  assert.match(page,/Zipverra · v3\.9\.14/);
+test('v3.9.15 runtime, PWA, package and desktop stylesheet are aligned',()=>{
+  assert.equal(APP_VERSION,'3.9.15');
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.15');
+  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.15/);
+  assert.match(page,/Zipverra · v3\.9\.15/);
   assert.ok(layout.indexOf('desktop-focused-v3913.css') < layout.indexOf('desktop-redesign-v3914.css'));
 });
 test('desktop redesign is breakpoint-scoped and never changes mobile presentation rules',()=>{

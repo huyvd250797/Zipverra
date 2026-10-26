@@ -17,7 +17,7 @@ test('v1.7 ZIP total expanded while each Git blob remains under Vercel request l
   assert.equal(LIMITS.unpackedBytes, 240 * 1024 * 1024);
   assert.equal(LIMITS.fileCount, 2500);
   assert.equal(LIMITS.archiveMembers, 10000);
-  assert.equal(LIMITS.fileBytes, 2_500_000);
+  assert.equal(LIMITS.fileBytes, 20*1024*1024);
   assert.equal(LIMITS.commitEntries, 2500);
 });
 
@@ -106,7 +106,7 @@ test('Web Worker error does not silently fall back and mask a corrupt archive', 
 test('workflow is repo → ZIP → analysis → confirmation → auto Activity; App Access in Settings', () => {
   const page=readFileSync(new URL('../app/page.jsx',import.meta.url),'utf8');
   const css=readFileSync(new URL('../app/globals.css',import.meta.url),'utf8');
-  assert.match(page,/useState\('home'\)/); // v3.9.14 opens directly in Upload; GitHub login is still explicit
+  assert.match(page,/useState\('home'\)/); // v3.9.15 opens directly in Upload; GitHub login is still explicit
   assert.match(page,/goToTab\('home'\)/);
   assert.match(page,/goToTab\('activity'\)/);
   assert.match(page,/openArchiveOffThread/);

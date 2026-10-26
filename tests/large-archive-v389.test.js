@@ -11,11 +11,11 @@ const MiB=1024*1024;
 const SH='a'.repeat(40);
 const encodeProof=(exp)=>Buffer.from(JSON.stringify({v:1,exp})).toString('base64url')+'.signature';
 
-test('v3.9.14 capacity profiles are explicit, bounded, and non-persistent',()=>{
+test('v3.9.15 capacity profiles are explicit, bounded, and non-persistent',()=>{
   assert.deepEqual(archiveCapacity('standard'),{zipBytes:120*MiB,unpackedBytes:240*MiB});
   assert.deepEqual(archiveCapacity('extended'),{zipBytes:200*MiB,unpackedBytes:400*MiB});
   assert.equal(LIMITS.zipBytes,120*MiB);
-  assert.equal(LIMITS.fileBytes,2_500_000);
+  assert.equal(LIMITS.fileBytes,20*1024*1024);
   assert.equal(LIMITS.fileCount,2500);
   assert.equal(LIMITS.commitEntries,2500);
   assert.throws(()=>archiveCapacity('enterprise'),/không hợp lệ/);

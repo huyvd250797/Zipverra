@@ -38,6 +38,8 @@ import { reviewReadiness, themeChoice, resolveTheme } from '../lib/ux-polish.js'
 import MobileViewportGuard from './components/MobileViewportGuard.jsx';
 import ModalSheet from './components/ModalSheet.jsx';
 import VirtualReviewList from './components/VirtualReviewList.jsx';
+import DesktopOperationProgress from './components/DesktopOperationProgress.jsx';
+import { uploadLargeSourceFile } from '../lib/large-blob-client.js';
 import { installViewportLayout } from '../lib/viewport-layout-client.js';
 const HistoryPanel = dynamic(() => import('./components/HistoryPanel.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải HistoryPanel…"/> });
 const WorkspacePanel = dynamic(() => import('./components/WorkspacePanel.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải WorkspacePanel…"/> });
@@ -52,7 +54,7 @@ async function requestOnce(endpoint, data) {
   let response;
   const controller = new AbortController();
   // A timeout on `commit` is deliberately ambiguous; journal + Verify Push resolve it.
-  const timer = setTimeout(() => controller.abort(), ['commit', 'rollback/execute', 'workspace/save'].includes(endpoint) ? 110000 : 38000);
+  const timer = setTimeout(() => controller.abort(), endpoint === 'large-blob/finalize' ? 185000 : ['commit', 'rollback/execute', 'workspace/save'].includes(endpoint) ? 110000 : 38000);
   try {
     response = await fetch(`/api/github/${endpoint}`, {
       method: 'POST',
@@ -788,6 +790,16 @@ export default function Home() {
       setProgress(75);
       const remote = await api('snapshot', input);
       const changes = calculateChanges(archive.files, remote.files, mode);
+      const sourceByPath = new Map(archive.files.map(item => [item.path,item]));
+      const largeChange = changes.find(item => item.kind !== 'delete' && (sourceByPath.get(item.path)?.bytes||0) > LIMITS.directFileBytes);
+      if (largeChange) {
+        setProgress(80);
+        setStatus('Đang xác minh hạ tầng truyền file lớn...');
+        const candidate=sourceByPath.get(largeChange.path);
+        // One signed but unused ticket checks that PRIVATE Blob storage is available
+        // before we let the user approve an upload that cannot complete.
+        await requestOnce('large-blob/ticket',{...input,path:candidate.path,sha:candidate.sha,bytes:candidate.bytes});
+      }
       const insights = analyzeSource({ ...archive, changes });
       // This read-only check is advisory: paths and manifests cannot prove project identity.
       // Never block the upload if optional manifest retrieval fails.
@@ -1036,6 +1048,32 @@ export default function Home() {
       if (!archiveSessionRef.current) throw new Error('Phiên ZIP đã đóng. Hãy phân tích ZIP lại trước khi Push.');
       const transferStarted = Date.now();
       uploadProgressAtRef.current = 0;
+      const largeUploadProgress = new Map();
+      const selectedTotalBytes = selectedChanges.filter(c=>c.kind!=='delete').reduce((n,c)=>n+(preview.archive.files.find(f=>f.path===c.path)?.bytes||0),0);
+      let completedUploadBytes = 0;
+      const uploadOneFile = async (source) => {
+        const bytes=await archiveSessionRef.current.getFile(source.path);
+        if (bytes.byteLength <= LIMITS.directFileBytes) {
+          return api('blob',{owner:input.owner,repo:input.repo,path:source.path,
+            content:encodeBase64(bytes),allowSensitiveUpload:requiresConsent && sensitiveConsent},
+            attempt=>setStatus(`GitHub đang phản hồi chậm. Thử lại (${attempt}/2)...`));
+        }
+        setStatus(`Đang truyền file lớn: ${source.path} (${prettyBytes(bytes.byteLength)})`);
+        const { upload } = await import('@vercel/blob/client');
+        return uploadLargeSourceFile({source,bytes,input,allowSensitiveUpload:requiresConsent && sensitiveConsent,
+          request:requestOnce,uploadPrivate:upload,
+          onUploadProgress:(percentage)=>{
+            largeUploadProgress.set(source.path,percentage);
+            const now=Date.now();
+            if (shouldPublishProgress(uploadProgressAtRef.current,now,percentage>=100)) {
+              uploadProgressAtRef.current=now;
+              const inFlight = Array.from(largeUploadProgress.entries()).reduce((n,[path,pct])=>
+                n+(preview.archive.files.find(f=>f.path===path)?.bytes||0)*pct/100,0);
+              setProgress(Math.min(79,Math.floor((completedUploadBytes+inFlight)/Math.max(1,selectedTotalBytes)*80)));
+              setStatus(`Đang tải ${source.path}: ${Math.floor(percentage)}%`);
+            }
+          }});
+      };
       const { blobShas, attestations, reused } = await uploadBlobsInBatches({
         changes: selectedChanges,
         files: preview.archive.files,
@@ -1043,8 +1081,8 @@ export default function Home() {
         concurrency: 2,
         batchSize: 12,
         upload: async (source) => {
-          const res = await api('blob', { owner: input.owner, repo: input.repo, path: source.path, content: encodeBase64(await archiveSessionRef.current.getFile(source.path)), allowSensitiveUpload: requiresConsent && sensitiveConsent },
-            (attempt) => setStatus(`GitHub chậm với ${source.path}. Retry an toàn (${attempt}/2)...`));
+          const res=await uploadOneFile(source);
+          largeUploadProgress.delete(source.path);
           return {sha:res.sha,proof:res.proof};
         },
         onCheckpoint: (completed) => {
@@ -1055,7 +1093,8 @@ export default function Home() {
           const now = Date.now();
           if (!shouldPublishProgress(uploadProgressAtRef.current, now, completed >= total)) return;
           uploadProgressAtRef.current = now;
-          setProgress(Math.round((completed / Math.max(1, total)) * 80));
+          completedUploadBytes=completedBytes;
+          setProgress(Math.round((completedBytes / Math.max(1, totalBytes)) * 80));
           setTransfer({ ...transferEstimate(uploadedBytes, Math.max(0, totalBytes - (completedBytes - uploadedBytes)), now - transferStarted), completed, total, batch, totalBatches, reused: reusedCount, completedBytes, totalBytes });
           setStatus(`Git blobs: ${completed}/${total} · Batch ${batch}/${totalBatches}${reusedCount ? ` · Phục hồi ${reusedCount} file` : ''}`);
         },
@@ -1067,9 +1106,7 @@ export default function Home() {
       await refreshExpiringAttestations({ changes:selectedChanges,files:preview.archive.files,blobShas,attestations,
         onCheckpoint:(path,item)=>{checkpoint[path]=item;saveUploadCheckpoint(makeCheckpoint(fingerprint,checkpoint));},
         upload:async source=>{
-          const res=await api('blob',{owner:input.owner,repo:input.repo,path:source.path,
-            content:encodeBase64(await archiveSessionRef.current.getFile(source.path)),
-            allowSensitiveUpload:requiresConsent && sensitiveConsent});
+          const res=await uploadOneFile(source);
           return {sha:res.sha,proof:res.proof};
         },
         onProgress:(done,total)=>setStatus(`Gia hạn chứng nhận an toàn: ${done}/${total} file...`),
@@ -1130,7 +1167,7 @@ export default function Home() {
         <span className="desktop-rail-label">GITHUB ACCOUNT</span>
         <strong>{auth.user?.login ? `@${auth.user.login}` : 'Chưa đăng nhập'}</strong>
         <span className="desktop-rail-branch"><Icon name="branch" size={14}/>{chosenRepo ? `${repo} · ${branch}` : 'Chọn repository để bắt đầu'}</span>
-        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.14</span>
+        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.15</span>
       </div>
     </aside>
     <header className="topbar" role="banner">
@@ -1139,7 +1176,7 @@ export default function Home() {
       <div className="header-actions"><span className="desktop-header-help">
         
         <ContextualHelp tab={activeTab}/>
-      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.14</span></div>
+      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.15</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} />
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
@@ -1182,6 +1219,7 @@ export default function Home() {
         <div className="zip3913-review-file"><span className="zip3913-review-kicker">REVIEW SOURCE</span><strong title={file?.name || ''}>{file?.name}</strong><small>{prettyBytes(file?.size || 0)} · {selectedChanges.length}/{preview.changes.length} file thay đổi · {mode === 'sync' ? 'Sync' : 'Merge'} / {releaseStrategy === 'pr' ? 'PR' : 'Direct Push'}</small></div>
         <button type="button" className="button secondary zip3913-change-zip" disabled={busy || Boolean(pendingCommit || pendingPR)} onClick={() => fileInput.current?.click()}><Icon name="file" size={17}/> Đổi ZIP</button>
       </div>}
+      <DesktopOperationProgress phase={phase} progress={progress} busy={busy} error={error} status={status} transfer={transfer}/>
       <section className="content-grid" data-active-view={activeTab}>
         <div className="form-column">
           <article className={`panel upload-panel${preview ? ' zip392-reviewed' : ''}`} data-mobile-view="home">
@@ -1213,7 +1251,7 @@ export default function Home() {
             {file && <div className="file-detail"><Icon name="check" size={15}/> {busy && phase === PUSH_STAGES.ANALYZING ? 'Đang phân tích...' : preview ? 'Review sẵn sàng' : 'Đã chọn ZIP'} · <strong>{commitMessage}</strong></div>}
             {archiveMode === 'extended' && <p className="archive-capacity-note" role="status">Extended 200 MiB · Giữ app mở khi xử lý.</p>}
             <details className="workflow-options"><summary><Icon name="settings" size={16}/> Tùy chọn nâng cao <span>{mode === 'sync' ? 'Sync' : 'Merge'} · {releaseStrategy === 'pr' ? 'Pull Request' : 'Direct Push'}</span></summary><div className="workflow-options-body">
-            <div className="limits"><span>{archiveMode === 'extended' ? 'Extended · 200 MiB ZIP / 400 MiB giải nén' : 'Standard · 120 MiB ZIP / 240 MiB giải nén'}</span><span>2.500 file · 2,5 MB/file</span></div>
+            <div className="limits"><span>{archiveMode === 'extended' ? 'Extended · 200 MiB ZIP / 400 MiB giải nén' : 'Standard · 120 MiB ZIP / 240 MiB giải nén'}</span><span>2.500 file · 20 MiB/file</span></div>
             <div className="field"><label htmlFor="mode">Chế độ cập nhật</label><select id="mode" value={mode} disabled={busy} onChange={(e) => change(setMode, e.target.value)}><option value="merge">Merge · Giữ file cũ</option><option value="sync">Sync · Đồng bộ & xóa file thừa</option></select>{mode === 'sync' && <small className="hint" role="status">Sync có thể xóa file trên GitHub.</small>}</div>
             <div className="release-strategy" role="group" aria-label="Chiến lược cập nhật GitHub">
               <strong>Cách cập nhật source</strong>
@@ -1373,7 +1411,7 @@ export default function Home() {
                 {workspaceOpen && <WorkspacePanel hostView="settings" key={`${owner}/${repo}@${branch}`} authenticated={auth.authenticated} owner={owner} repo={repo} branch={branch} online={online} busy={busy} onBack={() => {workspaceDirtyRef.current=false;setWorkspaceOpen(false);}} onDirtyChange={onWorkspaceDirtyChange} api={api} onCommit={(outcome)=>{reset();logLocalAction({kind:'quick-edit',state:'success',repo:`${owner}/${repo}`,sha:outcome?.sha,message:'Quick Edit saved'});}}/>}
               </div>
             </details>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.14</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.15</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -1384,7 +1422,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.9.14</span><span>GitHub App · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.9.15</span><span>GitHub App · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <ModalSheet open={Boolean(preview && diffViewer && activeTab === 'home')} title={`Diff · ${diffViewer?.path || ''}`}
     onClose={() => { diffRequestRef.current += 1; setDiffViewer(null); }} variant="diff">
