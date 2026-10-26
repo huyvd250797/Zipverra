@@ -1,8 +1,8 @@
 import { handleUpload } from '@vercel/blob/client';
-import { checkOrigin } from '../../lib/auth/session.js';
-import { resolveAppSession } from '../../lib/auth/github-app.js';
-import { verifyLargeBlobTicket } from '../../lib/large-blob-ticket.js';
-import { LIMITS } from '../../lib/constants.js';
+import { checkOrigin } from '../../../lib/auth/session.js';
+import { resolveAppSession } from '../../../lib/auth/github-app.js';
+import { verifyLargeBlobTicket } from '../../../lib/large-blob-ticket.js';
+import { LIMITS } from '../../../lib/constants.js';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 /** The upload-completed callback is verified by Vercel Blob SDK, not by a browser session.

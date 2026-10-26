@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.9.15",
+  "version": "3.9.16",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.9.15 — Large File Upload & Desktop Progress UX: private Blob transport for files up to 20 MiB and PC upload progress",
+  "description": "Zipverra Pro v3.9.16 — Build Import Resolution Hotfix (20 MiB large file transport and desktop progress retained)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

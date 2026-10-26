@@ -5,13 +5,13 @@ import {APP_VERSION} from '../lib/pwa-reliability.js';
 import {adaptiveSheetPresentation, shouldDismissSheetDrag, focusedFieldScrollDelta} from '../lib/adaptive-sheet.js';
 const read=p=>readFileSync(new URL(`../${p}`,import.meta.url),'utf8');
 
-test('v3.9.15 release, cache and stylesheet cascade are aligned',()=>{
- assert.equal(APP_VERSION,'3.9.15');
- assert.equal(JSON.parse(read('package.json')).version,'3.9.15');
- assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.15/);
+test('v3.9.16 release, cache and stylesheet cascade are aligned',()=>{
+ assert.equal(APP_VERSION,'3.9.16');
+ assert.equal(JSON.parse(read('package.json')).version,'3.9.16');
+ assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.16/);
  const layout=read('app/layout.jsx');
  assert.ok(layout.indexOf('quick-actions-v393.css') < layout.indexOf('adaptive-sheets-v394.css'));
- assert.match(read('app/page.jsx'),/Zipverra · v3\.9\.15/);
+ assert.match(read('app/page.jsx'),/Zipverra · v3\.9\.16/);
 });
 
 test('mobile bottom sheet / desktop panel / centered security decision are separated',()=>{

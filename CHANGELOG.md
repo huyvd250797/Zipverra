@@ -1,3 +1,10 @@
+# v3.9.16 — Build Import Resolution Hotfix
+
+- Fixed four incorrect relative imports in `/api/large-upload` (from `../../lib` to `../../../lib`).
+- Added repository-wide static import-path validation to prevent another `Module not found` during Vercel build.
+- Existing large file transport, Desktop Progress, GitHub APIs, security & consent gates are unchanged.
+- Runtime, service-worker cache, and source metadata synchronized.
+
 # v3.9.15 — Large File Upload & Desktop Progress UX
 
 - Max per-file ZIP source increased from 2.5MB to 20MiB with bounded security scan; direct API capped at 3MB.

@@ -10,10 +10,10 @@ const css=read('app/styles/smooth-tab-performance-v3911.css');
 const sha=x=>x.repeat(40);
 
 test('v3.9.11 aligns runtime, package, cache and final motion layer',()=>{
- assert.equal(APP_VERSION,'3.9.15');
+ assert.equal(APP_VERSION,'3.9.16');
  assert.equal(JSON.parse(read('package.json')).version,APP_VERSION);
- assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.15/);
- assert.match(page,/Zipverra · v3\.9\.15/);
+ assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.16/);
+ assert.match(page,/Zipverra · v3\.9\.16/);
  const layout=read('app/layout.jsx');
  assert.ok(layout.indexOf('desktop-redesign-v3914.css') < layout.indexOf('large-upload-progress-v3915.css')); 
 });

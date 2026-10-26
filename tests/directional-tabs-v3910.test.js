@@ -9,10 +9,10 @@ const page=read('app/page.jsx');
 const css=read('app/styles/directional-tabs-v3910.css');
 
 test('v3.9.11 PWA cache, React UI and CSS layer are synchronized',()=>{
-  assert.equal(APP_VERSION,'3.9.15');
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.15');
-  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.15/);
-  assert.match(page,/Zipverra · v3\.9\.15/);
+  assert.equal(APP_VERSION,'3.9.16');
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.16');
+  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.16/);
+  assert.match(page,/Zipverra · v3\.9\.16/);
   const layout=read('app/layout.jsx');
   assert.ok(layout.indexOf('upload-hub-v399.css')<layout.indexOf('large-upload-progress-v3915.css'));
 });

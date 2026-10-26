@@ -181,7 +181,7 @@ test('new mobile status and recovery actions are present without losing 1.3.3 sa
   assert.match(page, /Xác minh push trên GitHub/);
   assert.match(page, /JOURNAL_KEY/);
   assert.match(page, /phase\.replaceAll/);
-  assert.match(page, /v3\.9\.15/);
+  assert.match(page, /v3\.9\.16/);
   assert.match(css, /safe-area-inset-top/);
   assert.match(css, /recovery-banner/);
 });
