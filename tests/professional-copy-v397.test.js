@@ -8,13 +8,13 @@ const read = name => readFileSync(new URL(`../${name}`, import.meta.url), 'utf8'
 const page = read('app/page.jsx');
 const css = read('app/styles/professional-copy-v397.css');
 
-test('v3.9.17 package, PWA and final stylesheet match', () => {
-  assert.equal(APP_VERSION, '3.9.17');
-  assert.equal(JSON.parse(read('package.json')).version, '3.9.17');
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.17/);
+test('v3.9.18 package, PWA and final stylesheet match', () => {
+  assert.equal(APP_VERSION, '3.9.18');
+  assert.equal(JSON.parse(read('package.json')).version, '3.9.18');
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.18/);
   const layout=read('app/layout.jsx');
   assert.ok(layout.indexOf('review-gate-hotfix-v396.css') < layout.indexOf('professional-copy-v397.css'));
-  assert.match(page, /Zipverra · v3\.9\.17/);
+  assert.match(page, /Zipverra · v3\.9\.18/);
 });
 test('Review keeps compact titles and removes redundant paragraphs', () => {
   assert.match(page, /<strong>File thay đổi<\/strong>/);
@@ -45,7 +45,7 @@ test('no review confirmation or commit safety gate was relaxed', () => {
   assert.equal(readiness.ready,false);
   assert.match(page,/const canSubmitPush = pushReadiness\.ready/);
   assert.match(page,/disabled=\{!canSubmitPush\}/);
-  assert.match(page,/requestOnce\('commit', commitPayload\)/);
+  assert.match(page,/requestOnce\('background-push\/start', commitPayload\)/);
   assert.match(page,/riskSummary\.pendingCount > 0 \|\| !\['CONFIRM','READY'\]\.includes\(pushReadiness\.code\)/);
 });
 test('mobile dock remains a gateway, never exposes direct Push', () => {

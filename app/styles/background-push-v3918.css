@@ -1,0 +1,6 @@
+.zip3918-background-job { display:flex;flex-direction:column;gap:5px;border:1px solid rgba(39,186,144,.36);background:rgba(23,119,91,.12);border-radius:15px;padding:14px 16px;margin:12px 0;color:var(--text,#e4edf2); }
+.zip3918-background-job strong{color:#42c9a0;font-size:14px;}
+.zip3918-background-job span{font-size:13px;font-weight:650;overflow-wrap:anywhere;}
+.zip3918-background-job small{font-size:12px;line-height:1.55;opacity:.84;}
+.zip3918-staging-note{font-size:12px;line-height:1.45;color:var(--muted,#9fb0be);margin:9px 0;}
+@media(min-width:761px){.zip3918-background-job{max-width:100%;}.zip3918-staging-note{max-width:480px;}}

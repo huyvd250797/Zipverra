@@ -9,10 +9,10 @@ const page=read('app/page.jsx');
 const css=read('app/styles/directional-tabs-v3910.css');
 
 test('v3.9.11 PWA cache, React UI and CSS layer are synchronized',()=>{
-  assert.equal(APP_VERSION,'3.9.17');
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.17');
-  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.17/);
-  assert.match(page,/Zipverra · v3\.9\.17/);
+  assert.equal(APP_VERSION,'3.9.18');
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.18');
+  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.18/);
+  assert.match(page,/Zipverra · v3\.9\.18/);
   const layout=read('app/layout.jsx');
   assert.ok(layout.indexOf('upload-hub-v399.css')<layout.indexOf('large-upload-progress-v3915.css'));
 });
@@ -55,7 +55,7 @@ test('Push still enters Activity and retains all server mutation safeguards',()=
   const push=page.slice(start,end);
   assert.match(push,/goToTab\('activity'\)/);
   assert.match(push,/!canSubmitPush/);
-  assert.match(push,/requestOnce\('commit', commitPayload\)/);
+  assert.match(push,/requestOnce\('background-push\/start', commitPayload\)/);
   assert.match(page,/refreshExpiringAttestations/);
 });
 test('fallback is horizontal, has no dark-screen pause and supports reduced motion',()=>{

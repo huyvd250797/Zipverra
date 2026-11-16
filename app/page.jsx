@@ -40,6 +40,7 @@ import ModalSheet from './components/ModalSheet.jsx';
 import VirtualReviewList from './components/VirtualReviewList.jsx';
 import DesktopOperationProgress from './components/DesktopOperationProgress.jsx';
 import { uploadLargeSourceFile } from '../lib/large-blob-client.js';
+import { BACKGROUND_JOB_KEY, validSavedJob } from '../lib/background-job-client.js';
 import { installViewportLayout } from '../lib/viewport-layout-client.js';
 const HistoryPanel = dynamic(() => import('./components/HistoryPanel.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải HistoryPanel…"/> });
 const WorkspacePanel = dynamic(() => import('./components/WorkspacePanel.jsx'), { ssr: false, loading: () => <LoadingSkeleton kind="panel" label="Đang tải WorkspacePanel…"/> });
@@ -243,6 +244,8 @@ export default function Home() {
   const [phase, setPhase] = useState(PUSH_STAGES.IDLE);
   const [online, setOnline] = useState(true);
   const [pendingCommit, setPendingCommit] = useState(null);
+  const [backgroundJob, setBackgroundJob] = useState(null);
+  const verifiedTargetRepoRef = useRef(null);
   const fileInput = useRef(null);
   const previewRef = useRef(null);
   const decisionRef = useRef(null);
@@ -309,6 +312,15 @@ export default function Home() {
       viewTimerRef.current = window.setTimeout(() => { setActiveTab(tab); setViewExiting(false); }, 175);
     } else { setActiveTab(tab); setViewExiting(false); }
   }
+  // The browser may be closed only AFTER Git blobs are fully uploaded and
+  // the durable server job has been acknowledged. The receipt is account-bound;
+  // credentials and source bytes are never stored here.
+  function saveBackgroundJob(job) {
+    try {const key=accountStorageKey(BACKGROUND_JOB_KEY,auth.user);if(key) window.localStorage.setItem(key,JSON.stringify(job));}catch{}
+  }
+  function clearBackgroundJob() {
+    try {const key=accountStorageKey(BACKGROUND_JOB_KEY,auth.user);if(key) window.localStorage.removeItem(key);}catch{}
+  }
   function saveUploadCheckpoint(value) {
     try { window.localStorage.setItem(UPLOAD_CHECKPOINT_KEY, JSON.stringify(value)); } catch { /* no persistent storage available */ }
   }
@@ -346,6 +358,68 @@ export default function Home() {
     });
   }
 
+
+  // Resume observing a server-owned Push when the PWA is opened again.
+  useEffect(() => {
+    if (auth.loading) return;
+    setBackgroundJob(null);
+    if (!auth.authenticated || !auth.user?.login) return;
+    try {
+      const stored=JSON.parse(localStorage.getItem(accountStorageKey(BACKGROUND_JOB_KEY,auth.user))||'null');
+      if (validSavedJob(stored)) {
+        if (!readPending() && validJournal(stored.journal)) {
+          setPendingCommit(stored.journal);
+          rememberPending(stored.journal);
+        }
+        setBackgroundJob(stored);setPhase(PUSH_STAGES.COMMITTING);
+        setProgress(90);
+        setStatus(`Đang kiểm tra job GitHub trên máy chủ: ${stored.repo} · ${stored.branch}.`);
+      }
+    } catch {}
+  },[auth.loading,auth.authenticated,auth.user?.login]);
+
+  useEffect(() => {
+    if (!backgroundJob || !auth.authenticated || auth.loading) return;
+    let alive=true, querying=false;
+    async function inspect() {
+      if (!alive || querying || !navigator.onLine) return;
+      querying=true;
+      try {
+        const state=await requestOnce('background-push/status',{runId:backgroundJob.runId,receipt:backgroundJob.receipt});
+        if (!alive) return;
+        if (state.status==='pending' || state.status==='running') {
+          setPhase(PUSH_STAGES.COMMITTING);setProgress(90);
+          setStatus(`GitHub đang xử lý trên server: ${state.repo} · ${state.branch}. Có thể chuyển ứng dụng hoặc khóa màn hình.`);
+          return;
+        }
+        setBackgroundJob(null);clearBackgroundJob();
+        if (state.status==='completed' && state.result?.state==='succeeded' && state.result?.outcome?.verified) {
+          verifiedTargetRepoRef.current = state.repo;
+          finishVerified(state.result.outcome);
+          if (state.result.prState==='verified' && state.result.pr) {
+            setResult({...state.result.outcome,pr:state.result.pr,sourceBranch:backgroundJob.sourceBranch});
+            setStatus(`Push và Pull Request #${state.result.pr.number} đã xác minh trên GitHub.`);
+            logLocalAction({kind:'pr',state:'success',repo:state.repo,sha:state.result.outcome.sha,message:`Opened Pull Request #${state.result.pr.number}`});
+          } else if (state.result.prState==='unconfirmed' && state.result.prRequest) {
+            setPendingPR(state.result.prRequest);savePendingPR(state.result.prRequest);
+            setStatus('Commit đã xác minh; cần kiểm tra Pull Request trước khi tạo lại.');
+          }
+          return;
+        }
+        setPhase(PUSH_STAGES.UNCONFIRMED);
+        setProgress(0);
+        setStatus('Job Push đã dừng hoặc chưa xác minh. Kiểm tra HEAD GitHub; không gửi lại ZIP.');
+        setError(state.result?.reason || `Job trên máy chủ: ${state.status}. Vào Recovery Center để xác minh.`);
+      } catch(e) {
+        if(alive) setStatus(`Không đọc được trạng thái Push trên server (${backgroundJob.repo}). Khi có mạng, ứng dụng sẽ tự kiểm tra lại.`);
+      } finally {querying=false;}
+    }
+    inspect();
+    const timer=window.setInterval(inspect,5000);
+    const onVisible=()=>{if(!document.hidden) inspect();};
+    document.addEventListener('visibilitychange',onVisible);
+    return ()=>{alive=false;window.clearInterval(timer);document.removeEventListener('visibilitychange',onVisible);};
+  },[backgroundJob,auth.loading,auth.authenticated,auth.user?.login]);
 
   useEffect(() => {
     // Account-scoped local metadata, never a credential store. Do not show another account's cache.
@@ -403,7 +477,7 @@ export default function Home() {
   async function applyProfile(profile) {
     // A saved profile is a proposal, never an implicit change of destination or
     // a security consent. Validate against the currently authorized repo list.
-    if (!auth.authenticated || busy || pendingCommit || pendingPR ||
+    if (!auth.authenticated || busy || pendingCommit || pendingPR || backgroundJob ||
         `${owner}/${repo}`.toLowerCase() !== profile?.repo?.toLowerCase() ||
         !repos.some(r => r.full_name.toLowerCase() === profile.repo.toLowerCase())) return false;
     if (file && phase !== PUSH_STAGES.SUCCEEDED && !await askConfirmation({
@@ -416,7 +490,7 @@ export default function Home() {
       message:'Sync có thể xóa các file đang có trên GitHub nhưng không nằm trong ZIP. Các xác nhận Review/Sync vẫn bắt buộc.',
       confirmLabel:'Chọn Sync',danger:true,
     })) return false;
-    if (busy || pendingCommit || pendingPR || !canLeaveWorkspace('',true)) return false;
+    if (busy || pendingCommit || pendingPR || backgroundJob || !canLeaveWorkspace('',true)) return false;
     workspaceDirtyRef.current=false;setWorkspaceOpen(false);
     setBranch(profile.branch);setMode(profile.mode);setReleaseStrategy(profile.strategy);
     setFile(null);if(fileInput.current)fileInput.current.value='';
@@ -425,7 +499,7 @@ export default function Home() {
     return true;
   }
   async function selectAndApplyProfile(profile) {
-    if (!auth.authenticated || busy || pendingCommit || pendingPR ||
+    if (!auth.authenticated || busy || pendingCommit || pendingPR || backgroundJob ||
         !repos.some(r=>r.full_name.toLowerCase()===profile?.repo?.toLowerCase())) return false;
     if (file && phase !== PUSH_STAGES.SUCCEEDED && !await askConfirmation({
       title:'Đổi repository và áp dụng Profile?',
@@ -437,7 +511,7 @@ export default function Home() {
       message:'Sync có thể xóa file cũ trên GitHub. Các bước xác nhận Review và Push vẫn bắt buộc.',
       confirmLabel:'Chọn Sync',danger:true,
     })) return false;
-    if (busy || pendingCommit || pendingPR || !canLeaveWorkspace('',true)) return false;
+    if (busy || pendingCommit || pendingPR || backgroundJob || !canLeaveWorkspace('',true)) return false;
     workspaceDirtyRef.current=false;
     const [nextOwner,nextRepo]=profile.repo.split('/');
     setOwner(nextOwner);setRepo(nextRepo);setBranch(profile.branch);
@@ -538,13 +612,15 @@ export default function Home() {
   // beforeunload is best-effort on iOS; server-side verification journals remain authoritative.
   useEffect(() => {
     const onLeave = event => {
-      if (!busy && !workspaceDirty) return;
+      // Once Vercel has acknowledged the durable job, no browser-side upload
+      // remains. Do not block closing the PWA with a stale ZIP-draft warning.
+      if (backgroundJob || (!busy && !workspaceDirty)) return;
       event.preventDefault();
       event.returnValue = '';
     };
     window.addEventListener('beforeunload', onLeave);
     return () => window.removeEventListener('beforeunload', onLeave);
-  }, [busy, workspaceDirty]);
+  }, [busy, workspaceDirty, backgroundJob]);
 
   useEffect(() => {
     if (!auth.authenticated) return;
@@ -646,7 +722,7 @@ export default function Home() {
     if (isMobileViewport()) { setDecisionSheetOpen(true); return; }
     goToDecision();
   };
-  const canSubmitPush = pushReadiness.ready && (preview?.identity?.severity !== 'critical' || projectMismatchConfirmed);
+  const canSubmitPush = pushReadiness.ready && (preview?.identity?.severity !== 'critical' || projectMismatchConfirmed) && !backgroundJob;
   const copyCommitSha = useCallback(async (sha) => {
     if (!/^[a-f0-9]{40}$/i.test(sha || '')) return;
     try { await navigator.clipboard.writeText(sha); notify('sha-copied'); }
@@ -671,12 +747,12 @@ export default function Home() {
   };
   async function restartWorkspace() {
     // A pending write must be verified, never silently hidden by a reset.
-    if (busy || loadingRepos || pendingCommit || pendingPR) {
+    if (busy || loadingRepos || pendingCommit || pendingPR || backgroundJob) {
       await askConfirmation({ title: 'Chưa thể khởi động lại', message: 'Đang xử lý hoặc có thao tác GitHub cần xác minh. Mở Activity và hoàn tất trước khi khởi động lại.', confirmLabel: 'Đã hiểu' });
       return;
     }
     if ((file || preview || workspaceDirtyRef.current) && !await askConfirmation({ title: 'Khởi động lại Zipverra?', message: 'Repository, ZIP, Review và bản nháp chưa commit đang chọn sẽ bị bỏ. Lịch sử GitHub và tùy chọn giao diện vẫn được giữ.', confirmLabel: 'Khởi động lại', danger: true })) return;
-    if (busy || loadingRepos || pendingCommit || pendingPR) return;
+    if (busy || loadingRepos || pendingCommit || pendingPR || backgroundJob) return;
     clearUploadCheckpoint();
     // Unmount all transient editors/sheets and request a clean, fully reloaded home screen.
     window.location.assign(window.location.pathname);
@@ -706,11 +782,11 @@ export default function Home() {
     finally { setBusy(false); setLoadingRepos(false); }
   }
   async function chooseRepo(value) {
-    if (!value || busy || pendingCommit || pendingPR) return;
+    if (!value || busy || pendingCommit || pendingPR || backgroundJob) return;
     // Re-selecting the same repo must not erase an uncommitted ZIP Review.
     if (value.toLowerCase() === `${owner}/${repo}`.toLowerCase()) { goToTab('home'); return; }
     if (file && phase !== PUSH_STAGES.SUCCEEDED && !await askConfirmation({ title: 'Đổi repository?', message: 'ZIP và Review chưa Push sẽ bị bỏ. Thao tác đã ghi lên GitHub không bị ảnh hưởng.', confirmLabel: 'Đổi repository', danger: true })) return;
-    if (busy || pendingCommit || pendingPR) return;
+    if (busy || pendingCommit || pendingPR || backgroundJob) return;
     if (!canLeaveWorkspace('', true)) return;
     workspaceDirtyRef.current = false;setWorkspaceOpen(false);
     const index = value.indexOf('/');
@@ -724,9 +800,9 @@ export default function Home() {
     goToTab('home');
   }
   async function chooseBranch(nextBranch) {
-    if (!nextBranch || nextBranch === branch || busy || pendingCommit || pendingPR) return;
+    if (!nextBranch || nextBranch === branch || busy || pendingCommit || pendingPR || backgroundJob) return;
     if (file && phase !== PUSH_STAGES.SUCCEEDED && !await askConfirmation({ title: 'Đổi branch?', message: 'Bản Review ZIP chưa Push sẽ bị bỏ. Không thay đổi các commit đã có trên GitHub.', confirmLabel: 'Đổi branch', danger: true })) return;
-    if (busy || pendingCommit || pendingPR) return;
+    if (busy || pendingCommit || pendingPR || backgroundJob) return;
     change(setBranch, nextBranch);
   }
   function handleZipDragOver(event) {
@@ -743,7 +819,7 @@ export default function Home() {
     event.preventDefault();
     setZipDragging(false);
     if (!chosenRepo) { setError('Hãy chọn repository trước khi kéo thả ZIP.'); return; }
-    if (busy || pendingCommit || pendingPR) return;
+    if (busy || pendingCommit || pendingPR || backgroundJob) return;
     if (event.dataTransfer.files.length !== 1) { setError('Mỗi lần chỉ được kéo thả một file ZIP.'); return; }
     void chooseFile(event.dataTransfer.files[0]);
   }
@@ -781,7 +857,7 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file]);
   async function analyze() {
-    if (analyzingRef.current || busy) return;
+    if (analyzingRef.current || busy || backgroundJob) return;
     analyzingRef.current = true;
     archiveProgressAtRef.current = 0;
     setArchiveValidation({processed:0,total:0,invalid:0});
@@ -863,6 +939,8 @@ export default function Home() {
     finally { analyzingRef.current = false; setBusy(false); }
   }
   function finishVerified(outcome) {
+    const verifiedRepo = verifiedTargetRepoRef.current || `${owner}/${repo}`;
+    verifiedTargetRepoRef.current = null;
     setDecisionSheetOpen(false); setRiskSheetOpen(false);
     setResult(outcome);
     setStatus(outcome.recovered ? 'Push đã thành công, được xác minh lại trên GitHub.' : 'Đã push và xác minh commit trên GitHub.');
@@ -870,8 +948,8 @@ export default function Home() {
     setPhase(PUSH_STAGES.SUCCEEDED);
     setActiveTab('activity');
     notify('push-verified', true);
-    recordVerifiedPushRepo(`${owner}/${repo}`, outcome.sha);
-    logLocalAction({kind:'push',state:'success',repo:`${owner}/${repo}`,sha:outcome.sha,message:'Commit verified on GitHub'});
+    recordVerifiedPushRepo(verifiedRepo, outcome.sha);
+    logLocalAction({kind:'push',state:'success',repo:verifiedRepo,sha:outcome.sha,message:'Commit verified on GitHub'});
     setPendingCommit(null);
     clearPending();
     clearUploadCheckpoint();
@@ -1033,10 +1111,11 @@ export default function Home() {
   }
 
   async function push() {
-    if (!preview || !selectedChanges.length || (requiresConsent && !sensitiveConsent) || !confirmed || (mode === 'sync' && stats?.delete > 0 && !syncConfirmed) || busy || pendingCommit || pendingPR || !canSubmitPush) return;
+    if (!preview || !selectedChanges.length || (requiresConsent && !sensitiveConsent) || !confirmed || (mode === 'sync' && stats?.delete > 0 && !syncConfirmed) || busy || pendingCommit || pendingPR || backgroundJob || !canSubmitPush) return;
     setDecisionSheetOpen(false); setRiskSheetOpen(false);
     setBusy(true); setResult(null); setError(''); setErrorHint(''); setProgress(0); setTransfer(null);
     setPhase(PUSH_STAGES.UPLOADING);
+    setStatus('Đang chuyển các file lên GitHub. Cần giữ ứng dụng mở đến khi server nhận job Push.');
     let commitPayload = null;
     try {
       goToTab('activity');
@@ -1143,9 +1222,20 @@ export default function Home() {
       setPendingCommit(commitPayload);
       setPhase(PUSH_STAGES.COMMITTING);
       setProgress(85);
-      setStatus('Đang tạo commit và cập nhật branch. Không tự retry thao tác commit...');
-      const outcome = await requestOnce('commit', commitPayload);
-      await completeVerified(outcome, commitPayload);
+      setStatus('Đã gửi xong Git blobs. Đang bàn giao Commit/PR cho server...');
+      // IMPORTANT: never retry start blindly after a network timeout. A job may
+      // already have been accepted; preserve the signed journal for Recovery.
+      const accepted = await requestOnce('background-push/start', commitPayload);
+      if (!accepted.runId || !accepted.receipt) throw new Error('Server chưa xác nhận mã job Push.');
+      const job={runId:accepted.runId,receipt:accepted.receipt,repo:`${commitInput.owner}/${commitInput.repo}`,
+        branch:commitInput.branch,sourceBranch:prRequest?.sourceBranch||'',startedAt:Date.now(),
+        journal:{owner:commitPayload.owner,repo:commitPayload.repo,branch:commitPayload.branch,
+          expectedHead:commitPayload.expectedHead,message:commitPayload.message,
+          entries:commitPayload.entries.map(({path,sha,mode})=>({path,sha,mode}))}};
+      saveBackgroundJob(job);
+      setBackgroundJob(job);
+      setProgress(90);
+      setStatus(`Server đã nhận job Push: ${job.repo} · ${job.branch}. Có thể chuyển ứng dụng hoặc khóa màn hình; mở lại Activity để xem kết quả.`);
     } catch (e) {
       setError(e.message);
       setErrorHint(e.hint || '');
@@ -1191,7 +1281,7 @@ export default function Home() {
         <span className="desktop-rail-label">GITHUB ACCOUNT</span>
         <strong>{auth.user?.login ? `@${auth.user.login}` : 'Chưa đăng nhập'}</strong>
         <span className="desktop-rail-branch"><Icon name="branch" size={14}/>{chosenRepo ? `${repo} · ${branch}` : 'Chọn repository để bắt đầu'}</span>
-        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.17</span>
+        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.18</span>
       </div>
     </aside>
     <header className="topbar" role="banner">
@@ -1200,7 +1290,7 @@ export default function Home() {
       <div className="header-actions"><span className="desktop-header-help">
         
         <ContextualHelp tab={activeTab}/>
-      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.17</span></div>
+      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.18</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} />
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
@@ -1347,11 +1437,12 @@ export default function Home() {
             <div className="zip396-mobile-only">
               {riskSummary.pendingCount > 0 ? <button type="button" className="zip396-mobile-cta zip396-mobile-cta--warning" onClick={focusRiskCenter}>Xử lý {riskSummary.pendingCount} cảnh báo <Icon name="arrow" size={15}/></button>
                 : <button type="button" className="button secondary full zip396-mobile-cta" disabled={busy || !selectedChanges.length} onClick={openDecisionSheet}><Icon name="check" size={17}/> {confirmed ? 'Kiểm tra & Push' : 'Xác nhận & Push'}</button>}
-              <p className="zip396-mobile-note">Cảnh báo phải được xử lý trước khi Push.</p>
+              <p className="zip396-mobile-note">Cần giữ ứng dụng mở khi tải file lên GitHub. Chỉ có thể rời khi Activity báo server đã nhận job.</p>
             </div>
             <div className="zip396-desktop-only">
               {riskSummary.pendingCount > 0 && <button type="button" className="zip392-dock-risk" onClick={focusRiskCenter}>{riskSummary.pendingCount} cảnh báo chưa xác nhận · Xem ngay <Icon name="arrow" size={14}/></button>}
               <label className="confirm-row zip392-dock-consent"><input type="checkbox" checked={confirmed} disabled={busy || !selectedChanges.length || (requiresConsent && !sensitiveConsent) || (preview.identity?.severity === 'critical' && !projectMismatchConfirmed) || riskSummary.pendingCount > 0} onChange={(e) => setConfirmed(e.target.checked)}/><span>Tôi đã kiểm tra và đồng ý {releaseStrategy === 'pr' ? 'tạo PR' : 'Push'} lên <b>{preview.input.branch}</b>.</span></label>
+              <p className="zip3918-staging-note">Giữ ứng dụng mở trong lúc chuyển file. Sau khi server nhận job, có thể khóa màn hình hoặc chuyển app.</p>
               <button type="button" className="button primary full zip392-dock-push" disabled={!canSubmitPush} aria-describedby="push-readiness-help" onClick={push}><Icon name="upload" size={17}/> {busy ? 'Đang xử lý...' : releaseStrategy === 'pr' ? `Push & Create PR (${selectedChanges.length})` : `Commit & Push (${selectedChanges.length})`}</button>
             </div>
           </section>}
@@ -1394,16 +1485,17 @@ export default function Home() {
           <article ref={activityRef} className="panel activity-panel" data-mobile-view="activity"><div id="activity-live-flow" className="activity-title"><div><span className="pro-overline">LIVE OPERATIONS</span><h2>Live Activity</h2>{(busy || pendingCommit || pendingPR) && (chosenRepo || pendingCommit || pendingPR) && <p className="zip3917-activity-repo" aria-label="Repository GitHub đang xử lý"><Icon name="branch" size={15}/> <strong>{pendingCommit ? `${pendingCommit.owner}/${pendingCommit.repo}` : pendingPR ? `${pendingPR.owner}/${pendingPR.repo}` : `${owner}/${repo}`}</strong><span>· {pendingCommit?.branch || pendingPR?.baseBranch || branch}</span></p>}</div><span className={`activity-dot ${busy ? 'pulse' : ''}`} aria-label={busy ? 'Đang thực hiện thao tác' : 'Không có thao tác đang chạy'}/></div>
             {phase === PUSH_STAGES.IDLE && !busy && !result && !pendingCommit && !pendingPR && <ActivityEmpty canUpload={chosenRepo} onUpload={() => goToTab('home')}/>}
             <LiveActivityFocus presentation={activityFocus}/>
+            {backgroundJob && <div className="zip3918-background-job" role="status"><strong>Đã chuyển xử lý sang server</strong><span>{backgroundJob.repo} · {backgroundJob.branch}</span><small>Có thể chuyển ứng dụng hoặc khóa màn hình. Mở lại Activity để xem kết quả. Không Push lại khi job đang chạy.</small></div>}
             {(phase !== PUSH_STAGES.IDLE || busy || result || pendingCommit || pendingPR) && <div className={`push-timeline ${hasPrFlow ? 'with-pr' : ''}`}  aria-label="Tiến trình push và tạo PR">{timeline.map((step, index) => <div key={step.id} className={`timeline-step timeline-${step.state}`}><span className="timeline-icon">{step.state === 'complete' ? <Icon name="check" size={14}/> : index + 1}</span><div><strong>{({validate:'Validate',upload:'Upload',commit:'Commit',verify:'Verify',pr:'Open PR'})[step.id]}</strong><small>{({complete:'Hoàn tất',active:'Đang xử lý',uncertain:'Chưa xác minh',failed:'Cần kiểm tra',waiting:'Chờ xử lý'})[step.state]}</small></div></div>)}</div>}
             {phase === PUSH_STAGES.SUCCEEDED && !pendingCommit && !pendingPR && <div className="workflow-complete"><div><strong>Đã xác minh trên GitHub</strong><small>Bạn có thể bắt đầu bản ZIP tiếp theo mà không cần chọn lại repository.</small></div><button type="button" className="button primary" onClick={startNextVersion} disabled={busy}>Push bản tiếp theo <Icon name="arrow" size={16}/></button></div>}
             <div className="progress-track" role="progressbar" aria-label="Tiến độ xử lý" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress}><div className="progress-fill" style={{ width: `${progress}%` }}/></div><p className="status-text" role="status">{status || 'Sẵn sàng nhận file ZIP.'}</p>
             {transfer && <div className="transfer-card"><div className="transfer-card-head"><strong>Upload Git blobs</strong><span>{transfer.completed}/{transfer.total} file</span></div><div className="transfer-stats"><span>{prettyBytes(transfer.completedBytes)} / {prettyBytes(transfer.totalBytes)}</span><span>{transfer.speedBytesPerSec > 0 ? `${prettyBytes(transfer.speedBytesPerSec)}/s` : 'Đang chuẩn bị…'}</span><span>{transfer.etaSeconds !== null && transfer.etaSeconds < 3600 ? `ETA ~${transfer.etaSeconds}s` : 'ETA chưa xác định'}</span></div><small>Batch {transfer.batch}/{transfer.totalBatches} · Đã dùng lại {transfer.reused} blob · Ước tính có thể dao động theo mạng</small></div>}
             <div className="push-status-line"><span className={`network-chip ${online && pwa.reachable ? 'online' : 'offline'}`}>{online && pwa.reachable ? '● Online' : '● Offline'}</span><span className="stage-chip">{phase.replaceAll('_', ' ')}</span></div>
-            {pendingCommit && visibleRecoveryPush && <details className="pwa-recovery-advanced"><summary>Chi tiết Push chưa xác minh</summary><div className="recovery-banner" role="status"><strong>Cần xác minh lần push trước</strong><p>{pendingCommit.owner}/{pendingCommit.repo} · {pendingCommit.branch} · {pendingCommit.message}</p><button type="button" className="button secondary full" disabled={busy || !online || !auth.authenticated} onClick={() => verifyPending()}><Icon name="refresh" size={16}/> {busy && phase === PUSH_STAGES.VERIFYING ? 'Đang xác minh...' : 'Xác minh push trên GitHub'}</button><small>Chỉ kiểm tra trạng thái, không tạo commit mới.</small></div></details>}
+            {pendingCommit && !backgroundJob && visibleRecoveryPush && <details className="pwa-recovery-advanced"><summary>Chi tiết Push chưa xác minh</summary><div className="recovery-banner" role="status"><strong>Cần xác minh lần push trước</strong><p>{pendingCommit.owner}/{pendingCommit.repo} · {pendingCommit.branch} · {pendingCommit.message}</p><button type="button" className="button secondary full" disabled={busy || !online || !auth.authenticated} onClick={() => verifyPending()}><Icon name="refresh" size={16}/> {busy && phase === PUSH_STAGES.VERIFYING ? 'Đang xác minh...' : 'Xác minh push trên GitHub'}</button><small>Chỉ kiểm tra trạng thái, không tạo commit mới.</small></div></details>}
             {pendingPR && visibleRecoveryPR && <details className="pwa-recovery-advanced"><summary>Chi tiết Pull Request chưa xác minh</summary><div className="branch-pending" role="status"><strong>Branch đã push · PR chưa xác nhận</strong><p>{pendingPR.owner}/{pendingPR.repo} · {pendingPR.sourceBranch} → {pendingPR.baseBranch}<br/>Commit {pendingPR.expectedSourceHead.slice(0,12)}</p><button type="button" className="button secondary" onClick={retryPendingPR} disabled={busy || !online || !auth.authenticated}>Kiểm tra / Tạo PR</button><small>Không upload ZIP hoặc tạo commit mới. Server kiểm tra PR đã tồn tại trước khi tạo.</small></div></details>}
             {error && <div className="error-banner" role="alert">{error}{errorHint && <p className="error-hint">{errorHint}</p>}</div>}
             {result && <PushOutcome result={result} onCopy={copyCommitSha}/>}
-            <RecoveryCenter push={pendingCommit} pr={pendingPR} online={online && pwa.reachable} busy={busy} authenticated={auth.authenticated} authorizedRepos={repos} onVerifyPush={() => verifyPending()} onCheckPR={retryPendingPR} onOpenHistory={() => goToTab('history')}/>
+            <RecoveryCenter push={backgroundJob ? null : pendingCommit} pr={pendingPR} online={online && pwa.reachable} busy={busy} authenticated={auth.authenticated} authorizedRepos={repos} onVerifyPush={() => verifyPending()} onCheckPR={retryPendingPR} onOpenHistory={() => goToTab('history')}/>
           </article>
           {activeTab === 'history' && <HistoryPanel authenticated={auth.authenticated} owner={owner} repo={repo} branch={branch} online={online} busy={busy} setBusy={setBusy} pendingPush={pendingCommit} api={api} requestOnce={requestOnce} onRollback={(outcome)=>logLocalAction({kind:'rollback',state:'success',repo:`${owner}/${repo}`,sha:outcome.sha,message:'Rollback verified'})}/>}
           {activeTab === 'history' && chosenRepo && <details className="zip399-history-tools" data-mobile-view="history" onToggle={event => setPrToolsOpen(event.currentTarget.open)}><summary>Branches & Pull Requests</summary>{prToolsOpen && <BranchPrPanel key={`${owner}/${repo}`} owner={owner} repo={repo} branch={branch} online={online} busy={busy} api={api} onSelectBranch={chooseBranch} onMerge={(outcome,number)=>logLocalAction({kind:'merge',state:'success',repo:`${owner}/${repo}`,sha:outcome?.sha,message:`Merged PR #${number}`})}/>}</details>}
@@ -1435,7 +1527,7 @@ export default function Home() {
                 {workspaceOpen && <WorkspacePanel hostView="settings" key={`${owner}/${repo}@${branch}`} authenticated={auth.authenticated} owner={owner} repo={repo} branch={branch} online={online} busy={busy} onBack={() => {workspaceDirtyRef.current=false;setWorkspaceOpen(false);}} onDirtyChange={onWorkspaceDirtyChange} api={api} onCommit={(outcome)=>{reset();logLocalAction({kind:'quick-edit',state:'success',repo:`${owner}/${repo}`,sha:outcome?.sha,message:'Quick Edit saved'});}}/>}
               </div>
             </details>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.17</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.18</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -1446,7 +1538,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.9.17</span><span>GitHub App · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.9.18</span><span>GitHub App · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <ModalSheet open={Boolean(preview && diffViewer && activeTab === 'home')} title={`Diff · ${diffViewer?.path || ''}`}
     onClose={() => { diffRequestRef.current += 1; setDiffViewer(null); }} variant="diff">

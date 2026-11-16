@@ -1,10 +1,12 @@
-# Zipverra Pro v3.9.17 — Smart ZIP Compatibility Hotfix
+# Zipverra Pro v3.9.18 — Durable Server Push
+
+**v3.9.18:** Sau khi tất cả Git blobs được upload và server đã nhận job, Commit/Verify/PR chạy bằng Vercel Workflow (không phụ thuộc iPhone mở). Người dùng phải giữ PWA mở *đến khi* Activity xác nhận server đã nhận job. Ghi nhận job an toàn theo tài khoản GitHub và khôi phục kết quả khi mở lại. Bổ sung `workflow` v5; hướng dẫn: [RELEASE_V3918.md](./RELEASE_V3918.md).
 
 **Bản hiện tại:** [RELEASE_V3917.md](RELEASE_V3917.md) · **Checklist:** [QA_CHECKLIST_V3917.md](QA_CHECKLIST_V3917.md) · **Bản trước:** [RELEASE_V3916.md](RELEASE_V3916.md).
 
 **Giới hạn:** 120/200 MiB ZIP, tối đa 20 MiB/file. File lớn hơn 3 MB yêu cầu kết nối **Private Vercel Blob** (xem release notes); file <=3 MB không cần cấu hình thêm. Trên PC, tiến trình phân tích/Push hiển thị trạng thái và % ngay trong workspace. Giao diện mobile giữ nguyên.
 
-**Triển khai:** Push nội dung thư mục `Zipverra-v3.9.17/` lên root repository, cài `@vercel/blob` bằng `npm install`, kiểm tra `npm test` và `npm run build` trên Vercel Preview. Chưa coi là Production Stable trước khi kiểm thử GitHub/Vercel Blob thực tế.
+**Triển khai:** Push nội dung thư mục `Zipverra-v3.9.18/` lên root repository, cài `@vercel/blob` bằng `npm install`, kiểm tra `npm test` và `npm run build` trên Vercel Preview. Chưa coi là Production Stable trước khi kiểm thử GitHub/Vercel Blob thực tế.
 
 **v3.9.17:** Kiểm tra Central Directory/CRC đúng chuẩn cho file 0 byte, loại hai lớp wrapper khi xác định chắc chắn source root, thông báo lỗi theo file, hiển thị số file đã xác nhận; thiết kế lại riêng Upload PC (kéo thả ZIP, không còn khoảng trống lớn), hiển thị repo trong Activity và ẩn thanh progress trùng lặp tại Activity.
 
@@ -336,7 +338,7 @@ Read `ADVANCED_UX_V280.md` for UI acceptance and `ROADMAP_NEXT.md` for v3.0.0 Pr
 - **Faster perceived startup:** splash minimum reduced from 650ms to 180ms, and maximum from 5.5s to 1.8s; the real UI/skeleton can appear while session status remains unresolved. This is a UI wait-time change, not a measured LCP improvement.
 - **No extra environment variables, databases or dependencies.** Existing GitHub App flow, five tabs, ZIP Web Worker, Security Scan, PR and Safe Rollback preserved.
 
-**Important limitation:** ZIP/Quick Edit drafts are intentionally *not* persisted across browser/PWA restarts; iOS may discard in-memory state and sessionStorage. Recovery is only as complete as the GitHub read-only verification journal still available. You may need to reselect the ZIP and verify GitHub manually. Updates are not background jobs, and the PWA cannot guarantee continued upload while iPhone suspends or closes it.
+**v3.9.18:** ZIP/Quick Edit drafts are not retained across browser restarts. Git blob uploads still require the browser to remain active. Once Activity confirms the server accepted a durable Push job, Commit, verification and optional PR run independently of the browser; the app can be closed and the same GitHub account can reopen to read its result. Read-only recovery metadata is stored locally and no client token/source bytes are saved.
 
 See [PWA_RELIABILITY_V260.md](./PWA_RELIABILITY_V260.md) for implementation details, security boundaries and iPhone QA cases.
 
@@ -548,7 +550,7 @@ Quy trình mobile giữ nguyên: **Repos → Upload ZIP → Phân tích/Review �
 
 - Tự chuyển Activity ngay lúc nhấn Push; hiển thị số file/batch và lượng dữ liệu đã upload, tốc độ/ETA **ước tính**. Batch 12 file, tối đa 2 request song song.
 - Fingerprint/checkpoint dùng **chỉ các file được chọn**, ngăn tái dùng blob của danh sách thay đổi khác. Giữ xác minh HEAD/commit SHA, trạng thái unconfirmed, nút Verify Push, retry an toàn từ v1.7.0.
-- Không có background upload nếu đóng PWA. Không tự retry commit có kết quả chưa xác nhận.
+- Không thể tiếp tục **upload file** khi PWA bị iOS đình chỉ. Sau khi server nhận job, **Commit/Verify/PR** chạy độc lập. Không tự retry commit có kết quả chưa xác nhận.
 
 ## 1. Điểm mới v1.7.0
 
@@ -583,7 +585,7 @@ Tab **Repos** chỉ chứa repo, branch, tìm kiếm và repo gần đây (đã 
 - **Batch upload:** nhóm tối đa 12 file, 2 upload blob đồng thời. Chỉ gửi **file thay đổi**, không gửi nguyên ZIP lên server; không tự retry commit/branch mutation.
 - **Resume trước commit:** mỗi blob được xác minh SHA và checkpoint ở `localStorage` trên thiết bị (metadata tên file/SHA, không phải nội dung ZIP/token). Khi mất mạng, mở lại PWA → **chọn lại cùng repo/branch và file ZIP** → phân tích lại → Push; file đã upload với SHA phù hợp sẽ được bỏ qua. Checkpoint chỉ hợp lệ trong 24 giờ và ràng buộc bởi fingerprint SHA-256 của repo, HEAD, mode, path và blob SHA.
 - **Trạng thái commit không chắc chắn:** ưu tiên nút **Xác minh push** ở Activity; không tự tạo commit thứ hai. Recovery Journal cũ dùng `sessionStorage` vẫn hoạt động.
-- **Thận trọng:** Không có tiến trình background khi đóng PWA. Resume là **tiếp tục theo file** sau khi người dùng mở lại/chọn lại ZIP, không phải tiếp tục từng byte bên trong một file đang upload.
+- **Thận trọng (v3.9.18):** Giai đoạn tải Git blobs vẫn cần PWA mở; khi server báo đã nhận job, có thể khóa màn hình/chuyển app. Nếu đóng sớm, dùng checkpoint theo file và Recovery để xác minh; không tiếp tục từng byte file đang dở.
 
 
 ### History & Safe Rollback — v1.6.0

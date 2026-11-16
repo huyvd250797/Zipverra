@@ -8,10 +8,10 @@ const read = file => readFileSync(new URL(`../${file}`, import.meta.url),'utf8')
 const page = read('app/page.jsx');
 const css = read('app/styles/review-gate-hotfix-v396.css');
 
-test('v3.9.17 version and latest styles are synchronized', () => {
-  assert.equal(APP_VERSION,'3.9.17');
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.17');
-  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.17/);
+test('v3.9.18 version and latest styles are synchronized', () => {
+  assert.equal(APP_VERSION,'3.9.18');
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.18');
+  assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.18/);
   const layout=read('app/layout.jsx');
   assert.ok(layout.indexOf('zero-scroll-v395.css') < layout.indexOf('review-gate-hotfix-v396.css'));
 });
@@ -64,7 +64,7 @@ test('changing project/file and verified writes clear the sheet state', () => {
 test('desktop Push and GitHub security APIs remain the same', () => {
   assert.match(page,/className="zip396-desktop-only"/);
   assert.match(page,/onClick=\{push\}/);
-  assert.match(page,/requestOnce\('commit', commitPayload\)/);
+  assert.match(page,/requestOnce\('background-push\/start', commitPayload\)/);
   assert.match(page,/api\('preflight'/);
   assert.match(page,/api\('blob'/);
   assert.match(page,/setConfirmed\(false\); setSyncConfirmed\(false\); setSensitiveConsent\(false\)/);

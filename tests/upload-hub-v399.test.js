@@ -7,10 +7,10 @@ const read = name => readFileSync(new URL(`../${name}`, import.meta.url), 'utf8'
 const page = read('app/page.jsx');
 const css = read('app/styles/upload-hub-v399.css');
 
-test('v3.9.17 runtime, PWA and Upload Hub stylesheet are release-aligned', () => {
-  assert.equal(APP_VERSION, '3.9.17');
+test('v3.9.18 runtime, PWA and Upload Hub stylesheet are release-aligned', () => {
+  assert.equal(APP_VERSION, '3.9.18');
   assert.equal(JSON.parse(read('package.json')).version, APP_VERSION);
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.17/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.18/);
   const imports=read('app/layout.jsx');
   assert.ok(imports.indexOf('minimal-interface-v398.css') < imports.indexOf('upload-hub-v399.css'));
 });
@@ -60,7 +60,7 @@ test('security, confirmation and recovery gates remain independent of UI refacto
   assert.match(page,/disabled=\{!canSubmitPush\}/);
   assert.match(page,/requiresConsent && !sensitiveConsent/);
   assert.match(page,/!confirmed \|\| \(mode === 'sync' && stats\?\.delete > 0 && !syncConfirmed\)/);
-  assert.match(page,/requestOnce\('commit', commitPayload\)/);
+  assert.match(page,/requestOnce\('background-push\/start', commitPayload\)/);
   assert.match(page,/refreshExpiringAttestations/);
   assert.match(page,/<RecoveryCenter/);
 });

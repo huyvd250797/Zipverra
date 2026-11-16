@@ -8,11 +8,11 @@ const ready = { hasPreview:true, selectedCount:3, critical:0, authenticated:true
   pending:false, confirmed:true, syncDeleteCount:0, syncConfirmed:false };
 
 test('v3.0 stable release keeps full PWA version and stylesheet', () => {
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.17');
-  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.9\.17'/);
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.17/);
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.18');
+  assert.match(read('lib/pwa-reliability.js'), /APP_VERSION = '3\.9\.18'/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.18/);
   assert.match(read('app/layout.jsx'), /advanced-ux-polish\.css/);
-  assert.match(read('app/page.jsx'), /v3\.9\.17/);
+  assert.match(read('app/page.jsx'), /v3\.9\.18/);
 });
 
 test('readiness cannot approve a missing preview, missing changes or unconfirmed review', () => {
@@ -84,14 +84,14 @@ test('Readiness is visible and remains behind user checkbox and server-backed Pu
   assert.match(main,/<ReviewReadiness state=\{pushReadiness\}/);
   assert.match(main,/disabled=\{!canSubmitPush\}/);
   assert.match(main,/!confirmed \|\| \(mode === 'sync' && stats\?\.delete > 0 && !syncConfirmed\)/);
-  assert.match(main,/requestOnce\('commit', commitPayload\)/);
+  assert.match(main,/requestOnce\('background-push\/start', commitPayload\)/);
   assert.match(main,/\(requiresConsent && !sensitiveConsent\)/);
 });
 
 test('Outcome uses only verified GitHub result and provides safe copy SHA / external links', () => {
   const main=read('app/page.jsx');const ui=read('app/components/PolishedWorkspace.jsx');
   assert.match(main,/<PushOutcome result=\{result\} onCopy=\{copyCommitSha\}/);
-  assert.match(main,/const outcome = await requestOnce\('commit', commitPayload\)/);
+  assert.match(main,/const accepted = await requestOnce\('background-push\/start', commitPayload\)/);
   assert.match(ui,/\^\[a-f0-9\]\{40\}\$/);
   assert.match(ui,/rel="noopener noreferrer"/);
   assert.equal(createInteractionNotice('sha-copied').tone,'info');

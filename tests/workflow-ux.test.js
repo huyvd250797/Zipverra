@@ -38,7 +38,7 @@ test('file selection triggers analysis but never a GitHub commit',()=>{
   assert.match(page,/checkZipCandidate\(next, archiveCapacity\(\'extended\'\)\.zipBytes\)/);
   assert.match(page,/if \(!preview \|\| !selectedChanges\.length \|\| \(requiresConsent && !sensitiveConsent\) \|\| !confirmed/);
   assert.match(page,/onClick=\{push\}/);
-  assert.match(page,/requestOnce\('commit', commitPayload\)/);
+  assert.match(page,/requestOnce\('background-push\/start', commitPayload\)/);
 });
 test('tab navigation keeps review state, activity verification and safe next ZIP CTA',()=>{
   const page=read('app/page.jsx');

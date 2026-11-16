@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { readLimitedJson, RequestBodyError, MAX_JSON_BODY_BYTES } from '../lib/request-body.js';
 import { positionTabViewport, scheduleTabViewport } from '../lib/tab-scroll.js';
-import config from '../next.config.mjs';
+import config from '../lib/next-safe-config.js';
 
 const source = name => readFileSync(new URL(`../${name}`, import.meta.url), 'utf8');
 
@@ -94,11 +94,11 @@ test('Navigation scroll cleanup avoids stale animation and restores smooth-scrol
 
 test('Live Push Flow appears before Recovery Center and Recent Actions; no push retry added',()=>{
   const page=source('app/page.jsx');
-  assert.ok(page.indexOf('id="activity-live-flow"') < page.indexOf('<RecoveryCenter push={pendingCommit}'));
-  assert.ok(page.indexOf('<RecoveryCenter push={pendingCommit}') < page.indexOf('<ActivityJournal items={proActivity}'));
+  assert.ok(page.indexOf('id="activity-live-flow"') < page.indexOf('<RecoveryCenter push={backgroundJob ? null : pendingCommit}'));
+  assert.ok(page.indexOf('<RecoveryCenter push={backgroundJob ? null : pendingCommit}') < page.indexOf('<ActivityJournal items={proActivity}'));
   assert.match(page,/setPhase\(PUSH_STAGES\.UPLOADING\);[\s\S]*?goToTab\('activity'\)/);
   assert.match(page,/useEffect\(\(\) => \{\s*return scheduleTabViewport\(window, document, activeTab, activityRef\.current\);/);
-  assert.match(page,/requestOnce\('commit', commitPayload\)/);
+  assert.match(page,/requestOnce\('background-push\/start', commitPayload\)/);
   assert.doesNotMatch(source('lib/tab-scroll.js'),/fetch\(|localStorage|sessionStorage|requestOnce\(/);
 });
 

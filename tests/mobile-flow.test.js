@@ -33,7 +33,7 @@ test('app keeps mobile safe area, dark/light preferences and reduced motion', ()
 test('retry policy and verification UI remain in place', () => {
  const page = read('app/page.jsx');
  assert.match(page, /setPendingCommit\(commitPayload\)/);
- assert.match(page, /requestOnce\('commit', commitPayload\)/);
+ assert.match(page, /requestOnce\('background-push\/start', commitPayload\)/);
  assert.match(page, /api\('verify', data,/);
  assert.match(page, /mobile-global-status/);
 });

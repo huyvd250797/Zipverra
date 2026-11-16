@@ -10,8 +10,8 @@ const ui=source('app/components/ReviewRiskCenter.jsx');
 const critical={report:{critical:1,warning:2,info:1},requiresConsent:true,
   identity:{severity:'critical',common:1,differentNames:true},mode:'sync',deleteCount:15};
 
-test('v3.9.17 registers one unified Review risk surface ahead of Commit and diagnostics',()=>{
-  assert.equal(JSON.parse(source('package.json')).version,'3.9.17');
+test('v3.9.18 registers one unified Review risk surface ahead of Commit and diagnostics',()=>{
+  assert.equal(JSON.parse(source('package.json')).version,'3.9.18');
   assert.match(source('app/layout.jsx'),/review-risk-v385\.css/);
   const risk=page.indexOf('<ReviewRiskCenter'),decision=page.indexOf('className="premium-review-confirm"'),files=page.indexOf('className="premium-review-files"');
   assert.ok(risk>0&&risk<decision&&decision<files);
@@ -76,7 +76,7 @@ test('diagnostics start collapsed but remain accessible by button; secrets are n
  assert.doesNotMatch(ui,/finding\.value|finding\.content|f\.secret|data\.content/);
 });
 test('existing technical gates and server acknowledgement are untouched',()=>{
- assert.match(page,/requestOnce\('commit', commitPayload\)/);
+ assert.match(page,/requestOnce\('background-push\/start', commitPayload\)/);
  assert.match(page,/allowSensitiveCommit: requiresConsent && sensitiveConsent/);
  assert.match(page,/allowSensitiveUpload:\s*requiresConsent && sensitiveConsent/);
  assert.match(page,/!confirmed \|\| \(mode === 'sync' && stats\?\.delete > 0 && !syncConfirmed\)/);

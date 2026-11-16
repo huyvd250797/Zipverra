@@ -9,11 +9,11 @@ const read = path => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8'
 const page = read('app/page.jsx');
 const css = read('app/styles/desktop-focused-v3913.css');
 
-test('v3.9.17 metadata, public cache and desktop-only layer are aligned', () => {
-  assert.equal(APP_VERSION, '3.9.17');
+test('v3.9.18 metadata, public cache and desktop-only layer are aligned', () => {
+  assert.equal(APP_VERSION, '3.9.18');
   assert.equal(JSON.parse(read('package.json')).version, APP_VERSION);
-  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.17/);
-  assert.match(page, /Zipverra · v3\.9\.17/);
+  assert.match(read('public/sw.js'), /zipverra-public-v3\.9\.18/);
+  assert.match(page, /Zipverra · v3\.9\.18/);
   assert.ok(read('app/layout.jsx').indexOf('upload-hub-v399.css') < read('app/layout.jsx').indexOf('desktop-focused-v3913.css'));
 });
 test('desktop stage is based on a completed Preview, not just a selected archive', () => {
@@ -49,7 +49,7 @@ test('selecting repo, selecting profile and analyzing do not mutate repo ranking
     assert.doesNotMatch(section, /recordVerifiedPushRepo\(/);
     assert.doesNotMatch(section, /setRecents\(|recordRepositorySelection\(/);
   }
-  assert.equal((page.match(/recordVerifiedPushRepo\(`/g)||[]).length,2);
+  assert.equal((page.match(/recordVerifiedPushRepo\(`/g)||[]).length + (page.match(/recordVerifiedPushRepo\(verifiedRepo,/g)||[]).length,2);
 });
 test('only confirmed SHA records ranking, including verified PR branch; duplicate verification is deduped', () => {
   const fn = page.slice(page.indexOf('function recordVerifiedPushRepo'),page.indexOf('useEffect(() => {',page.indexOf('function recordVerifiedPushRepo')));

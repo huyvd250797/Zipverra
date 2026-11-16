@@ -1,3 +1,8 @@
+## v3.9.18 — Durable Server Push (2026-11-16)
+- Upload blobs & security proofs vẫn thực hiện foreground; sau khi server xác nhận job, Commit/Verify/PR chạy trong Vercel Workflow, độc lập với iPhone.
+- Idempotency hook chống duplicate, status receipt HMAC gắn GitHub account, session mã hóa, status poll + resume/recovery; không tự retry mutation chưa rõ kết quả.
+- Có cảnh báo chính xác thời điểm được phép khóa màn hình; nâng cấp version PWA/cache. Không thay đổi giới hạn ZIP hay các cổng xác nhận rủi ro.
+
 # v3.9.17 — Smart ZIP Compatibility Hotfix
 
 - ZIP Central Directory metadata + CRC check; chấp nhận file 0 byte không thêm nội dung.

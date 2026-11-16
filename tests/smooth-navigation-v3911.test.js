@@ -10,10 +10,10 @@ const css=read('app/styles/smooth-tab-performance-v3911.css');
 const sha=x=>x.repeat(40);
 
 test('v3.9.11 aligns runtime, package, cache and final motion layer',()=>{
- assert.equal(APP_VERSION,'3.9.17');
+ assert.equal(APP_VERSION,'3.9.18');
  assert.equal(JSON.parse(read('package.json')).version,APP_VERSION);
- assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.17/);
- assert.match(page,/Zipverra · v3\.9\.17/);
+ assert.match(read('public/sw.js'),/zipverra-public-v3\.9\.18/);
+ assert.match(page,/Zipverra · v3\.9\.18/);
  const layout=read('app/layout.jsx');
  assert.ok(layout.indexOf('desktop-redesign-v3914.css') < layout.indexOf('large-upload-progress-v3915.css')); 
 });
@@ -40,8 +40,8 @@ test('repo ranking is recorded only after verified GitHub commit for Direct Push
 test('Push attempts and failure paths never promote a repository',()=>{
  const push=page.slice(page.indexOf('async function push()'),page.indexOf('return <>',page.indexOf('async function push()')));
  assert.doesNotMatch(push,/recordVerifiedPushRepo\(/);
- assert.match(push,/requestOnce\('commit', commitPayload\)/);
- assert.match(push,/await completeVerified\(outcome, commitPayload\)/);
+ assert.match(push,/requestOnce\('background-push\/start', commitPayload\)/);
+ assert.match(push,/setBackgroundJob\(job\)/);
 });
 test('most recent verified Push is first, even when other repositories are pinned',()=>{
  const repos=['team/A','team/B','team/C','team/D'].map(full_name=>({full_name}));

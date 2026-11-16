@@ -4,8 +4,8 @@ import { readFileSync } from 'node:fs';
 import { createInteractionNotice, shouldAnnounceEvent } from '../lib/interaction-feedback.js';
 const read = path => readFileSync(new URL(`../${path}`, import.meta.url),'utf8');
 
-test('v3.9.17 has separate optional motion layer loaded last',()=>{
-  assert.equal(JSON.parse(read('package.json')).version,'3.9.17');
+test('v3.9.18 has separate optional motion layer loaded last',()=>{
+  assert.equal(JSON.parse(read('package.json')).version,'3.9.18');
   const layout=read('app/layout.jsx');
   assert.ok(layout.indexOf('pro-design-system.css') < layout.indexOf('pro-motion.css'));
   for(const css of ['--motion-quick','--motion-enter','--motion-steady','--motion-curve','pro-toast-region','pro-skeleton','pro-enter','pro-toast-enter','prefers-reduced-motion:reduce'])
@@ -50,7 +50,7 @@ test('only verified GitHub operation emits final success toast',()=>{
   assert.match(page,/function finishVerified\(outcome\)[\s\S]*?notify\('push-verified', true\)/);
   assert.match(page,/const pr = await requestOnce\('pull-request\/create', prData\);[\s\S]*?notify\('pr-verified', true\)/);
   assert.match(page,/if \(!preview \|\| !selectedChanges\.length \|\| \(requiresConsent && !sensitiveConsent\) \|\| !confirmed/);
-  assert.match(page,/requestOnce\('commit', commitPayload\)/);
+  assert.match(page,/requestOnce\('background-push\/start', commitPayload\)/);
 });
 test('skeleton appears for async chunks, authorization and ZIP analysis',()=>{
   const page=read('app/page.jsx');
