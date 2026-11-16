@@ -34,6 +34,7 @@ import './styles/upload-hub-v399.css';
 import './styles/desktop-focused-v3913.css';
 import './styles/desktop-redesign-v3914.css';
 import './styles/large-upload-progress-v3915.css';
+import './styles/smart-zip-desktop-v3917.css';
 
 export const metadata = {
   title: 'Zipverra Pro — GitHub Workspace',

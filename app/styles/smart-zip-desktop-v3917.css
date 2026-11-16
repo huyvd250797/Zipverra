@@ -1,0 +1,80 @@
+/* v3.9.17: Desktop-only workspace. The mobile layout remains in previous layers. */
+.zip3917-desktop-drop-copy{display:none}
+@media (min-width:761px){
+  .zip3917-desktop-drop-copy{display:inline}
+  .zip3917-mobile-drop-copy{display:none}
+  /* Activity already has a complete phase tracker. Do not duplicate it above. */
+  .pro-shell main[data-active-view="activity"]>.zip3915-progress{display:none!important}
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .content-grid{max-width:1430px;margin:0 auto!important}
+  /* The left upload sequence flows naturally; shortcuts are independent on the
+     right, so their height cannot create a blank grid row between actions. */
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel{
+    display:flex!important;flex-direction:column;align-items:stretch;justify-content:flex-start;
+    gap:14px!important;position:relative!important;top:auto!important;
+    grid-template-columns:none!important;grid-template-rows:none!important;
+    width:100%;min-height:0!important;max-height:none!important;
+    padding:0 calc(39% + 22px) 0 0!important;margin:0!important;
+    background:transparent!important;border:none!important;box-shadow:none!important;overflow:visible!important;
+  }
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel:has(>.zip393-quick-actions){min-height:330px!important}
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.zip3914-upload-section-title{
+    display:flex;align-items:center;width:100%;margin:0 0 2px;padding:8px 0 15px;
+    border-bottom:1px solid var(--pro-border);
+  }
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.zip393-quick-actions{
+    display:grid;position:absolute!important;inset:0 0 auto auto!important;
+    width:39%;height:auto;min-height:0!important;grid-column:auto;grid-row:auto;
+    margin:0!important;padding:19px!important;border:1px solid var(--pro-border);
+    border-radius:15px;background:var(--pro-surface-2);box-shadow:none;
+  }
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.zip392-target-switch{display:none!important}
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.zip3914-desktop-choose-repo,
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.source-zip-download{
+    width:100%;min-height:62px!important;grid-column:auto;grid-row:auto;margin:0!important;
+  }
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.drop-zone{
+    width:100%;grid-column:auto;grid-row:auto;margin:0!important;min-height:177px!important;
+    padding:24px!important;border:1.5px dashed var(--pro-border-strong);border-radius:15px;
+    background:var(--pro-surface-2);cursor:pointer;
+  }
+  /* Before repo selection there is no usable ZIP target. Hide the disabled
+     oversized placeholder instead of showing an empty dead zone. */
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.drop-zone.locked{display:none!important}
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.workflow-options{
+    width:100%;grid-column:auto;grid-row:auto;margin:0!important;
+    background:var(--pro-surface)!important;border:1px solid var(--pro-border);border-radius:13px;
+  }
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.file-detail,
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.archive-capacity-note,
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.button{
+    width:100%;grid-column:auto;grid-row:auto;margin:0;
+  }
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel.zip3917-drag-active>.drop-zone,
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.drop-zone:not(.locked):hover{
+    background:var(--pro-accent-surface)!important;border-color:var(--pro-accent)!important;
+    outline:2px solid color-mix(in srgb,var(--pro-accent) 24%,transparent);outline-offset:2px;
+  }
+  .zip3917-activity-repo{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:7px 0 0;color:var(--pro-muted);font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+  .zip3917-activity-repo svg{flex:none;color:var(--pro-accent)}
+  .zip3917-activity-repo strong{color:var(--pro-text);font-weight:750}
+  .zip3917-activity-repo span{color:var(--pro-muted)}
+}
+@media (min-width:761px) and (max-width:1100px){
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel{
+    padding:0!important;min-height:0!important;gap:13px!important;
+  }
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.zip393-quick-actions{
+    position:static!important;inset:auto!important;width:100%;order:6;margin:0!important;
+  }
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.zip3914-upload-section-title{order:0}
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.zip3914-desktop-choose-repo,
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.source-zip-download{order:1}
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.drop-zone{order:2}
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.file-detail,
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.archive-capacity-note{order:3}
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.workflow-options{order:4}
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .upload-panel>.button:not(.zip392-login){order:5}
+}
+@media (min-width:761px) and (prefers-reduced-motion:reduce){
+  .pro-shell main[data-active-view="home"][data-zip-stage="upload"] .drop-zone{transition:none!important}
+}

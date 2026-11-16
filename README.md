@@ -1,10 +1,12 @@
-# Zipverra Pro v3.9.16 — Build Import Resolution Hotfix
+# Zipverra Pro v3.9.17 — Smart ZIP Compatibility Hotfix
 
-**Bản hiện tại:** [RELEASE_V3916.md](RELEASE_V3916.md) · **Checklist:** [QA_CHECKLIST_V3916.md](QA_CHECKLIST_V3916.md) · **Bản trước:** [RELEASE_V3915.md](RELEASE_V3915.md).
+**Bản hiện tại:** [RELEASE_V3917.md](RELEASE_V3917.md) · **Checklist:** [QA_CHECKLIST_V3917.md](QA_CHECKLIST_V3917.md) · **Bản trước:** [RELEASE_V3916.md](RELEASE_V3916.md).
 
 **Giới hạn:** 120/200 MiB ZIP, tối đa 20 MiB/file. File lớn hơn 3 MB yêu cầu kết nối **Private Vercel Blob** (xem release notes); file <=3 MB không cần cấu hình thêm. Trên PC, tiến trình phân tích/Push hiển thị trạng thái và % ngay trong workspace. Giao diện mobile giữ nguyên.
 
-**Triển khai:** Push nội dung thư mục `Zipverra-v3.9.16/` lên root repository, cài `@vercel/blob` bằng `npm install`, kiểm tra `npm test` và `npm run build` trên Vercel Preview. Chưa coi là Production Stable trước khi kiểm thử GitHub/Vercel Blob thực tế.
+**Triển khai:** Push nội dung thư mục `Zipverra-v3.9.17/` lên root repository, cài `@vercel/blob` bằng `npm install`, kiểm tra `npm test` và `npm run build` trên Vercel Preview. Chưa coi là Production Stable trước khi kiểm thử GitHub/Vercel Blob thực tế.
+
+**v3.9.17:** Kiểm tra Central Directory/CRC đúng chuẩn cho file 0 byte, loại hai lớp wrapper khi xác định chắc chắn source root, thông báo lỗi theo file, hiển thị số file đã xác nhận; thiết kế lại riêng Upload PC (kéo thả ZIP, không còn khoảng trống lớn), hiển thị repo trong Activity và ẩn thanh progress trùng lặp tại Activity.
 
 **v3.9.16 hotfix:** Sửa đường dẫn import của API `/api/large-upload`; bổ sung kiểm thử toàn bộ static relative imports để tránh lỗi `Module not found`. Không thay đổi GitHub Push, cách tải file lớn hoặc giao diện.
 

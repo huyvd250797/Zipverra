@@ -1,9 +1,9 @@
 {
   "name": "zipverra",
-  "version": "3.9.16",
+  "version": "3.9.17",
   "private": true,
   "type": "module",
-  "description": "Zipverra Pro v3.9.16 — Build Import Resolution Hotfix (20 MiB large file transport and desktop progress retained)",
+  "description": "Zipverra Pro v3.9.17 — Smart ZIP Compatibility Hotfix · Desktop Upload Polish",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

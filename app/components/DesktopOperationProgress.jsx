@@ -13,7 +13,7 @@ const PHASES={
 };
 /** Standalone PC progress, visible without opening Activity. Percent is a bounded
  * workflow-stage value, not a promise of bytes transferred across every stage. */
-export default memo(function DesktopOperationProgress({phase,progress=0,busy=false,error='',status='',transfer=null}){
+export default memo(function DesktopOperationProgress({phase,progress=0,busy=false,error='',status='',transfer=null,validation=null}){
   if(!busy && !error && !['UNCONFIRMED','FAILED'].includes(phase)) return null;
   const value=Math.max(0,Math.min(100,Math.round(Number(progress)||0)));
   const failed=Boolean(error);
@@ -29,6 +29,7 @@ export default memo(function DesktopOperationProgress({phase,progress=0,busy=fal
     {!failed&&<div className="zip3915-progress-track" role="progressbar" aria-valuenow={value} aria-valuemin={0} aria-valuemax={100} aria-label="Tiến độ xử lý theo từng giai đoạn">
       <div className="zip3915-progress-fill" style={{width:`${value}%`}}/>
     </div>}
+    {validation?.total > 0 && (phase==='ANALYZING' || failed) && <div className="zip3915-progress-meta" aria-live="polite"><span>Đã kiểm tra {validation.processed}/{validation.total} file</span><span>Không hợp lệ: {validation.invalid ?? 0}</span></div>}
     {transfer?.total>0 && !failed && <div className="zip3915-progress-meta"><span>{transfer.completed}/{transfer.total} file</span><span>{transfer.speedBytesPerSec>0?`${(transfer.speedBytesPerSec/1024/1024).toFixed(1)} MB/s`: 'Đang chuẩn bị...'}</span></div>}
   </section>;
 });

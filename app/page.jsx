@@ -207,6 +207,8 @@ export default function Home() {
   const [diffViewer, setDiffViewer] = useState(null);
   const diffRequestRef = useRef(0);
   const [transfer, setTransfer] = useState(null);
+  const [archiveValidation, setArchiveValidation] = useState(null);
+  const [zipDragging, setZipDragging] = useState(false);
   const [changeFilter, setChangeFilter] = useState('all');
   const [syncConfirmed, setSyncConfirmed] = useState(false);
   const [projectMismatchConfirmed, setProjectMismatchConfirmed] = useState(false);
@@ -727,9 +729,29 @@ export default function Home() {
     if (busy || pendingCommit || pendingPR) return;
     change(setBranch, nextBranch);
   }
+  function handleZipDragOver(event) {
+    if (!event.dataTransfer?.types?.includes('Files')) return;
+    event.preventDefault();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = chosenRepo && !busy && !pendingCommit && !pendingPR ? 'copy' : 'none';
+    setZipDragging(Boolean(chosenRepo && !busy && !pendingCommit && !pendingPR));
+  }
+  function handleZipDragLeave(event) {
+    if (!event.currentTarget.contains(event.relatedTarget)) setZipDragging(false);
+  }
+  function handleZipDrop(event) {
+    if (!event.dataTransfer?.types?.includes('Files')) return;
+    event.preventDefault();
+    setZipDragging(false);
+    if (!chosenRepo) { setError('Hãy chọn repository trước khi kéo thả ZIP.'); return; }
+    if (busy || pendingCommit || pendingPR) return;
+    if (event.dataTransfer.files.length !== 1) { setError('Mỗi lần chỉ được kéo thả một file ZIP.'); return; }
+    void chooseFile(event.dataTransfer.files[0]);
+  }
   async function chooseFile(next) {
     if (busy || pendingCommit || pendingPR || !chosenRepo) return;
     if (fileInput.current) fileInput.current.value = '';
+    setZipDragging(false);
+    setArchiveValidation(null);
     if (!next) return;
     const selectionSeq=++fileSelectionSeqRef.current;
     const selectedRepo=`${owner}/${repo}@${branch}`;
@@ -762,6 +784,7 @@ export default function Home() {
     if (analyzingRef.current || busy) return;
     analyzingRef.current = true;
     archiveProgressAtRef.current = 0;
+    setArchiveValidation({processed:0,total:0,invalid:0});
     setBusy(true); setError(''); setErrorHint(''); setResult(null); setProgress(0); setPhase(PUSH_STAGES.ANALYZING);
     try {
       if (!online) throw new Error('Thiết bị đang offline. Hãy kết nối Internet rồi phân tích lại.');
@@ -774,14 +797,15 @@ export default function Home() {
       // metadata and redacted security findings; content bytes are read on demand.
       archiveSessionRef.current?.close();
       archiveSessionRef.current = null;
-      const session = await openArchiveOffThread(file, (percent) => {
+      const session = await openArchiveOffThread(file, (percent, detail) => {
         const now = Date.now();
-        if (shouldPublishProgress(archiveProgressAtRef.current, now, percent >= 100)) { archiveProgressAtRef.current = now; setProgress(Math.round(percent * 0.6)); }
+        if (detail?.invalid || shouldPublishProgress(archiveProgressAtRef.current, now, percent >= 100)) { archiveProgressAtRef.current = now; setProgress(Math.round(percent * 0.6)); if (detail) setArchiveValidation(detail); }
       },
         typeof Worker !== 'undefined' ? () => new Worker(new URL('./workers/archive.worker.js', import.meta.url), { type: 'module' }) : null,
         archiveMode);
       archiveSessionRef.current = session;
       const archive = session.archive;
+      if (archive.validation) setArchiveValidation(archive.validation);
       setPhase(PUSH_STAGES.PREFLIGHT);
       setProgress(65);
       setStatus('Đang kiểm tra GitHub App installation và quyền ghi repository...');
@@ -1167,7 +1191,7 @@ export default function Home() {
         <span className="desktop-rail-label">GITHUB ACCOUNT</span>
         <strong>{auth.user?.login ? `@${auth.user.login}` : 'Chưa đăng nhập'}</strong>
         <span className="desktop-rail-branch"><Icon name="branch" size={14}/>{chosenRepo ? `${repo} · ${branch}` : 'Chọn repository để bắt đầu'}</span>
-        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.16</span>
+        <span className={`desktop-rail-status${online && pwa.reachable ? ' is-online' : ''}`}>{online && pwa.reachable ? '● Connected' : '● Offline'} · v3.9.17</span>
       </div>
     </aside>
     <header className="topbar" role="banner">
@@ -1176,7 +1200,7 @@ export default function Home() {
       <div className="header-actions"><span className="desktop-header-help">
         
         <ContextualHelp tab={activeTab}/>
-      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.16</span></div>
+      </span>{auth.authenticated && online && pwa.reachable ? <span className="header-connected-mark" role="status" aria-label="GitHub đã kết nối" title={auth.user?.login ? `GitHub: @${auth.user.login} đã kết nối` : 'GitHub đã kết nối'}><Icon name="check" size={17}/></span> : <StatusIndicator online={online && pwa.reachable} authenticated={auth.authenticated} loading={auth.loading}/>}<span className="version">v3.9.17</span></div>
     </header>
     <UXViewIntro activeTab={activeTab} key={activeTab} online={online && pwa.reachable} pending={Boolean(pendingCommit || pendingPR)} />
     <PwaStatusBanner online={online} reachable={pwa.reachable} updateAvailable={pwa.updateAvailable} canApplyUpdate={pwa.canApplyUpdate} applyUpdate={pwa.applyUpdate} checking={pwa.checking} checkForUpdates={pwa.checkForUpdates}/>
@@ -1216,13 +1240,13 @@ export default function Home() {
       {activeTab === 'home' && <CurrentRepository owner={owner} repo={repo} branch={branch} busy={busy || Boolean(pendingCommit || pendingPR)} onChoose={() => setRepoSheetOpen(true)} onBranch={() => setBranchSheetOpen(true)}/> }
       {(pendingCommit || pendingPR) && activeTab !== 'activity' && <button type="button" className="mobile-recovery-shortcut" onClick={() => goToTab('activity')}>Có thao tác GitHub cần xác minh · Mở Activity <Icon name="arrow" size={15}/></button>}
       {activeTab === 'home' && preview && <div className="zip3913-desktop-review-toolbar" aria-label="Phiên Review">
-        <div className="zip3913-review-file"><span className="zip3913-review-kicker">REVIEW SOURCE</span><strong title={file?.name || ''}>{file?.name}</strong><small>{prettyBytes(file?.size || 0)} · {selectedChanges.length}/{preview.changes.length} file thay đổi · {mode === 'sync' ? 'Sync' : 'Merge'} / {releaseStrategy === 'pr' ? 'PR' : 'Direct Push'}</small></div>
+        <div className="zip3913-review-file"><span className="zip3913-review-kicker">REVIEW SOURCE</span><strong title={file?.name || ''}>{file?.name}</strong><small>{prettyBytes(file?.size || 0)} · {preview.archive.validation?.processed ?? preview.archive.files.length} file hợp lệ · {preview.archive.validation?.empty || 0} file rỗng · {selectedChanges.length}/{preview.changes.length} file thay đổi · {mode === 'sync' ? 'Sync' : 'Merge'} / {releaseStrategy === 'pr' ? 'PR' : 'Direct Push'}</small></div>
         <button type="button" className="button secondary zip3913-change-zip" disabled={busy || Boolean(pendingCommit || pendingPR)} onClick={() => fileInput.current?.click()}><Icon name="file" size={17}/> Đổi ZIP</button>
       </div>}
-      <DesktopOperationProgress phase={phase} progress={progress} busy={busy} error={error} status={status} transfer={transfer}/>
+      {activeTab === 'home' && <DesktopOperationProgress phase={phase} progress={progress} busy={busy} error={error} status={status} transfer={transfer} validation={archiveValidation}/>}
       <section className="content-grid" data-active-view={activeTab}>
         <div className="form-column">
-          <article className={`panel upload-panel${preview ? ' zip392-reviewed' : ''}`} data-mobile-view="home">
+          <article className={`panel upload-panel${preview ? ' zip392-reviewed' : ''}${zipDragging ? ' zip3917-drag-active' : ''}`} data-mobile-view="home" onDragOver={handleZipDragOver} onDragLeave={handleZipDragLeave} onDrop={handleZipDrop}>
             <StepTitle n="02" title="Upload ZIP" desc=""/>
             <div className="zip3914-upload-section-title" aria-hidden="true"><span>01</span><div><strong>Gói source ZIP</strong><small>Chọn ZIP mới hoặc tải source hiện tại</small></div></div>
             {!auth.loading && !auth.authenticated && <a className="button primary full zip392-login" href="/api/auth/login"><Icon name="github" size={17}/> Kết nối GitHub để chọn repository</a>}
@@ -1247,7 +1271,7 @@ export default function Home() {
             </div>}
             {auth.authenticated && !chosenRepo && <button type="button" className="zip3914-desktop-choose-repo" disabled={busy || Boolean(pendingCommit || pendingPR)} onClick={() => setRepoSheetOpen(true)}><Icon name="branch" size={20}/><span>Chọn repository để bắt đầu</span><Icon name="arrow" size={17}/></button>}
             <input ref={fileInput} id="file" className="visually-hidden" type="file" accept=".zip,application/zip,application/x-zip-compressed" disabled={busy || !chosenRepo} onChange={(e) => chooseFile(e.target.files?.[0])}/>
-            <label htmlFor={chosenRepo ? 'file' : undefined} className={`drop-zone ${file ? 'picked' : ''} ${!chosenRepo ? 'locked' : ''}`}><span className="file-symbol"><Icon name={file ? 'file' : 'upload'} size={25}/></span><strong>{file ? file.name : chosenRepo ? 'Chọn ZIP' : 'Chọn repository'}</strong>{file && <small>{prettyBytes(file.size)}</small>}</label>
+            <label htmlFor={chosenRepo ? 'file' : undefined} className={`drop-zone ${file ? 'picked' : ''} ${!chosenRepo ? 'locked' : ''}`}><span className="file-symbol"><Icon name={file ? 'file' : 'upload'} size={25}/></span><strong>{file ? file.name : chosenRepo ? <><span className="zip3917-desktop-drop-copy">Kéo thả ZIP hoặc bấm để chọn</span><span className="zip3917-mobile-drop-copy">Chọn ZIP</span></> : <><span className="zip3917-desktop-drop-copy">Chọn repository để bắt đầu</span><span className="zip3917-mobile-drop-copy">Chọn repository</span></>}</strong>{file ? <small>{prettyBytes(file.size)}</small> : chosenRepo ? <small className="zip3917-desktop-drop-copy">ZIP tối đa 200 MiB · 20 MiB/file</small> : null}</label>
             {file && <div className="file-detail"><Icon name="check" size={15}/> {busy && phase === PUSH_STAGES.ANALYZING ? 'Đang phân tích...' : preview ? 'Review sẵn sàng' : 'Đã chọn ZIP'} · <strong>{commitMessage}</strong></div>}
             {archiveMode === 'extended' && <p className="archive-capacity-note" role="status">Extended 200 MiB · Giữ app mở khi xử lý.</p>}
             <details className="workflow-options"><summary><Icon name="settings" size={16}/> Tùy chọn nâng cao <span>{mode === 'sync' ? 'Sync' : 'Merge'} · {releaseStrategy === 'pr' ? 'Pull Request' : 'Direct Push'}</span></summary><div className="workflow-options-body">
@@ -1367,7 +1391,7 @@ export default function Home() {
               </>}
             </div>
           </ModalSheet>}
-          <article ref={activityRef} className="panel activity-panel" data-mobile-view="activity"><div id="activity-live-flow" className="activity-title"><div><span className="pro-overline">LIVE OPERATIONS</span><h2>Live Activity</h2></div><span className={`activity-dot ${busy ? 'pulse' : ''}`} aria-label={busy ? 'Đang thực hiện thao tác' : 'Không có thao tác đang chạy'}/></div>
+          <article ref={activityRef} className="panel activity-panel" data-mobile-view="activity"><div id="activity-live-flow" className="activity-title"><div><span className="pro-overline">LIVE OPERATIONS</span><h2>Live Activity</h2>{(busy || pendingCommit || pendingPR) && (chosenRepo || pendingCommit || pendingPR) && <p className="zip3917-activity-repo" aria-label="Repository GitHub đang xử lý"><Icon name="branch" size={15}/> <strong>{pendingCommit ? `${pendingCommit.owner}/${pendingCommit.repo}` : pendingPR ? `${pendingPR.owner}/${pendingPR.repo}` : `${owner}/${repo}`}</strong><span>· {pendingCommit?.branch || pendingPR?.baseBranch || branch}</span></p>}</div><span className={`activity-dot ${busy ? 'pulse' : ''}`} aria-label={busy ? 'Đang thực hiện thao tác' : 'Không có thao tác đang chạy'}/></div>
             {phase === PUSH_STAGES.IDLE && !busy && !result && !pendingCommit && !pendingPR && <ActivityEmpty canUpload={chosenRepo} onUpload={() => goToTab('home')}/>}
             <LiveActivityFocus presentation={activityFocus}/>
             {(phase !== PUSH_STAGES.IDLE || busy || result || pendingCommit || pendingPR) && <div className={`push-timeline ${hasPrFlow ? 'with-pr' : ''}`}  aria-label="Tiến trình push và tạo PR">{timeline.map((step, index) => <div key={step.id} className={`timeline-step timeline-${step.state}`}><span className="timeline-icon">{step.state === 'complete' ? <Icon name="check" size={14}/> : index + 1}</span><div><strong>{({validate:'Validate',upload:'Upload',commit:'Commit',verify:'Verify',pr:'Open PR'})[step.id]}</strong><small>{({complete:'Hoàn tất',active:'Đang xử lý',uncertain:'Chưa xác minh',failed:'Cần kiểm tra',waiting:'Chờ xử lý'})[step.state]}</small></div></div>)}</div>}
@@ -1411,7 +1435,7 @@ export default function Home() {
                 {workspaceOpen && <WorkspacePanel hostView="settings" key={`${owner}/${repo}@${branch}`} authenticated={auth.authenticated} owner={owner} repo={repo} branch={branch} online={online} busy={busy} onBack={() => {workspaceDirtyRef.current=false;setWorkspaceOpen(false);}} onDirtyChange={onWorkspaceDirtyChange} api={api} onCommit={(outcome)=>{reset();logLocalAction({kind:'quick-edit',state:'success',repo:`${owner}/${repo}`,sha:outcome?.sha,message:'Quick Edit saved'});}}/>}
               </div>
             </details>
-            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.16</strong></div>
+            <div className="settings-info"><span>Phiên bản</span><strong>v3.9.17</strong></div>
             <div className="settings-info"><span>PWA</span><strong>{pwa.updateAvailable ? 'Có bản cập nhật' : pwa.reachable ? 'Đã kết nối' : 'Offline / Không phản hồi'}</strong></div>
             <button type="button" className="button secondary full" disabled={!online || pwa.checking} onClick={pwa.checkForUpdates}>{pwa.checking ? 'Đang kiểm tra bản mới...' : 'Kiểm tra cập nhật PWA'}</button>
             <div className="settings-info"><span>Chế độ GitHub</span><strong>GitHub App · User Token</strong></div>
@@ -1422,7 +1446,7 @@ export default function Home() {
         </div>
       </section>
     </main>
-    <footer><span>Zipverra · v3.9.16</span><span>GitHub App · <span className="accent">Vercel Ready</span></span></footer>
+    <footer><span>Zipverra · v3.9.17</span><span>GitHub App · <span className="accent">Vercel Ready</span></span></footer>
   </div>
   <ModalSheet open={Boolean(preview && diffViewer && activeTab === 'home')} title={`Diff · ${diffViewer?.path || ''}`}
     onClose={() => { diffRequestRef.current += 1; setDiffViewer(null); }} variant="diff">

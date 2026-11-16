@@ -1,3 +1,11 @@
+# v3.9.17 — Smart ZIP Compatibility Hotfix
+
+- ZIP Central Directory metadata + CRC check; chấp nhận file 0 byte không thêm nội dung.
+- An toàn: giữ limits và Project Guard; báo lỗi chỉ rõ file, không bỏ qua file lỗi.
+- Bỏ nhiều lớp thư mục bao ngoài khi có dấu hiệu project root tin cậy.
+- PC: Upload layout tối ưu, kéo thả ZIP, Activity hiển thị repository/branch, bỏ thanh progress trùng phía trên Activity.
+- Mobile: giữ nguyên bố cục và luồng nghiệp vụ.
+
 # v3.9.16 — Build Import Resolution Hotfix
 
 - Fixed four incorrect relative imports in `/api/large-upload` (from `../../lib` to `../../../lib`).

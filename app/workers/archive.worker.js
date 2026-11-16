@@ -11,8 +11,8 @@ self.onmessage=async ({data})=>{
     const next=++generation;
     reader?.close();reader=null;
     try {
-      const session=await createArchiveReader(data.file, value=>{
-        if (next===generation) self.postMessage({type:'progress',value});
+      const session=await createArchiveReader(data.file, (value,detail)=>{
+        if (next===generation) self.postMessage({type:'progress',value,detail});
       },{mode:data.mode,metadataOnly:true});
       if(next!==generation){session.close();return;}
       reader=session;
